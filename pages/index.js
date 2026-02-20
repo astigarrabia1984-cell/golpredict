@@ -23,12 +23,13 @@ export default function Home() {
   useEffect(() => {
     onAuthStateChanged(auth, (u) => setUser(u));
 
-    // 🔹 AHORA LLAMA A TU API DE VERCEL (NO DIRECTO A FOOTBALL-DATA)
-    fetch("/api/matches")
+    // Volvemos a la conexión directa para que no dependas de archivos extra ahora mismo
+    fetch("https://api.football-data.org/v4/matches", {
+      headers: { "X-Auth-Token": "8622f57039804f3fbf997840e90c8b18" }
+    })
       .then(res => res.json())
       .then(data => setMatches(data.matches || []))
       .catch(e => console.log(e));
-
   }, []);
 
   const handleAuth = async (type) => {
@@ -53,20 +54,18 @@ export default function Home() {
       ) : (
         <div>
           <p>Bienvenido: {user.email} | <span onClick={() => signOut(auth)} style={{ color: '#ff4444', cursor: 'pointer' }}>Cerrar sesión</span></p>
-
-          <div style={{ background: 'gold', color: 'black', padding: '10px', borderRadius: '5px', fontWeight: 'bold', margin: '20px auto', maxWidth: '400px' }}>
-            💎 SUSCRIPCIÓN PREMIUM
-          </div>
-
+          <div style={{ background: 'gold', color: 'black', padding: '10px', borderRadius: '5px', fontWeight: 'bold', margin: '20px auto', maxWidth: '400px' }}>💎 SUSCRIPCIÓN PREMIUM</div>
           <div style={{ marginTop: '30px' }}>
-            {matches.map(m => (
+            {matches.length > 0 ? matches.map(m => (
               <div key={m.id} style={{ background: '#222', margin: '10px auto', padding: '15px', borderRadius: '10px', maxWidth: '450px', border: '1px solid #333' }}>
                 {m.homeTeam.name} vs {m.awayTeam.name}
               </div>
-            ))}
+            )) : <p>Cargando partidos...</p>}
           </div>
         </div>
       )}
     </div>
   );
+        }
+
                                                              }

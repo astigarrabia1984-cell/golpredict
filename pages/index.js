@@ -1,10 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 
 const API_KEY = "8622f57039804f3fbf997840e90c8b18";
-
 const firebaseConfig = {
   apiKey: "AIzaSyCWaYeEdL9BAbFs0LZ8_OTk1fOHE7UqBKc",
   authDomain: "golpredict-pro.firebaseapp.com",
@@ -15,13 +14,16 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 const auth = getAuth(app);
 
 export default function Home() {
+  const [user, setUser] = useState(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [matches, setMatches] = useState([]);
 
   useEffect(() => {
+    onAuthStateChanged(auth, (u) => setUser(u));
     fetch("https://api.football-data.org/v4/competitions/PD/matches?status=SCHEDULED", {
       headers: { "X-Auth-Token": API_KEY }
     })
@@ -30,17 +32,41 @@ export default function Home() {
     .catch(e => console.log(e));
   }, []);
 
+  const handleAuth = async (type) => {
+    try {
+      if (type === "signup") await createUserWithEmailAndPassword(auth, email, password);
+      else await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) { alert("Error: " + e.message); }
+  };
+
   return (
-    <div style={{ backgroundColor: '#111', color: 'white', minHeight: '100vh', padding: '40px', fontFamily: 'sans-serif', textAlign: 'center' }}>
+    <div style={{ backgroundColor: '#111', color: 'white', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
       <h1 style={{ color: '#00ff00' }}>⚽ GOL PREDICT PRO</h1>
-      <div style={{ marginTop: '30px' }}>
-        {matches.length > 0 ? matches.map(m => (
-          <div key={m.id} style={{ background: '#222', border: '1px solid #444', margin: '10px auto', padding: '20px', borderRadius: '12px', maxWidth: '400px' }}>
-            <div style={{ fontWeight: 'bold' }}>{m.homeTeam.name} vs {m.awayTeam.name}</div>
-            <button style={{ marginTop: '10px', background: '#00ff00', border: 'none', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>PREDECIR</button>
+      
+      {!user ? (
+        <div style={{ background: '#222', padding: '20px', borderRadius: '10px', maxWidth: '300px', margin: 'auto' }}>
+          <h3>Área de Usuarios</h3>
+          <input type="email" placeholder="Email" onChange={e => setEmail(e.target.value)} style={{ width: '90%', marginBottom: '10px', padding: '8px' }} />
+          <input type="password" placeholder="Contraseña" onChange={e => setPassword(e.target.value)} style={{ width: '90%', marginBottom: '10px', padding: '8px' }} />
+          <button onClick={() => handleAuth("login")} style={{ background: '#00ff00', border: 'none', padding: '10px', width: '100%', cursor: 'pointer', fontWeight: 'bold' }}>Entrar</button>
+          <p onClick={() => handleAuth("signup")} style={{ fontSize: '12px', cursor: 'pointer', marginTop: '10px' }}>¿No tienes cuenta? Regístrate aquí</p>
+        </div>
+      ) : (
+        <div>
+          <p>Bienvenido, {user.email} | <span onClick={() => signOut(auth)} style={{ color: '#ff4444', cursor: 'pointer' }}>Cerrar sesión</span></p>
+          <div style={{ background: 'gold', color: 'black', padding: '10px', borderRadius: '5px', fontWeight: 'bold', margin: '20px auto', maxWidth: '400px', cursor: 'pointer' }}>
+            🚀 ACTIVAR SUSCRIPCIÓN PREMIUM
           </div>
-        )) : <p>Cargando partidos de hoy...</p>}
-      </div>
+          <div style={{ marginTop: '30px' }}>
+            {matches.map(m => (
+              <div key={m.id} style={{ background: '#222', margin: '10px auto', padding: '15px', borderRadius: '10px', maxWidth: '400px', border: '1px solid #444' }}>
+                {m.homeTeam.name} vs {m.awayTeam.name}
+                <div style={{ color: '#888', fontSize: '13px', marginTop: '5px' }}>Pronóstico bloqueado 🔒</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

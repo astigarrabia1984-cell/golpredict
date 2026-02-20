@@ -7,12 +7,13 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } f
 const API_KEY = "8622f57039804f3fbf997840e90c8b18";
 
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_DOMINIO",
-  projectId: "TU_ID_PROYECTO",
-  storageBucket: "TU_CUBETA",
-  messagingSenderId: "TU_ID_MENSAJERIA",
-  appId: "TU_ID_APP"
+  apiKey: "AIzaSyCWaYeEdL9BAbFs0LZ8_OTk1fOHE7UqBKc",
+  authDomain: "golpredict-pro.firebaseapp.com",
+  projectId: "golpredict-pro",
+  storageBucket: "golpredict-pro.firebasestorage.app",
+  messagingSenderId: "1018477661997",
+  appId: "1:1018477661997:web:9a776f0eb568ff89708da4"
+};
 };
 
 const app = initializeApp(firebaseConfig);

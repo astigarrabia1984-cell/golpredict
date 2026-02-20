@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
@@ -13,7 +12,6 @@ const firebaseConfig = {
   storageBucket: "golpredict-pro.firebasestorage.app",
   messagingSenderId: "1018477661997",
   appId: "1:1018477661997:web:9a776f0eb568ff89708da4"
-};
 };
 
 const app = initializeApp(firebaseConfig);
@@ -44,17 +42,16 @@ export default function Home() {
         <h1>⚽ GolPredict Pro</h1>
         <p>Pronósticos de LaLiga con IA</p>
       </header>
-      
       <main style={{ marginTop: '30px' }}>
         {matches.length > 0 ? (
           matches.map(m => (
             <div key={m.id} style={{ background: '#333', margin: '10px 0', padding: '15px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>{m.homeTeam.name} vs {m.awayTeam.name}</span>
-              <button style={{ background: '#00ff00', border: 'none', padding: '10px', borderRadius: '5px', cursor: 'pointer' }}>Predecir</button>
+              <button style={{ background: '#00ff00', color: 'black', border: 'none', padding: '10px', borderRadius: '5px', fontWeight: 'bold' }}>Predecir</button>
             </div>
           ))
         ) : (
-          <p style={{ textAlign: 'center' }}>Cargando partidos...</p>
+          <p style={{ textAlign: 'center' }}>Cargando partidos de LaLiga...</p>
         )}
       </main>
     </div>

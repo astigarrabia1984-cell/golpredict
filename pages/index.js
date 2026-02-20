@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 
-const API_KEY_FOOTBALL = "8622f57039804f3fbf997840e90c8b18";
-
 const firebaseConfig = {
   apiKey: "AIzaSyCWaYeEdL9BAbFs0LZ8_OTk1fOHE7UqBKc",
   authDomain: "golpredict-pro.firebaseapp.com",
@@ -24,12 +22,13 @@ export default function Home() {
 
   useEffect(() => {
     onAuthStateChanged(auth, (u) => setUser(u));
-    fetch("https://api.football-data.org/v4/matches", {
-      headers: { "X-Auth-Token": API_KEY_FOOTBALL }
-    })
-    .then(res => res.json())
-    .then(data => setMatches(data.matches || []))
-    .catch(e => console.log(e));
+
+    // 🔹 AHORA LLAMA A TU API DE VERCEL (NO DIRECTO A FOOTBALL-DATA)
+    fetch("/api/matches")
+      .then(res => res.json())
+      .then(data => setMatches(data.matches || []))
+      .catch(e => console.log(e));
+
   }, []);
 
   const handleAuth = async (type) => {
@@ -42,6 +41,7 @@ export default function Home() {
   return (
     <div style={{ backgroundColor: '#111', color: 'white', minHeight: '100vh', padding: '20px', textAlign: 'center', fontFamily: 'sans-serif' }}>
       <h1 style={{ color: '#00ff00' }}>⚽ GOL PREDICT PRO</h1>
+
       {!user ? (
         <div style={{ background: '#222', padding: '20px', borderRadius: '10px', maxWidth: '300px', margin: 'auto' }}>
           <h3>Área de Usuarios</h3>
@@ -53,7 +53,11 @@ export default function Home() {
       ) : (
         <div>
           <p>Bienvenido: {user.email} | <span onClick={() => signOut(auth)} style={{ color: '#ff4444', cursor: 'pointer' }}>Cerrar sesión</span></p>
-          <div style={{ background: 'gold', color: 'black', padding: '10px', borderRadius: '5px', fontWeight: 'bold', margin: '20px auto', maxWidth: '400px' }}>💎 SUSCRIPCIÓN PREMIUM</div>
+
+          <div style={{ background: 'gold', color: 'black', padding: '10px', borderRadius: '5px', fontWeight: 'bold', margin: '20px auto', maxWidth: '400px' }}>
+            💎 SUSCRIPCIÓN PREMIUM
+          </div>
+
           <div style={{ marginTop: '30px' }}>
             {matches.map(m => (
               <div key={m.id} style={{ background: '#222', margin: '10px auto', padding: '15px', borderRadius: '10px', maxWidth: '450px', border: '1px solid #333' }}>
@@ -65,4 +69,4 @@ export default function Home() {
       )}
     </div>
   );
-}
+                                                             }

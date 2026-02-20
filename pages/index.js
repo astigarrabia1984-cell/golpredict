@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 const API_KEY = "8622f57039804f3fbf997840e90c8b18";
 
@@ -19,7 +19,6 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 export default function Home() {
-  const [user, setUser] = useState(null);
   const [matches, setMatches] = useState([]);
 
   useEffect(() => {
@@ -37,23 +36,20 @@ export default function Home() {
   }
 
   return (
-    <div style={{ backgroundColor: '#1a1a1a', color: 'white', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
-      <header style={{ textAlign: 'center', borderBottom: '2px solid #333', paddingBottom: '20px' }}>
-        <h1>⚽ GolPredict Pro</h1>
-        <p>Pronósticos de LaLiga con IA</p>
-      </header>
-      <main style={{ marginTop: '30px' }}>
+    <div style={{ backgroundColor: '#1a1a1a', color: 'white', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
+      <h1>⚽ GolPredict Pro</h1>
+      <p>Pronósticos de LaLiga</p>
+      <div style={{ marginTop: '30px' }}>
         {matches.length > 0 ? (
           matches.map(m => (
-            <div key={m.id} style={{ background: '#333', margin: '10px 0', padding: '15px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>{m.homeTeam.name} vs {m.awayTeam.name}</span>
-              <button style={{ background: '#00ff00', color: 'black', border: 'none', padding: '10px', borderRadius: '5px', fontWeight: 'bold' }}>Predecir</button>
+            <div key={m.id} style={{ background: '#333', margin: '10px auto', padding: '15px', borderRadius: '10px', maxWidth: '500px' }}>
+              {m.homeTeam.name} vs {m.awayTeam.name}
             </div>
           ))
         ) : (
-          <p style={{ textAlign: 'center' }}>Cargando partidos de LaLiga...</p>
+          <p>Cargando partidos...</p>
         )}
-      </main>
+      </div>
     </div>
   );
 }

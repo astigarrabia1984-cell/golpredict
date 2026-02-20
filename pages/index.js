@@ -22,33 +22,24 @@ export default function Home() {
   const [matches, setMatches] = useState([]);
 
   useEffect(() => {
-    fetchMatches();
+    fetch("https://api.football-data.org/v4/competitions/PD/matches?status=SCHEDULED", {
+      headers: { "X-Auth-Token": API_KEY }
+    })
+    .then(res => res.json())
+    .then(data => setMatches(data.matches || []))
+    .catch(e => console.log(e));
   }, []);
 
-  async function fetchMatches() {
-    try {
-      const res = await fetch("https://api.football-data.org/v4/competitions/PD/matches?status=SCHEDULED", {
-        headers: { "X-Auth-Token": API_KEY }
-      });
-      const data = await res.json();
-      setMatches(data.matches || []);
-    } catch (e) { console.error(e); }
-  }
-
   return (
-    <div style={{ backgroundColor: '#1a1a1a', color: 'white', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
-      <h1>⚽ GolPredict Pro</h1>
-      <p>Pronósticos de LaLiga</p>
+    <div style={{ backgroundColor: '#111', color: 'white', minHeight: '100vh', padding: '40px', fontFamily: 'sans-serif', textAlign: 'center' }}>
+      <h1 style={{ color: '#00ff00' }}>⚽ GOL PREDICT PRO</h1>
       <div style={{ marginTop: '30px' }}>
-        {matches.length > 0 ? (
-          matches.map(m => (
-            <div key={m.id} style={{ background: '#333', margin: '10px auto', padding: '15px', borderRadius: '10px', maxWidth: '500px' }}>
-              {m.homeTeam.name} vs {m.awayTeam.name}
-            </div>
-          ))
-        ) : (
-          <p>Cargando partidos...</p>
-        )}
+        {matches.length > 0 ? matches.map(m => (
+          <div key={m.id} style={{ background: '#222', border: '1px solid #444', margin: '10px auto', padding: '20px', borderRadius: '12px', maxWidth: '400px' }}>
+            <div style={{ fontWeight: 'bold' }}>{m.homeTeam.name} vs {m.awayTeam.name}</div>
+            <button style={{ marginTop: '10px', background: '#00ff00', border: 'none', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>PREDECIR</button>
+          </div>
+        )) : <p>Cargando partidos de hoy...</p>}
       </div>
     </div>
   );

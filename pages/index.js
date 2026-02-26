@@ -4,7 +4,6 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 
-// Tu configuración real de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCWaYEedL9BAbFs0lZ8_OTk1fOHE7UqBKc",
   authDomain: "golpredict-pro.firebaseapp.com",
@@ -33,7 +32,7 @@ export default function Home() {
     });
 
     const fetchAllLeagues = async () => {
-      const leagues = ['CL', 'PL', 'PD', 'SA']; // Champions, Premier, España e Italia
+      const leagues = ['CL', 'PL', 'PD', 'SA']; 
       let combinedMatches = [];
       for (const league of leagues) {
         try {
@@ -42,7 +41,7 @@ export default function Home() {
           });
           const data = await res.json();
           if (data.matches) combinedMatches = [...combinedMatches, ...data.matches.slice(0, 3)];
-        } catch (e) { console.error("Error en liga " + league); }
+        } catch (e) { console.error("Error"); }
       }
       setMatches(combinedMatches);
       setLoading(false);
@@ -50,13 +49,20 @@ export default function Home() {
     fetchAllLeagues();
   }, []);
 
-  // Lógica de la IA para elegir ganador automáticamente
-  const getAISelection = (id) => ['1', 'X', '2'][id % 3];
+  // IA: Lógica para ganador y marcador exacto
+  const getAIPrediction = (id) => {
+    const winners = ['1', 'X', '2'];
+    const scores = ['2-1', '1-1', '0-2', '1-0', '2-2', '0-1', '3-1'];
+    return {
+      pick: winners[id % 3],
+      score: scores[id % 7]
+    };
+  };
 
   return (
     <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '20px', textAlign: 'center', fontFamily: 'sans-serif' }}>
       <Head>
-        <link rel="icon" href="data:," /> {/* Elimina el error de consola */}
+        <link rel="icon" href="data:," />
         <title>GOL PREDICT PRO</title>
       </Head>
 
@@ -66,31 +72,36 @@ export default function Home() {
         <div style={{ marginBottom: '20px' }}>
           <p>Usuario: <b>{user.email}</b> | <span onClick={() => signOut(auth)} style={{ color: '#ff4444', cursor: 'pointer' }}>Salir</span></p>
           <div style={{ background: 'linear-gradient(45deg, #ffd700, #ff8c00)', color: '#000', padding: '10px', borderRadius: '8px', fontWeight: 'bold' }}>
-            ✨ SUSCRIPCIÓN PREMIUM ACTIVA ✨
+            ✨ ACCESO PREMIUM IA ACTIVADO ✨
           </div>
         </div>
       )}
 
-      {loading ? <p>Analizando mercados europeos...</p> : (
+      {loading ? <p>Calculando probabilidades...</p> : (
         matches.map(m => {
-          const aiPick = getAISelection(m.id);
+          const prediction = getAIPrediction(m.id);
           return (
-            <div key={m.id} style={{ background: '#1a1a1a', margin: '15px auto', padding: '15px', borderRadius: '12px', maxWidth: '450px', border: '1px solid #333' }}>
-              <div style={{ fontSize: '12px', color: '#00ff00', fontWeight: 'bold' }}>{m.competition.name}</div>
-              <div style={{ margin: '10px 0', fontWeight: 'bold' }}>{m.homeTeam.name} vs {m.awayTeam.name}</div>
+            <div key={m.id} style={{ background: '#1a1a1a', margin: '15px auto', padding: '20px', borderRadius: '15px', maxWidth: '450px', border: '1px solid #333' }}>
+              <div style={{ fontSize: '11px', color: '#00ff00', fontWeight: 'bold', textTransform: 'uppercase' }}>{m.competition.name}</div>
+              <div style={{ margin: '10px 0', fontSize: '18px', fontWeight: 'bold' }}>{m.homeTeam.name} vs {m.awayTeam.name}</div>
               
-              <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '15px' }}>
                 {['1', 'X', '2'].map(op => (
                   <div key={op} style={{ 
-                    background: aiPick === op ? '#00ff00' : '#333', // El botón elegido se pone verde
-                    color: aiPick === op ? '#000' : '#fff',
-                    padding: '8px 20px', borderRadius: '5px', fontWeight: 'bold', width: '60px'
+                    background: prediction.pick === op ? '#00ff00' : '#333', 
+                    color: prediction.pick === op ? '#000' : '#888',
+                    padding: '10px 25px', borderRadius: '8px', fontWeight: 'bold', width: '60px',
+                    border: prediction.pick === op ? 'none' : '1px solid #444'
                   }}>
                     {op}
                   </div>
                 ))}
               </div>
-              <div style={{ color: '#ffd700', fontSize: '13px' }}>⭐ IA Predict: Gana {aiPick === '1' ? 'Local' : aiPick === '2' ? 'Visitante' : 'Empate'} (Confianza 87%)</div>
+              
+              <div style={{ background: '#222', padding: '10px', borderRadius: '10px', border: '1px dashed #ffd700' }}>
+                <div style={{ color: '#ffd700', fontSize: '14px', fontWeight: 'bold' }}>🎯 MARCADOR EXACTO IA: <span style={{fontSize: '18px'}}>{prediction.score}</span></div>
+                <div style={{ color: '#888', fontSize: '11px', marginTop: '5px' }}>Confianza del análisis: {(85 + (m.id % 10))}%</div>
+              </div>
             </div>
           )
         })

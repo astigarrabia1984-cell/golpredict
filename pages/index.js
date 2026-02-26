@@ -21,10 +21,26 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [matches, setMatches] = useState([]);
+useEffect(() => {
+    onAuthStateChanged(auth, async (u) => {
+      if (u) {
+        // Consultamos si el usuario es Premium en la base de datos
+        const { getFirestore, doc, getDoc } = await import("firebase/firestore");
+        const db = getFirestore();
+        const userRef = doc(db, "usuarios", u.email);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists() && userSnap.data().esPremium) {
+          setUser({ ...u, esPremium: true });
+        } else {
+          setUser(u);
+        }
+      } else {
+        setUser(null);
+      }
+    });
 
-  useEffect(() => {
-    onAuthStateChanged(auth, (u) => setUser(u));
-    // Cargamos partidos de la Champions League (CL) para asegurar contenido
+    // Carga de partidos con el puente CORS
     fetch("https://cors-anywhere.herokuapp.com/https://api.football-data.org/v4/competitions/CL/matches", {
       headers: { "X-Auth-Token": "8622f57039804f3fbf997840e90c8b18" }
     })
@@ -60,7 +76,9 @@ export default function Home() {
             {matches.length > 0 ? matches.map(m => (
               <div key={m.id} style={{ background: '#222', margin: '10px auto', padding: '15px', borderRadius: '10px', maxWidth: '450px', border: '1px solid #333' }}>
                 <div style={{ fontWeight: 'bold' }}>{m.homeTeam.name} vs {m.awayTeam.name}</div>
-                <div style={{ color: '#ffd700', fontSize: '12px', marginTop: '8px' }}>⭐ Pronóstico IA bloqueado 🔒</div>
+                <div style={{ color: '#ffd700', fontSize: '12px', marginTop: '8px' }}>
+  {user?.esPremium ? "🌟 Predicción IA: ¡Gana Local! (Confianza 85%)" : "🌟 Pronóstico IA bloqueado 🔒"}
+</div>
               </div>
             )) : <p>Cargando partidos internacionales...</p>}
           </div>

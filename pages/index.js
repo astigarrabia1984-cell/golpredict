@@ -21,7 +21,7 @@ export default function Home() {
   const [leaguesData, setLeaguesData] = useState([]);
   const [activeLeague, setActiveLeague] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [errorApi, setErrorApi] = useState(false);
+  const [needsAccess, setNeedsAccess] = useState(false);
 
   useEffect(() => {
     onAuthStateChanged(auth, async (u) => {
@@ -41,21 +41,23 @@ export default function Home() {
           const res = await fetch(`https://cors-anywhere.herokuapp.com/https://api.football-data.org/v4/competitions/${id}/matches?status=SCHEDULED`, {
             headers: { "X-Auth-Token": "8622f57039804f3fbf997840e90c8b18" }
           });
-          if (!res.ok) throw new Error("CORS Blocked");
+          
+          if (res.status === 403) {
+            setNeedsAccess(true);
+            break;
+          }
+
           const data = await res.json();
           if (data.matches) {
             allLeagues.push({
               name: id === 'PD' ? 'LaLiga' : id === 'CL' ? 'Champions' : id === 'PL' ? 'Premier' : 'Serie A',
-              code: id,
               matches: data.matches
             });
           }
         }
         setLeaguesData(allLeagues);
-        setErrorApi(false);
       } catch (e) { 
-        console.error("Error cargando datos");
-        setErrorApi(true);
+        console.error("Error"); 
       }
       setLoading(false);
     };
@@ -65,37 +67,36 @@ export default function Home() {
   const getAIPrediction = (id) => {
     const winners = ['1', 'X', '2'];
     const pick = winners[id % 3];
-    let score = pick === '1' ? '2-1' : (pick === 'X' ? '1-1' : '0-2');
+    let score = pick === '1' ? '2-0' : (pick === 'X' ? '1-1' : '0-1');
     return { pick, score };
   };
 
   return (
-    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '15px', textAlign: 'center', fontFamily: 'sans-serif' }}>
+    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '10px', textAlign: 'center', fontFamily: 'sans-serif' }}>
       <Head>
-        <link rel="icon" href="data:," />
         <title>GOL PREDICT PRO</title>
       </Head>
 
-      <h1 style={{ color: '#00ff00', fontSize: '26px', marginBottom: '15px' }}>⚽ GOL PREDICT PRO</h1>
-      
-      {/* Botón de emergencia si no cargan los partidos */}
-      {errorApi && (
-        <div style={{ background: '#331111', border: '1px solid #ff0000', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
-          <p style={{ fontSize: '14px' }}>⚠️ Los partidos no cargan en este dispositivo.</p>
-          <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style={{ background: '#00ff00', color: '#000', padding: '10px 15px', borderRadius: '5px', fontWeight: 'bold', textDecoration: 'none', display: 'inline-block' }}>
-            ACTIVAR DATOS AQUÍ
+      <h1 style={{ color: '#00ff00', fontSize: '24px', margin: '20px 0' }}>⚽ GOL PREDICT PRO</h1>
+
+      {/* BOTÓN DE RESCATE: Si no salen los partidos, esto lo arregla */}
+      {needsAccess && (
+        <div style={{ background: '#222', border: '2px solid #00ff00', padding: '20px', borderRadius: '15px', margin: '20px auto', maxWidth: '400px' }}>
+          <p style={{ fontWeight: 'bold' }}>⚠️ ¡ATENCIÓN!</p>
+          <p style={{ fontSize: '14px' }}>Para ver los partidos, pulsa el botón y luego "Request temporary access":</p>
+          <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style={{ background: '#00ff00', color: '#000', padding: '12px 20px', borderRadius: '10px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block', marginTop: '10px' }}>
+            ACTIVAR PARTIDOS AQUÍ
           </a>
         </div>
       )}
 
-      {/* Selector de Pestañas */}
-      {!loading && leaguesData.length > 0 && (
-        <div style={{ display: 'flex', overflowX: 'auto', gap: '8px', marginBottom: '20px', paddingBottom: '10px', justifyContent: 'center' }}>
+      {!loading && !needsAccess && (
+        <div style={{ display: 'flex', overflowX: 'auto', gap: '10px', marginBottom: '20px', padding: '5px', justifyContent: 'center' }}>
           {leaguesData.map((league, index) => (
             <button key={index} onClick={() => setActiveLeague(index)} style={{
-              background: activeLeague === index ? '#00ff00' : '#222',
+              background: activeLeague === index ? '#00ff00' : '#333',
               color: activeLeague === index ? '#000' : '#fff',
-              border: 'none', padding: '10px 18px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap'
+              border: 'none', padding: '10px 15px', borderRadius: '20px', fontWeight: 'bold', whiteSpace: 'nowrap'
             }}>
               {league.name}
             </button>
@@ -103,42 +104,28 @@ export default function Home() {
         </div>
       )}
 
-      {loading ? <p>Analizando partidos de la semana...</p> : (
-        <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+      {loading && !needsAccess ? <p>Cargando partidos...</p> : (
+        <div style={{ maxWidth: '450px', margin: '0 auto' }}>
           {leaguesData[activeLeague]?.matches.map(m => {
             const prediction = getAIPrediction(m.id);
             return (
-              <div key={m.id} style={{ background: '#1a1a1a', margin: '12px auto', padding: '20px', borderRadius: '15px', border: '1px solid #333' }}>
-                
-                {/* Nombres de los DOS equipos garantizados */}
-                <div style={{ marginBottom: '15px', borderBottom: '1px solid #222', paddingBottom: '10px' }}>
-                  <div style={{ fontSize: '19px', fontWeight: 'bold', color: '#fff' }}>{m.homeTeam.name}</div>
-                  <div style={{ color: '#00ff00', fontSize: '14px', margin: '5px 0', fontWeight: 'bold' }}>vs</div>
-                  <div style={{ fontSize: '19px', fontWeight: 'bold', color: '#fff' }}>{m.awayTeam.name}</div>
+              <div key={m.id} style={{ background: '#111', marginBottom: '20px', padding: '20px', borderRadius: '15px', border: '1px solid #333' }}>
+                {/* Nombres de los dos equipos siempre visibles */}
+                <div style={{ marginBottom: '15px' }}>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{m.homeTeam.name}</div>
+                  <div style={{ color: '#00ff00', fontSize: '12px', margin: '5px 0' }}>vs</div>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{m.awayTeam.name}</div>
                 </div>
                 
-                {/* Botones de predicción */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '15px' }}>
                   {['1', 'X', '2'].map(op => (
                     <div key={op} style={{ 
-                      background: prediction.pick === op ? '#00ff00' : '#333', 
+                      background: prediction.pick === op ? '#00ff00' : '#222', 
                       color: prediction.pick === op ? '#000' : '#fff',
-                      padding: '12px 25px', borderRadius: '8px', fontWeight: 'bold', width: '60px'
-                    }}>
-                      {op}
-                    </div>
+                      padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', width: '50px'
+                    }}>{op}</div>
                   ))}
                 </div>
                 
-                {/* Marcador Exacto */}
-                <div style={{ background: '#222', padding: '12px', borderRadius: '10px', border: '1px solid #ffd700' }}>
-                  <div style={{ color: '#ffd700', fontSize: '14px', fontWeight: 'bold' }}>🎯 MARCADOR IA: {prediction.score}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
+                <div style={{ background: '#00ff0022', padding: '10px', borderRadius: '10px', border: '1px solid #00ff00' }}>
+                  <div style={{ color: '#00ff00', fontSize: '14px', fontWeight: 'bold' }}>🎯 MARCADOR IA: {prediction.score

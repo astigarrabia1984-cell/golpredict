@@ -4,6 +4,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 
+// Tu configuración real de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCWaYEedL9BAbFs0lZ8_OTk1fOHE7UqBKc",
   authDomain: "golpredict-pro.firebaseapp.com",
@@ -32,7 +33,7 @@ export default function Home() {
     });
 
     const fetchAllLeagues = async () => {
-      const leagues = ['CL', 'PL', 'PD', 'SA']; 
+      const leagues = ['CL', 'PL', 'PD', 'SA']; // Champions, Premier, España e Italia
       let combinedMatches = [];
       for (const league of leagues) {
         try {
@@ -41,7 +42,7 @@ export default function Home() {
           });
           const data = await res.json();
           if (data.matches) combinedMatches = [...combinedMatches, ...data.matches.slice(0, 3)];
-        } catch (e) { console.error("Error"); }
+        } catch (e) { console.error("Error en liga " + league); }
       }
       setMatches(combinedMatches);
       setLoading(false);
@@ -49,7 +50,7 @@ export default function Home() {
     fetchAllLeagues();
   }, []);
 
-  // IA CORREGIDA: Marcador sincronizado con el ganador
+  // IA: Sincroniza el ganador (1X2) con el marcador exacto
   const getAIPrediction = (id) => {
     const winners = ['1', 'X', '2'];
     const pick = winners[id % 3];
@@ -65,7 +66,6 @@ export default function Home() {
       const awayScores = ['0-1', '0-2', '1-2', '1-3'];
       score = awayScores[id % awayScores.length];
     }
-
     return { pick, score };
   };
 
@@ -87,20 +87,26 @@ export default function Home() {
         </div>
       )}
 
-      {loading ? <p>Sincronizando pronósticos...</p> : (
+      {loading ? <p>Analizando mercados europeos...</p> : (
         matches.map(m => {
           const prediction = getAIPrediction(m.id);
           return (
             <div key={m.id} style={{ background: '#1a1a1a', margin: '15px auto', padding: '20px', borderRadius: '15px', maxWidth: '450px', border: '1px solid #333' }}>
-              <div style={{ fontSize: '11px', color: '#00ff00', fontWeight: 'bold' }}>{m.competition.name}</div>
-              <div style={{ margin: '10px 0', fontSize: '18px', fontWeight: 'bold' }}>{m.homeTeam.name} vs {m.awayTeam.name}</div>
+              <div style={{ fontSize: '11px', color: '#00ff00', fontWeight: 'bold', textTransform: 'uppercase' }}>{m.competition.name}</div>
+              
+              {/* Nombres de equipos completos y en vertical para que no se corten */}
+              <div style={{ margin: '15px 0', fontSize: '18px', fontWeight: 'bold', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <span>{m.homeTeam.name}</span>
+                <span style={{ color: '#888', fontSize: '14px' }}>vs</span>
+                <span>{m.awayTeam.name}</span>
+              </div>
               
               <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '15px' }}>
                 {['1', 'X', '2'].map(op => (
                   <div key={op} style={{ 
                     background: prediction.pick === op ? '#00ff00' : '#333', 
                     color: prediction.pick === op ? '#000' : '#fff',
-                    padding: '10px 25px', borderRadius: '8px', fontWeight: 'bold'
+                    padding: '10px 25px', borderRadius: '8px', fontWeight: 'bold', width: '60px'
                   }}>
                     {op}
                   </div>

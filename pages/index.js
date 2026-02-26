@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
-// ✅ He puesto tus llaves reales aquí para que NO falle
 const firebaseConfig = {
   apiKey: "AIzaSyCWaYeEdL9BAbFs0LZ8_OTk1fOHE7UqBKc",
   authDomain: "golpredict-pro.firebaseapp.com",
@@ -23,7 +22,6 @@ export default function Home() {
 
   useEffect(() => {
     onAuthStateChanged(auth, (u) => setUser(u));
-    // Cargamos partidos mundiales para que siempre veas algo
     fetch("https://api.football-data.org/v4/matches", {
       headers: { "X-Auth-Token": "8622f57039804f3fbf997840e90c8b18" }
     })

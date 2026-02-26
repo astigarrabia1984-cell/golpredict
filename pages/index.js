@@ -48,9 +48,9 @@ export default function Home() {
       {!user ? (
         <div style={{ background: '#111', padding: '30px', borderRadius: '15px', border: '1px solid #333', maxWidth: '350px', margin: 'auto' }}>
           <h3>Área de Usuarios</h3>
-          <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={{ width: '90%', padding: '10px', marginBottom: '10px' }} />
-          <input type="password" placeholder="Contraseña" onChange={(e) => setPassword(e.target.value)} style={{ width: '90%', padding: '10px', marginBottom: '10px' }} />
-          <button onClick={() => handleAuth("login")} style={{ width: '100%', padding: '12px', background: '#00ff00', fontWeight: 'bold' }}>ENTRAR</button>
+          <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={{ width: '90%', padding: '10px', marginBottom: '10px', color: '#000' }} />
+          <input type="password" placeholder="Contraseña" onChange={(e) => setPassword(e.target.value)} style={{ width: '90%', padding: '10px', marginBottom: '10px', color: '#000' }} />
+          <button onClick={() => handleAuth("login")} style={{ width: '100%', padding: '12px', background: '#00ff00', fontWeight: 'bold', cursor: 'pointer' }}>ENTRAR</button>
           <p onClick={() => handleAuth("registro")} style={{ fontSize: '12px', marginTop: '15px', cursor: 'pointer', color: '#888' }}>¿No tienes cuenta? Regístrate</p>
         </div>
       ) : (
@@ -67,7 +67,7 @@ export default function Home() {
                 {['1', 'X', '2'].map((opcion) => (
                   <button 
                     key={opcion}
-                    onClick={() => setSeleccionados({...seleccionados, [m.id]: opcion})}
+                    onClick={() => setSeleccionados(prev => ({...prev, [m.id]: opcion}))}
                     style={{ 
                       background: seleccionados[m.id] === opcion ? '#00ff00' : '#444', 
                       color: seleccionados[m.id] === opcion ? '#000' : '#fff',

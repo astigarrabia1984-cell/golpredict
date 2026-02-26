@@ -3,7 +3,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 
-// Configuración integrada para evitar errores de archivos faltantes
+// Configuración integrada para eliminar el error "Module not found"
 const firebaseConfig = {
   apiKey: "AIzaSyAs-demo-key", 
   authDomain: "golpredict-pro.firebaseapp.com",
@@ -60,7 +60,7 @@ export default function Home() {
           <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={{ width: '90%', padding: '10px', marginBottom: '10px', color: '#000' }} />
           <input type="password" placeholder="Contraseña" onChange={(e) => setPassword(e.target.value)} style={{ width: '90%', padding: '10px', marginBottom: '10px', color: '#000' }} />
           <button onClick={() => handleAuth("login")} style={{ width: '100%', padding: '12px', background: '#00ff00', fontWeight: 'bold', cursor: 'pointer' }}>ENTRAR</button>
-          <p onClick={() => handleAuth("registro")} style={{ fontSize: '12px', marginTop: '15px', cursor: 'pointer', color: '#888' }}>Regístrate aquí</p>
+          <p onClick={() => handleAuth("registro")} style={{ fontSize: '12px', marginTop: '15px', cursor: 'pointer', color: '#888' }}>¿Nuevo? Regístrate aquí</p>
         </div>
       ) : (
         <div>
@@ -88,4 +88,12 @@ export default function Home() {
                 ))}
               </div>
               <div style={{ color: '#ffd700', fontSize: '12px' }}>
-                {user.esPremium ? "⭐ Predicción IA: Gana Local (85%)" :
+                {user.esPremium ? "⭐ Predicción IA: Gana Local (85%)" : "🌟 Pronóstico IA bloqueado 🔒"}
+              </div>
+            </div>
+          )) : <p>Cargando partidos...</p>}
+        </div>
+      )}
+    </div>
+  );
+}

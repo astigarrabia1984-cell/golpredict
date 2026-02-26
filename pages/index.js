@@ -21,7 +21,8 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [matches, setMatches] = useState([]);
-useEffect(() => {
+const [seleccionados, setSeleccionados] = useState({});
+  useEffect(() => {
     onAuthStateChanged(auth, async (u) => {
       if (u) {
         // Consultamos si el usuario es Premium en la base de datos

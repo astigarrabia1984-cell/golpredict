@@ -43,14 +43,13 @@ export default function Home() {
           const data = await res.json();
           if (data.matches) {
             allLeagues.push({
-              name: data.competition.name,
-              code: id,
+              name: id === 'PD' ? 'LaLiga' : id === 'CL' ? 'Champions' : id === 'PL' ? 'Premier' : 'Serie A',
               matches: data.matches
             });
           }
         }
         setLeaguesData(allLeagues);
-      } catch (e) { console.error("Error"); }
+      } catch (e) { console.error("Error cargando datos"); }
       setLoading(false);
     };
     fetchLeagues();
@@ -64,4 +63,41 @@ export default function Home() {
   };
 
   return (
-    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '10px', textAlign
+    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '10px', textAlign: 'center', fontFamily: 'sans-serif' }}>
+      <Head>
+        <link rel="icon" href="data:," />
+        <title>GOL PREDICT PRO</title>
+      </Head>
+
+      <h1 style={{ color: '#00ff00', fontSize: '26px', margin: '20px 0' }}>⚽ GOL PREDICT PRO</h1>
+
+      {/* PESTAÑAS - NAVEGACIÓN */}
+      {!loading && (
+        <div style={{ display: 'flex', overflowX: 'auto', gap: '10px', marginBottom: '25px', padding: '10px', justifyContent: 'center' }}>
+          {leaguesData.map((league, index) => (
+            <button key={index} onClick={() => setActiveLeague(index)} style={{
+              background: activeLeague === index ? '#00ff00' : '#222',
+              color: activeLeague === index ? '#000' : '#fff',
+              border: 'none', padding: '10px 20px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap'
+            }}>
+              {league.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {loading ? <p>Analizando mercados...</p> : (
+        <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+          {leaguesData[activeLeague]?.matches.map(m => {
+            const prediction = getAIPrediction(m.id);
+            return (
+              <div key={m.id} style={{ background: '#1a1a1a', marginBottom: '20px', padding: '20px', borderRadius: '15px', border: '1px solid #333' }}>
+                
+                {/* NOMBRES DE LOS EQUIPOS - VISIBLES Y GRANDES */}
+                <div style={{ marginBottom: '15px' }}>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>{m.homeTeam.name}</div>
+                  <div style={{ color: '#00ff00', fontSize: '14px', margin: '5px 0', fontWeight: 'bold' }}>VS</div>
+                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>{m.awayTeam.name}</div>
+                </div>
+                
+                {/* BOTONES 1X2 - IA SELECCIÓN

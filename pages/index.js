@@ -4,12 +4,13 @@ import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, s
 
 // ✅ Datos reales de tu proyecto golpredict-pro
 const firebaseConfig = {
-  apiKey: 'AIzaSyCWaYeEdL9BAbFs0LZ8_OTk1fOHE7UqBKc',
-  authDomain: 'golpredict-pro.firebaseapp.com',
-  projectId: 'golpredict-pro',
-  storageBucket: 'golpredict-pro.firebasestorage.app',
-  messagingSenderId: '1018477661997',
-  appId: '1:1018477661997:web:9a776f0eb568ff89708da4'
+  apiKey: "AIzaSyCWaYEedL9BAbFs0lZ8_OTk1fOHE7UqBKc",
+  authDomain: "golpredict-pro.firebaseapp.com",
+  projectId: "golpredict-pro",
+  storageBucket: "golpredict-pro.firebasestorage.app",
+  messagingSenderId: "1018477661997",
+  appId: "1:1018477661997:web:9a776f0eb568ff89708da4",
+  measurementId: "G-0291GDRK66"
 };
 
 const app = initializeApp(firebaseConfig);

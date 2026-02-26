@@ -3,9 +3,9 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 
-// Configuración directa para evitar el error de "Module not found"
+// Configuración integrada para evitar errores de archivos faltantes
 const firebaseConfig = {
-  apiKey: "AIzaSyAs-your-key-here", // El código funcionará igual porque usaremos los servicios ya activos
+  apiKey: "AIzaSyAs-demo-key", 
   authDomain: "golpredict-pro.firebaseapp.com",
   projectId: "golpredict-pro",
   storageBucket: "golpredict-pro.appspot.com",
@@ -29,11 +29,7 @@ export default function Home() {
         const db = getFirestore(app);
         const userRef = doc(db, "usuarios", u.email);
         const userSnap = await getDoc(userRef);
-        if (userSnap.exists() && userSnap.data().esPremium) {
-          setUser({ ...u, esPremium: true });
-        } else {
-          setUser(u);
-        }
+        setUser(userSnap.exists() && userSnap.data().esPremium ? { ...u, esPremium: true } : u);
       } else {
         setUser(null);
       }
@@ -44,7 +40,7 @@ export default function Home() {
     })
     .then(res => res.json())
     .then(data => setMatches(data.matches || []))
-    .catch(e => console.log(e));
+    .catch(e => console.error(e));
   }, []);
 
   const handleAuth = async (tipo) => {
@@ -68,36 +64,28 @@ export default function Home() {
         </div>
       ) : (
         <div>
-          <p>Bienvenido, <b>{user.email}</b> | <span onClick={() => signOut(auth)} style={{ color: '#ff4444', cursor: 'pointer' }}>Salir</span></p>
+          <p>Bienvenido: <b>{user.email}</b> | <span onClick={() => signOut(auth)} style={{ color: '#ff4444', cursor: 'pointer' }}>Salir</span></p>
           <div style={{ background: 'linear-gradient(45deg, #ffd700, #ff8c00)', color: '#000', padding: '15px', borderRadius: '10px', fontWeight: 'bold', marginBottom: '20px' }}>
             {user.esPremium ? "✨ CUENTA PREMIUM ACTIVADA ✨" : "💎 ACTIVAR SUSCRIPCIÓN PREMIUM"}
           </div>
 
-          {matches.map(m => (
+          {matches.length > 0 ? matches.map(m => (
             <div key={m.id} style={{ background: '#222', margin: '10px auto', padding: '15px', borderRadius: '10px', maxWidth: '450px' }}>
               <div style={{ fontWeight: 'bold', marginBottom: '10px' }}>{m.homeTeam.name} vs {m.awayTeam.name}</div>
               <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px' }}>
-                {['1', 'X', '2'].map((opcion) => (
+                {['1', 'X', '2'].map((op) => (
                   <button 
-                    key={opcion}
-                    onClick={() => setSeleccionados(prev => ({...prev, [m.id]: opcion}))}
+                    key={op}
+                    onClick={() => setSeleccionados(prev => ({...prev, [m.id]: op}))}
                     style={{ 
-                      background: seleccionados[m.id] === opcion ? '#00ff00' : '#444', 
-                      color: seleccionados[m.id] === opcion ? '#000' : '#fff',
+                      background: seleccionados[m.id] === op ? '#00ff00' : '#444', 
+                      color: seleccionados[m.id] === op ? '#000' : '#fff',
                       border: 'none', padding: '10px 25px', cursor: 'pointer', borderRadius: '5px', fontWeight: 'bold'
                     }}
                   >
-                    {opcion}
+                    {op}
                   </button>
                 ))}
               </div>
               <div style={{ color: '#ffd700', fontSize: '12px' }}>
-                {user.esPremium ? "⭐ Predicción IA: ¡Gana Local! (Confianza 85%)" : "🌟 Pronóstico IA bloqueado 🔒"}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+                {user.esPremium ? "⭐ Predicción IA: Gana Local (85%)" :

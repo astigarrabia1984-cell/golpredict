@@ -4,12 +4,12 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWith
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAs-demo-key", 
+  apiKey: "AIzaSyCWaYEedL9BAbFs0lZ8_OTk1fOHE7UqBKc",
   authDomain: "golpredict-pro.firebaseapp.com",
   projectId: "golpredict-pro",
-  storageBucket: "golpredict-pro.appspot.com",
-  messagingSenderId: "1056536034179",
-  appId: "1:1056536034179:web:1d8d9b9c9f9e9d9c"
+  storageBucket: "golpredict-pro.firebasestorage.app",
+  messagingSenderId: "1018477661997",
+  appId: "1:1018477661997:web:9a776f0eb568ff89708da4"
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];

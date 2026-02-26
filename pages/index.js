@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -16,11 +16,8 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 const auth = getAuth(app);
 
 export default function Home() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
   const [matches, setMatches] = useState([]);
-  const [seleccionados, setSeleccionados] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,26 +30,30 @@ export default function Home() {
       } else { setUser(null); }
     });
 
-    // Usamos la liga española (PD) que suele tener más partidos activos
-    fetch("https://cors-anywhere.herokuapp.com/https://api.football-data.org/v4/competitions/PD/matches?status=SCHEDULED", {
-      headers: { "X-Auth-Token": "8622f57039804f3fbf997840e90c8b18" }
-    })
-    .then(res => res.json())
-    .then(data => {
-      setMatches(data.matches?.slice(0, 10) || []);
+    const fetchAllMatches = async () => {
+      const leagues = ['CL', 'PL']; // Champions y Premier
+      let allMatches = [];
+      
+      for (const league of leagues) {
+        try {
+          const res = await fetch(`https://cors-anywhere.herokuapp.com/https://api.football-data.org/v4/competitions/${league}/matches?status=SCHEDULED`, {
+            headers: { "X-Auth-Token": "8622f57039804f3fbf997840e90c8b18" }
+          });
+          const data = await res.json();
+          if (data.matches) allMatches = [...allMatches, ...data.matches.slice(0, 5)];
+        } catch (e) { console.error("Error en liga " + league, e); }
+      }
+      setMatches(allMatches);
       setLoading(false);
-    })
-    .catch(e => {
-      console.error(e);
-      setLoading(false);
-    });
+    };
+
+    fetchAllMatches();
   }, []);
 
-  const handleAuth = async (tipo) => {
-    try {
-      if (tipo === "registro") await createUserWithEmailAndPassword(auth, email, password);
-      else await signInWithEmailAndPassword(auth, email, password);
-    } catch (e) { alert("Error: " + e.message); }
+  // Simulación de IA para elegir ganador automáticamente
+  const getAIResult = (id) => {
+    const results = ['1', 'X', '2'];
+    return results[id % 3]; 
   };
 
   return (
@@ -60,45 +61,41 @@ export default function Home() {
       <h1 style={{ color: '#00ff00' }}>⚽ GOL PREDICT PRO</h1>
       
       {!user ? (
-        <div style={{ background: '#111', padding: '30px', borderRadius: '15px', border: '1px solid #333', maxWidth: '350px', margin: 'auto' }}>
-          <h3>Entrar al Sistema</h3>
-          <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={{ width: '90%', padding: '10px', marginBottom: '10px', color: '#000' }} />
-          <input type="password" placeholder="Contraseña" onChange={(e) => setPassword(e.target.value)} style={{ width: '90%', padding: '10px', marginBottom: '10px', color: '#000' }} />
-          <button onClick={() => handleAuth("login")} style={{ width: '100%', padding: '12px', background: '#00ff00', fontWeight: 'bold', cursor: 'pointer' }}>ACCEDER</button>
-          <p onClick={() => handleAuth("registro")} style={{ fontSize: '12px', marginTop: '15px', cursor: 'pointer', color: '#888' }}>¿No tienes cuenta? Regístrate</p>
-        </div>
+        <p>Por favor, inicia sesión para ver los pronósticos.</p>
       ) : (
         <div>
           <p>Usuario: <b>{user.email}</b> | <span onClick={() => signOut(auth)} style={{ color: '#ff4444', cursor: 'pointer' }}>Salir</span></p>
           
-          <div style={{ background: user.esPremium ? 'linear-gradient(45deg, #ffd700, #ff8c00)' : '#333', color: '#000', padding: '15px', borderRadius: '10px', fontWeight: 'bold', marginBottom: '20px' }}>
-            {user.esPremium ? "✨ SUSCRIPCIÓN PREMIUM ACTIVA ✨" : "💎 HAZTE PREMIUM PARA VER PREDICCIONES"}
+          <div style={{ background: 'linear-gradient(45deg, #ffd700, #ff8c00)', color: '#000', padding: '15px', borderRadius: '10px', fontWeight: 'bold', marginBottom: '20px' }}>
+            {user.esPremium ? "✨ SISTEMA IA DE PREDICCIÓN ACTIVO ✨" : "💎 HAZTE PREMIUM PARA DESBLOQUEAR"}
           </div>
 
-          {loading ? <p>Cargando partidos de hoy...</p> : (
-            matches.length > 0 ? matches.map(m => (
+          {loading ? <p>Cargando ligas europeas...</p> : (
+            matches.map(m => (
               <div key={m.id} style={{ background: '#222', margin: '10px auto', padding: '15px', borderRadius: '10px', maxWidth: '450px', border: '1px solid #333' }}>
+                <div style={{ fontSize: '12px', color: '#888', marginBottom: '5px' }}>{m.competition.name}</div>
                 <div style={{ fontWeight: 'bold', marginBottom: '10px' }}>{m.homeTeam.name} vs {m.awayTeam.name}</div>
+                
                 <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px' }}>
                   {['1', 'X', '2'].map((op) => (
                     <button 
                       key={op}
-                      onClick={() => setSeleccionados(prev => ({...prev, [m.id]: op}))}
                       style={{ 
-                        background: seleccionados[m.id] === op ? '#00ff00' : '#444', 
-                        color: seleccionados[m.id] === op ? '#000' : '#fff',
-                        border: 'none', padding: '10px 25px', cursor: 'pointer', borderRadius: '5px', fontWeight: 'bold'
+                        background: user.esPremium && getAIResult(m.id) === op ? '#00ff00' : '#444', 
+                        color: user.esPremium && getAIResult(m.id) === op ? '#000' : '#fff',
+                        border: 'none', padding: '10px 25px', borderRadius: '5px', fontWeight: 'bold'
                       }}
                     >
                       {op}
                     </button>
                   ))}
                 </div>
-                <div style={{ color: '#ffd700', fontSize: '12px' }}>
-                  {user.esPremium ? "⭐ IA Predict: Gana Local (Confianza 82%)" : "🌟 Pronóstico IA bloqueado 🔒"}
+                
+                <div style={{ color: '#ffd700', fontSize: '13px', fontWeight: 'bold' }}>
+                  {user.esPremium ? `⭐ IA RECOMIENDA: ${getAIResult(m.id) === '1' ? 'Local' : getAIResult(m.id) === '2' ? 'Visitante' : 'Empate'}` : "🌟 Pronóstico bloqueado 🔒"}
                 </div>
               </div>
-            )) : <p>No hay partidos programados por ahora. Intenta de nuevo más tarde.</p>
+            ))
           )}
         </div>
       )}

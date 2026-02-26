@@ -73,15 +73,22 @@ useEffect(() => {
           <p>Bienvenido, <b>{user.email}</b> | <span onClick={() => signOut(auth)} style={{ color: '#ff4444', cursor: 'pointer', textDecoration: 'underline' }}>Salir</span></p>
           <div style={{ background: 'linear-gradient(45deg, #ffd700, #ff8c00)', color: '#000', padding: '15px', borderRadius: '10px', fontWeight: 'bold', margin: '20px auto', maxWidth: '400px', boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)' }}>💎 ACTIVAR SUSCRIPCIÓN PREMIUM</div>
           <div style={{ marginTop: '20px' }}>
-            {matches.length > 0 ? matches.map(m => (
-              <div key={m.id} style={{ background: '#222', margin: '10px auto', padding: '15px', borderRadius: '10px', maxWidth: '450px', border: '1px solid #333' }}>
-                <div style={{ fontWeight: 'bold' }}>{m.homeTeam.name} vs {m.awayTeam.name}</div>
-                <div style={{ color: '#ffd700', fontSize: '12px', marginTop: '8px' }}>
-  {user?.esPremium ? "🌟 Predicción IA: ¡Gana Local! (Confianza 85%)" : "🌟 Pronóstico IA bloqueado 🔒"}
-</div>
+{matches.length > 0 ? matches.map(m => (
+            <div key={m.id} style={{ background: '#222', margin: '10px auto', padding: '15px', borderRadius: '10px', maxWidth: '450px' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '10px' }}>{m.homeTeam.name} vs {m.awayTeam.name}</div>
+              
+              {/* Botones de Selección */}
+              <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '10px' }}>
+                <button onClick={() => alert('Seleccionaste: ' + m.homeTeam.name)} style={{ background: '#444', color: '#fff', border: '1px solid #555', padding: '5px 10px', cursor: 'pointer', borderRadius: '5px' }}>1</button>
+                <button onClick={() => alert('Seleccionaste: Empate')} style={{ background: '#444', color: '#fff', border: '1px solid #555', padding: '5px 10px', cursor: 'pointer', borderRadius: '5px' }}>X</button>
+                <button onClick={() => alert('Seleccionaste: ' + m.awayTeam.name)} style={{ background: '#444', color: '#fff', border: '1px solid #555', padding: '5px 10px', cursor: 'pointer', borderRadius: '5px' }}>2</button>
               </div>
-            )) : <p>Cargando partidos internacionales...</p>}
-          </div>
+
+              <div style={{ color: '#ffd700', fontSize: '12px' }}>
+                {user?.esPremium ? "🌟 Predicción IA: ¡Gana Local! (Confianza 85%)" : "🌟 Pronóstico IA bloqueado 🔒"}
+              </div>
+            </div>
+          )) : <p>Cargando partidos internacionales...</p>}
         </div>
       )}
     </div>

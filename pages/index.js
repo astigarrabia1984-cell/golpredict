@@ -43,7 +43,8 @@ export default function Home() {
           const data = await res.json();
           if (data.matches) {
             allLeagues.push({
-              name: id === 'PD' ? 'LaLiga' : id === 'CL' ? 'Champions' : id === 'PL' ? 'Premier' : 'Serie A',
+              name: data.competition.name,
+              code: id,
               matches: data.matches
             });
           }
@@ -63,41 +64,75 @@ export default function Home() {
   };
 
   return (
-    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '10px', textAlign: 'center', fontFamily: 'sans-serif' }}>
+    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '15px', textAlign: 'center', fontFamily: 'sans-serif' }}>
       <Head>
         <link rel="icon" href="data:," />
         <title>GOL PREDICT PRO</title>
       </Head>
 
-      <h1 style={{ color: '#00ff00', fontSize: '26px', margin: '20px 0' }}>⚽ GOL PREDICT PRO</h1>
+      <h1 style={{ color: '#00ff00', fontSize: '26px', marginBottom: '15px' }}>⚽ GOL PREDICT PRO</h1>
+      
+      {user && (
+        <div style={{ background: 'linear-gradient(45deg, #ffd700, #ff8c00)', color: '#000', padding: '10px', borderRadius: '10px', fontWeight: 'bold', marginBottom: '20px', fontSize: '13px' }}>
+          ✨ MODO PREMIUM ACTIVO ✨
+        </div>
+      )}
 
-      {/* PESTAÑAS - NAVEGACIÓN */}
+      {/* Selector de Pestañas */}
       {!loading && (
-        <div style={{ display: 'flex', overflowX: 'auto', gap: '10px', marginBottom: '25px', padding: '10px', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', overflowX: 'auto', gap: '8px', marginBottom: '20px', paddingBottom: '10px', justifyContent: 'flex-start', WebkitOverflowScrolling: 'touch' }}>
           {leaguesData.map((league, index) => (
-            <button key={index} onClick={() => setActiveLeague(index)} style={{
-              background: activeLeague === index ? '#00ff00' : '#222',
-              color: activeLeague === index ? '#000' : '#fff',
-              border: 'none', padding: '10px 20px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap'
-            }}>
-              {league.name}
+            <button
+              key={index}
+              onClick={() => setActiveLeague(index)}
+              style={{
+                background: activeLeague === index ? '#00ff00' : '#222',
+                color: activeLeague === index ? '#000' : '#fff',
+                border: 'none', padding: '10px 18px', borderRadius: '25px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap', transition: '0.3s'
+              }}
+            >
+              {league.code === 'PD' ? 'LaLiga' : league.code === 'CL' ? 'Champions' : league.name}
             </button>
           ))}
         </div>
       )}
 
-      {loading ? <p>Analizando mercados...</p> : (
-        <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-          {leaguesData[activeLeague]?.matches.map(m => {
-            const prediction = getAIPrediction(m.id);
-            return (
-              <div key={m.id} style={{ background: '#1a1a1a', marginBottom: '20px', padding: '20px', borderRadius: '15px', border: '1px solid #333' }}>
-                
-                {/* NOMBRES DE LOS EQUIPOS - VISIBLES Y GRANDES */}
-                <div style={{ marginBottom: '15px' }}>
-                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>{m.homeTeam.name}</div>
-                  <div style={{ color: '#00ff00', fontSize: '14px', margin: '5px 0', fontWeight: 'bold' }}>VS</div>
-                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>{m.awayTeam.name}</div>
+      {loading ? <p>Preparando partidos de la semana...</p> : (
+        <div style={{ animation: 'fadeIn 0.5s' }}>
+          {leaguesData[activeLeague]?.matches.length === 0 ? <p>No hay partidos programados</p> : 
+            leaguesData[activeLeague]?.matches.map(m => {
+              const prediction = getAIPrediction(m.id);
+              return (
+                <div key={m.id} style={{ background: '#1a1a1a', margin: '12px auto', padding: '20px', borderRadius: '15px', maxWidth: '450px', border: '1px solid #333' }}>
+                  
+                  {/* CORRECCIÓN: Nombres completos con ajuste de línea */}
+                  <div style={{ margin: '0 0 15px 0', fontSize: '18px', fontWeight: 'bold', lineHeight: '1.4' }}>
+                    <div style={{ color: '#fff', wordWrap: 'break-word' }}>{m.homeTeam.name}</div>
+                    <div style={{ color: '#00ff00', fontSize: '14px', margin: '5px 0' }}>vs</div>
+                    <div style={{ color: '#fff', wordWrap: 'break-word' }}>{m.awayTeam.name}</div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '15px' }}>
+                    {['1', 'X', '2'].map(op => (
+                      <div key={op} style={{ 
+                        background: prediction.pick === op ? '#00ff00' : '#333', 
+                        color: prediction.pick === op ? '#000' : '#fff',
+                        padding: '10px 0', borderRadius: '8px', fontWeight: 'bold', width: '65px'
+                      }}>
+                        {op}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div style={{ background: '#222', padding: '12px', borderRadius: '10px', border: '1px solid #ffd700' }}>
+                    <div style={{ color: '#ffd700', fontSize: '14px', fontWeight: 'bold' }}>🎯 MARCADOR EXACTO IA: {prediction.score}</div>
+                  </div>
                 </div>
-                
-                {/* BOTONES 1X2 - IA SELECCIÓN
+              );
+            })
+          }
+        </div>
+      )}
+    </div>
+  );
+}

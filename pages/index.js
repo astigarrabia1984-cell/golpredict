@@ -25,7 +25,7 @@ export default function Home() {
   useEffect(() => {
     onAuthStateChanged(auth, (u) => setUser(u));
     // Cargamos partidos de la Champions League (CL) para asegurar contenido
-    fetch("https://api.football-data.org/v4/competitions/CL/matches", {
+    fetch("https://cors-anywhere.herokuapp.com/https://api.football-data.org/v4/competitions/CL/matches", {
       headers: { "X-Auth-Token": "8622f57039804f3fbf997840e90c8b18" }
     })
     .then(res => res.json())

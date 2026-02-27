@@ -63,119 +63,13 @@ export default function GolPredict() {
     }, 600);
   };
 
-  // Lógica con Probabilidad de Acierto del ~90%
   const obtenerAnalisisFijoIA = (m, v) => {
     const seed = (m.length + v.length + m.charCodeAt(0)) % 10;
-    
-    let ganador, score, porcentaje;
-    
-    // Rango de probabilidad ajustado al 90%
-    porcentaje = 88 + (seed % 7); 
+    let ganador, score;
 
     if (seed > 5) {
       ganador = `Gana ${m}`;
       score = `${(seed % 2) + 1}-${seed % 2}`;
     } else if (seed > 2) {
       ganador = `Gana ${v}`;
-      score = `${seed % 2}-${(seed % 2) + 1}`;
-    } else {
-      ganador = "Empate";
-      score = `${seed % 2}-${seed % 2}`;
-    }
-    
-    return { ganador, score, porcentaje };
-  };
-
-  if (!user) {
-    return (
-      <div style={{ textAlign: 'center', backgroundColor: '#000', color: '#fff', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <h1 style={{ letterSpacing: '2px' }}>GOL PREDICT PRO</h1>
-        <button onClick={() => signInWithPopup(auth, provider)} style={{ padding: '15px 30px', cursor: 'pointer', margin: 'auto', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '5px' }}>ENTRAR CON GOOGLE</button>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '15px', fontFamily: 'sans-serif' }}>
-      <header style={{ borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px', textAlign: 'center' }}>
-        <h2 style={{ margin: 0, color: '#fbbf24' }}>GOL PREDICT PRO</h2>
-        <p style={{ fontSize: '0.8rem', margin: '5px 0' }}>Hola, {user.displayName}</p>
-      </header>
-
-      {isPremium ? (
-        <div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '20px' }}>
-            {ligas.map((l) => (
-              <button key={l.id} onClick={() => cambiarLiga(l.id)} style={{ padding: '10px 5px', backgroundColor: ligaActiva === l.id ? '#fbbf24' : '#222', color: ligaActiva === l.id ? '#000' : '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.75rem', cursor: 'pointer' }}>
-                {l.nombre}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <button onClick={() => setVista('PARTIDOS')} style={{ flex: 1, padding: '12px', backgroundColor: vista === 'PARTIDOS' ? '#444' : '#222', color: '#fff', border: '1px solid #555', borderRadius: '5px', fontWeight: 'bold' }}>PARTIDOS</button>
-            <button onClick={() => setVista('TABLA')} style={{ flex: 1, padding: '12px', backgroundColor: vista === 'TABLA' ? '#444' : '#222', color: '#fff', border: '1px solid #555', borderRadius: '5px', fontWeight: 'bold' }}>TABLA</button>
-          </div>
-
-          {loading ? (
-            <p style={{ textAlign: 'center', marginTop: '30px' }}>IA Calculando Probabilidades...</p>
-          ) : vista === 'PARTIDOS' ? (
-            <div>
-              {partidos.map((p, i) => {
-                const analisis = obtenerAnalisisFijoIA(p.mandante, p.visitante);
-                return (
-                  <div key={i} style={{ border: '1px solid #333', padding: '15px', marginBottom: '15px', borderRadius: '12px', backgroundColor: '#111' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                      <span style={{ fontWeight: 'bold' }}>{p.mandante} vs {p.visitante}</span>
-                      <div style={{ textAlign: 'right' }}>
-                         <span style={{ color: '#0f0', fontWeight: 'bold', display: 'block' }}>{analisis.porcentaje}% ACIERTO</span>
-                         <span style={{ fontSize: '0.6rem', color: '#666' }}>IA ANALYZED</span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                      <div style={{ backgroundColor: '#1a1a1a', padding: '10px', borderRadius: '8px', border: '1px solid #222' }}>
-                        <p style={{ fontSize: '0.65rem', color: '#888', margin: '0 0 5px 0' }}>GANADOR PROBABLE</p>
-                        <p style={{ margin: 0, color: '#fbbf24', fontWeight: 'bold', fontSize: '0.9rem' }}>{analisis.ganador}</p>
-                      </div>
-                      <div style={{ backgroundColor: '#1a1a1a', padding: '10px', borderRadius: '8px', border: '1px solid #222' }}>
-                        <p style={{ fontSize: '0.65rem', color: '#888', margin: '0 0 5px 0' }}>MARCADOR EXACTO</p>
-                        <p style={{ margin: 0, color: '#fbbf24', fontWeight: 'bold', fontSize: '1.1rem' }}>{analisis.score}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-             <div style={{ backgroundColor: '#111', padding: '15px', borderRadius: '10px', border: '1px solid #333' }}>
-              <h4 style={{ textAlign: 'center', margin: '0 0 15px 0' }}>Clasificación {ligaActiva}</h4>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #333', color: '#888' }}>
-                    <th style={{ textAlign: 'left', padding: '10px' }}>Pos</th>
-                    <th style={{ textAlign: 'left', padding: '10px' }}>Equipo</th>
-                    <th style={{ textAlign: 'right', padding: '10px' }}>Pts</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ligas.find(l => l.id === ligaActiva).equipos.map((equipo, index) => (
-                    <tr key={index} style={{ borderBottom: '1px solid #222' }}>
-                      <td style={{ padding: '10px' }}>{index + 1}</td>
-                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{equipo}</td>
-                      <td style={{ padding: '10px', textAlign: 'right' }}>{25 - (index * 4)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div style={{ textAlign: 'center', marginTop: '100px' }}>
-          <p>Activa tu suscripción VIP para ver pronósticos del 90%.</p>
-          <button style={{ padding: '15px 25px', backgroundColor: '#25D366', color: '#fff', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}>ADQUIRIR ACCESO VIP</button>
-        </div>
-      )}
-    </div>
-  );
-}
+      score = `${seed % 2}-${(seed %

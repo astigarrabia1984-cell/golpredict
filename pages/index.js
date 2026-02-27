@@ -3,7 +3,6 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
-// Tu configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCWaYEedL9BAbFs0lZ8_OTk1fOHE7UqBKc",
   authDomain: "golpredict-pro.firebaseapp.com",
@@ -27,42 +26,36 @@ export default function GolPredict() {
   const [ligaActiva, setLigaActiva] = useState('LALIGA');
   const [vista, setVista] = useState('PARTIDOS');
 
-  // Base de datos de partidos de la jornada
   const baseDeDatosPartidos = {
     LALIGA: [
       { m: 'Real Madrid', v: 'Real Sociedad' },
       { m: 'Barcelona', v: 'Getafe' },
       { m: 'Atlético', v: 'Sevilla' },
-      { m: 'Villarreal', v: 'Valencia' },
-      { m: 'Athletic', v: 'Betis' }
+      { m: 'Villarreal', v: 'Valencia' }
     ],
     LALIGA2: [
       { m: 'Almería', v: 'Cádiz' },
       { m: 'Granada', v: 'Sporting' },
       { m: 'Zaragoza', v: 'Oviedo' },
-      { m: 'Levante', v: 'Racing' },
-      { m: 'Elche', v: 'Eibar' }
+      { m: 'Levante', v: 'Racing' }
     ],
     PREMIER: [
       { m: 'Man. City', v: 'Newcastle' },
       { m: 'Arsenal', v: 'Liverpool' },
       { m: 'Chelsea', v: 'Tottenham' },
-      { m: 'Man. United', v: 'Aston Villa' },
-      { m: 'Fulham', v: 'Brighton' }
+      { m: 'Man. United', v: 'Aston Villa' }
     ],
     SERIEA: [
       { m: 'Inter', v: 'Lazio' },
       { m: 'Juventus', v: 'Roma' },
       { m: 'Milan', v: 'Fiorentina' },
-      { m: 'Napoli', v: 'Atalanta' },
-      { m: 'Bologna', v: 'Torino' }
+      { m: 'Napoli', v: 'Atalanta' }
     ],
     BUNDES: [
       { m: 'Bayern', v: 'Leipzig' },
       { m: 'Dortmund', v: 'Frankfurt' },
       { m: 'Leverkusen', v: 'Stuttgart' },
-      { m: 'Wolfsburg', v: 'Mgladbach' },
-      { m: 'Freiburg', v: 'Hoffenheim' }
+      { m: 'Wolfsburg', v: 'Mgladbach' }
     ]
   };
 
@@ -82,7 +75,8 @@ export default function GolPredict() {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists() && docSnap.data().esPremium) {
           setIsPremium(true);
-          cambiarLiga('LALIGA');
+          setPartidos(baseDeDatosPartidos['LALIGA']);
+          setLoading(false);
         } else { setLoading(false); }
       } else { setUser(null); setIsPremium(false); setLoading(false); }
     });
@@ -95,18 +89,17 @@ export default function GolPredict() {
     setTimeout(() => {
       setPartidos(baseDeDatosPartidos[id] || []);
       setLoading(false);
-    }, 600);
+    }, 500);
   };
 
   const obtenerAnalisisFijoIA = (m, v) => {
-    // Genera resultados fijos basados en los nombres de los equipos
     const seed = (m.length + v.length + m.charCodeAt(0)) % 10;
     let ganador, score;
     if (seed > 5) {
-      ganador = `Gana ${m}`;
+      ganador = `Victoria ${m}`;
       score = `${(seed % 2) + 1}-${seed % 2}`;
     } else if (seed > 2) {
-      ganador = `Gana ${v}`;
+      ganador = `Victoria ${v}`;
       score = `${seed % 2}-${(seed % 2) + 1}`;
     } else {
       ganador = "Empate";
@@ -115,13 +108,11 @@ export default function GolPredict() {
     return { ganador, score };
   };
 
-  const login = () => signInWithPopup(auth, provider);
-
   if (!user) {
     return (
       <div style={{ textAlign: 'center', backgroundColor: '#000', color: '#fff', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'sans-serif' }}>
-        <h1 style={{ letterSpacing: '4px', marginBottom: '30px' }}>GOL PREDICT PRO</h1>
-        <button onClick={login} style={{ padding: '15px 30px', cursor: 'pointer', margin: 'auto', backgroundColor: '#fbbf24', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '5px', fontSize: '1rem' }}>ENTRAR CON GOOGLE</button>
+        <h1 style={{ letterSpacing: '4px' }}>GOL PREDICT PRO</h1>
+        <button onClick={() => signInWithPopup(auth, provider)} style={{ padding: '15px 30px', cursor: 'pointer', margin: 'auto', backgroundColor: '#fbbf24', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '5px' }}>ENTRAR CON GOOGLE</button>
       </div>
     );
   }
@@ -130,12 +121,12 @@ export default function GolPredict() {
     <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '15px', fontFamily: 'sans-serif' }}>
       <header style={{ borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px', textAlign: 'center' }}>
         <h2 style={{ margin: 0, color: '#fbbf24', letterSpacing: '2px' }}>GOL PREDICT PRO</h2>
-        <p style={{ fontSize: '0.8rem', margin: '5px 0', color: '#888' }}>Usuario VIP: {user.displayName}</p>
+        <p style={{ fontSize: '0.8rem', color: '#888' }}>Hola, {user.displayName}</p>
       </header>
 
       {isPremium ? (
         <div>
-          {/* SELECTOR DE LIGAS */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '20px' }}>
             {ligas.map((l) => (
-              <button key={l.id} onClick={() => cambiarLiga(l.id)} style={{ padding: '12px 5px', backgroundColor: ligaActiva === l.id ? '#fbbf24' : '#1
+              <button key={l.id} onClick={() => cambiarLiga(l.id)} style={{ padding: '10px 5px', backgroundColor: ligaActiva === l.id ? '#fbbf24' : '#1a1a1a', color: ligaActiva === l.id ? '#000' : '#fff', border: '1px solid #333', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.7rem' }}>
+                {l.

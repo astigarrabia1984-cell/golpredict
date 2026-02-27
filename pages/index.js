@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
@@ -24,46 +25,36 @@ export default function GolPredict() {
   const [partidos, setPartidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ligaActiva, setLigaActiva] = useState('LALIGA');
-  const [vista, setVista] = useState('PARTIDOS');
 
   const ligas = [
-    { id: 'LALIGA', nombre: '1ª España' },
-    { id: 'LALIGA2', nombre: '2ª España' },
+    { id: 'LALIGA', nombre: '1a Espana' },
+    { id: 'LALIGA2', nombre: '2a Espana' },
     { id: 'PREMIER', nombre: 'Premier' },
     { id: 'SERIEA', nombre: 'Serie A' },
     { id: 'BUNDES', nombre: 'Bundesliga' }
   ];
 
-  const baseDeDatosPartidos = {
+  const baseDeDatos = {
     LALIGA: [
-      { m: 'Real Madrid', v: 'Real Sociedad' },
-      { m: 'Barcelona', v: 'Getafe' },
-      { m: 'Atlético', v: 'Sevilla' },
+      { m: 'Real Madrid', v: 'Barcelona' },
+      { m: 'At. Madrid', v: 'Sevilla' },
       { m: 'Villarreal', v: 'Valencia' }
     ],
     LALIGA2: [
-      { m: 'Almería', v: 'Cádiz' },
-      { m: 'Granada', v: 'Sporting' },
-      { m: 'Zaragoza', v: 'Oviedo' },
-      { m: 'Levante', v: 'Racing' }
+      { m: 'Almeria', v: 'Cadiz' },
+      { m: 'Granada', v: 'Malaga' }
     ],
     PREMIER: [
-      { m: 'Man. City', v: 'Newcastle' },
-      { m: 'Arsenal', v: 'Liverpool' },
-      { m: 'Chelsea', v: 'Tottenham' },
-      { m: 'Man. United', v: 'Aston Villa' }
+      { m: 'Man. City', v: 'Liverpool' },
+      { m: 'Arsenal', v: 'Chelsea' }
     ],
     SERIEA: [
-      { m: 'Inter', v: 'Lazio' },
-      { m: 'Juventus', v: 'Roma' },
-      { m: 'Milan', v: 'Fiorentina' },
-      { m: 'Napoli', v: 'Atalanta' }
+      { m: 'Inter Milan', v: 'Juventus' },
+      { m: 'Milan', v: 'Napoli' }
     ],
     BUNDES: [
-      { m: 'Bayern', v: 'Leipzig' },
-      { m: 'Dortmund', v: 'Frankfurt' },
-      { m: 'Leverkusen', v: 'Stuttgart' },
-      { m: 'Wolfsburg', v: 'Mgladbach' }
+      { m: 'Bayern M.', v: 'Dortmund' },
+      { m: 'Leverkusen', v: 'Leipzig' }
     ]
   };
 
@@ -71,18 +62,14 @@ export default function GolPredict() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        const docRef = doc(db, "usuarios", currentUser.email);
+        const docRef = doc(db, 'usuarios', currentUser.email);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists() && docSnap.data().esPremium) {
           setIsPremium(true);
-          setPartidos(baseDeDatosPartidos['LALIGA']);
+          setPartidos(baseDeDatos['LALIGA']);
         }
-        setLoading(false);
-      } else {
-        setUser(null);
-        setIsPremium(false);
-        setLoading(false);
       }
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -91,21 +78,23 @@ export default function GolPredict() {
     setLigaActiva(id);
     setLoading(true);
     setTimeout(() => {
-      setPartidos(baseDeDatosPartidos[id] || []);
+      setPartidos(baseDeDatos[id] || []);
       setLoading(false);
-    }, 500);
+    }, 400);
   };
 
-  const obtenerAnalisisFijoIA = (m, v) => {
-    const seed = (m.length + v.length + m.charCodeAt(0)) % 10;
-    let ganador, score;
-    if (seed > 5) {
-      ganador = `Victoria ${m}`;
-      score = `${(seed % 2) + 1}-${seed % 2}`;
-    } else if (seed > 2) {
-      ganador = `Victoria ${v}`;
-      score = `${seed % 2}-${(seed % 2) + 1}`;
-    } else {
-      ganador = "Empate";
-      score = `${seed % 2}-${seed % 2}`;
-    }
+  if (loading) {
+    return <div style={{ backgroundColor: '#000', color: '#fff', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>CARGANDO...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div style={{ textAlign: 'center', backgroundColor: '#000', color: '#fff', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <h1>GOL PREDICT PRO</h1>
+        <button onClick={() => signInWithPopup(auth, provider)} style={{ padding: '15px 30px', margin: 'auto', backgroundColor: '#fbbf24', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>ENTRAR CON GOOGLE</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '15px', fontFamily: 'sans-serif'

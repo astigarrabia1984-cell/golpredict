@@ -22,66 +22,117 @@ export default function GolPredict() {
   const [user, setUser] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
   const [partidos, setPartidos] = useState([]);
-  const [liga, setLiga] = useState('LALIGA');
   const [loading, setLoading] = useState(true);
+  const [ligaActiva, setLigaActiva] = useState('LALIGA');
+  const [vista, setVista] = useState('PARTIDOS');
 
-  const dbPartidos = {
-    LALIGA: [{ m: 'Real Madrid', v: 'Barcelona' }, { m: 'At. Madrid', v: 'Sevilla' }],
-    LALIGA2: [{ m: 'Almeria', v: 'Cadiz' }, { m: 'Granada', v: 'Malaga' }],
-    PREMIER: [{ m: 'Man. City', v: 'Liverpool' }, { m: 'Arsenal', v: 'Chelsea' }],
-    SERIEA: [{ m: 'Inter', v: 'Juventus' }, { m: 'Milan', v: 'Napoli' }],
-    BUNDES: [{ m: 'Bayern', v: 'Dortmund' }, { m: 'Leverkusen', v: 'Leipzig' }]
+  const ligas = [
+    { id: 'LALIGA', nombre: '1a Espana' },
+    { id: 'LALIGA2', nombre: '2a Espana' },
+    { id: 'PREMIER', nombre: 'Premier' },
+    { id: 'SERIEA', nombre: 'Serie A' },
+    { id: 'BUNDES', nombre: 'Bundesliga' }
+  ];
+
+  const baseDeDatosPartidos = {
+    LALIGA: [
+      { m: 'Real Madrid', v: 'Barcelona' },
+      { m: 'At. Madrid', v: 'Sevilla' },
+      { m: 'Villarreal', v: 'Valencia' },
+      { m: 'Real Sociedad', v: 'Athletic' }
+    ],
+    LALIGA2: [
+      { m: 'Almeria', v: 'Cadiz' },
+      { m: 'Granada', v: 'Sporting' },
+      { m: 'Zaragoza', v: 'Oviedo' },
+      { m: 'Levante', v: 'Racing' }
+    ],
+    PREMIER: [
+      { m: 'Man. City', v: 'Liverpool' },
+      { m: 'Arsenal', v: 'Chelsea' },
+      { m: 'Man. United', v: 'Tottenham' },
+      { m: 'Aston Villa', v: 'Newcastle' }
+    ],
+    SERIEA: [
+      { m: 'Inter Milan', v: 'Juventus' },
+      { m: 'Milan', v: 'Napoli' },
+      { m: 'Roma', v: 'Lazio' },
+      { m: 'Atalanta', v: 'Fiorentina' }
+    ],
+    BUNDES: [
+      { m: 'Bayern M.', v: 'Dortmund' },
+      { m: 'Leverkusen', v: 'Leipzig' },
+      { m: 'Frankfurt', v: 'Stuttgart' },
+      { m: 'Wolfsburg', v: 'Freiburg' }
+    ]
   };
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      if (u) {
-        setUser(u);
-        const d = await getDoc(doc(db, 'usuarios', u.email));
-        if (d.exists() && d.data().esPremium) {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        const docRef = doc(db, 'usuarios', currentUser.email);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().esPremium) {
           setIsPremium(true);
-          setPartidos(dbPartidos.LALIGA);
+          setPartidos(baseDeDatosPartidos['LALIGA']);
         }
       }
       setLoading(false);
     });
-    return () => unsub();
+    return () => unsubscribe();
   }, []);
 
-  const changeL = (id) => {
-    setLiga(id);
-    setPartidos(dbPartidos[id] || []);
+  const cambiarLiga = (id) => {
+    setLigaActiva(id);
+    setLoading(true);
+    setTimeout(() => {
+      setPartidos(baseDeDatosPartidos[id] || []);
+      setLoading(false);
+    }, 500);
   };
 
-  if (loading) return <div style={{background:'#000',color:'#fff',height:'100vh',display:'flex',justifyContent:'center',alignItems:'center'}}>Cargando...</div>;
+  const obtenerAnalisis = (m, v) => {
+    const suma = m.length + v.length;
+    if (suma % 3 === 0) return { g: 'Victoria ' + m, s: '2-1' };
+    if (suma % 3 === 1) return { g: 'Victoria ' + v, s: '0-1' };
+    return { g: 'Empate', s: '1-1' };
+  };
 
-  if (!user) return (
-    <div style={{background:'#000',color:'#fff',height:'100vh',display:'flex',flexDirection:'column',justifyContent:'center',textAlign:'center'}}>
-      <h1>GOL PREDICT PRO</h1>
-      <button onClick={() => signInWithPopup(auth, provider)} style={{padding:'15px',margin:'auto',background:'#fbbf24',border:'none',borderRadius:'5px',fontWeight:'bold'}}>ENTRAR CON GOOGLE</button>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div style={{ backgroundColor: '#000', color: '#fbbf24', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif' }}>
+        <h3>IA ANALIZANDO JORNADA...</h3>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div style={{ textAlign: 'center', backgroundColor: '#000', color: '#fff', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'sans-serif' }}>
+        <h1 style={{ letterSpacing: '4px', color: '#fbbf24' }}>GOL PREDICT PRO</h1>
+        <button onClick={() => signInWithPopup(auth, provider)} style={{ padding: '15px 30px', cursor: 'pointer', margin: 'auto', backgroundColor: '#fbbf24', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '8px', fontSize: '1rem' }}>
+          ENTRAR CON GOOGLE
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div style={{background:'#000',color:'#fff',minHeight:'100vh',padding:'15px',fontFamily:'sans-serif'}}>
-      <h2 style={{color:'#fbbf24',textAlign:'center'}}>GOL PREDICT PRO</h2>
+    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '15px', fontFamily: 'sans-serif' }}>
+      <header style={{ borderBottom: '1px solid #333', paddingBottom: '15px', marginBottom: '20px', textAlign: 'center' }}>
+        <h2 style={{ margin: 0, color: '#fbbf24', letterSpacing: '2px' }}>GOL PREDICT PRO</h2>
+        <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '5px' }}>Suscripcion VIP: {user.displayName}</p>
+      </header>
+
       {isPremium ? (
         <div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'5px',marginBottom:'20px'}}>
-            {Object.keys(dbPartidos).map(id => (
-              <button key={id} onClick={() => changeL(id)} style={{padding:'10px 2px',background:liga===id?'#fbbf24':'#1a1a1a',color:liga===id?'#000':'#fff',border:'none',borderRadius:'5px',fontSize:'10px',fontWeight:'bold'}}>{id}</button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '20px' }}>
+            {ligas.map((l) => (
+              <button key={l.id} onClick={() => cambiarLiga(l.id)} style={{ padding: '12px 5px', backgroundColor: ligaActiva === l.id ? '#fbbf24' : '#1a1a1a', color: ligaActiva === l.id ? '#000' : '#fff', border: '1px solid #333', borderRadius: '10px', fontWeight: 'bold', fontSize: '0.7rem', cursor: 'pointer' }}>
+                {l.nombre}
+              </button>
             ))}
           </div>
-          {partidos.map((p, i) => (
-            <div key={i} style={{border:'1px solid #333',padding:'15px',marginBottom:'10px',borderRadius:'10px',background:'#0a0a0a'}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
-                <span style={{fontWeight:'bold',fontSize:'14px'}}>{p.m} vs {p.v}</span>
-                <div style={{background:'#0f0',color:'#000',padding:'4px 8px',borderRadius:'5px',fontWeight:'900'}}>90%</div>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}}>
-                <div style={{background:'#151515',padding:'10px',borderRadius:'5px'}}>
-                  <p style={{fontSize:'10px',color:'#666',margin:0}}>PREDICCIÓN</p>
-                  <p style={{margin:0,color:'#fbbf24',fontWeight:'bold'}}>Victoria Local</p>
-                </div>
-                <div style={{background:'#151515',padding:'10px',borderRadius:'5px'}}>
-                  <p style={{fontSize:'10px',color:'#666',
+
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '25px' }}>

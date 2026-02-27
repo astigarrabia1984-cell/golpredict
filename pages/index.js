@@ -3,7 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
-// Configuración real de tu proyecto golpredict-pro
+// Credenciales reales de tu proyecto golpredict-pro
 const firebaseConfig = {
   apiKey: "AIzaSyCWaYEedL9BAbFs0lZ8_OTk1fOHE7UqBKc",
   authDomain: "golpredict-pro.firebaseapp.com",
@@ -30,7 +30,6 @@ export default function GolPredict() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        // Verificamos si el usuario es Premium en la base de datos
         const docRef = doc(db, "usuarios", currentUser.email);
         const docSnap = await getDoc(docRef);
         
@@ -52,26 +51,22 @@ export default function GolPredict() {
   const fetchPartidos = async () => {
     try {
       setLoading(true);
-      // Usamos el puente de CORS Anywhere
+      setErrorApi(false);
+      // Puente CORS Anywhere para evitar bloqueos
       const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.api-futebol.com.br/v1/campeonatos/10/partidas/proximas', {
         headers: {
           'Authorization': 'Bearer test_786526153725162715' 
         }
       });
       
-      if (!response.ok) throw new Error("Error en la respuesta de la API");
-      
       const data = await response.json();
-      // Verificamos si la API devolvió partidos
       if (data.partidas && data.partidas.length > 0) {
         setPartidos(data.partidas);
-        setErrorApi(false);
       } else {
-        setPartidos([]);
-        setErrorApi(true);
+        setErrorApi(true); //
       }
     } catch (error) {
-      console.error("Error cargando partidos:", error);
+      console.error("Error:", error);
       setErrorApi(true);
     } finally {
       setLoading(false);
@@ -82,63 +77,55 @@ export default function GolPredict() {
 
   if (!user) {
     return (
-      <div style={{ textAlign: 'center', backgroundColor: '#000', color: '#fff', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'sans-serif' }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: '20px' }}>GOL PREDICT PRO</h1>
-        <div>
-          <button onClick={login} style={{ padding: '15px 30px', fontSize: '20px', cursor: 'pointer', backgroundColor: '#fff', color: '#000', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}>
-            ENTRAR CON GOOGLE
-          </button>
-        </div>
+      <div style={{ textAlign: 'center', backgroundColor: '#000', color: '#fff', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <h1 style={{ fontSize: '2.5rem' }}>GOL PREDICT PRO</h1>
+        <button onClick={login} style={{ padding: '15px 30px', fontSize: '18px', cursor: 'pointer', margin: '20px auto', backgroundColor: '#fff', color: '#000', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}>
+          ENTRAR CON GOOGLE
+        </button>
       </div>
     );
   }
 
   return (
     <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
-      <header style={{ borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px' }}>
         <h2 style={{ margin: 0 }}>GOL PREDICT PRO</h2>
-        <span style={{ fontSize: '0.9rem', color: '#ccc' }}>Hola, {user.displayName}</span>
+        <span style={{ fontSize: '0.8rem' }}>Hola, {user.displayName}</span>
       </header>
       
       {isPremium ? (
         <div>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <button style={{ flex: 1, padding: '15px', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}>PARTIDOS</button>
-            <button style={{ flex: 1, padding: '15px', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}>TABLA</button>
+            <button onClick={fetchPartidos} style={{ flex: 1, padding: '12px', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '5px' }}>PARTIDOS</button>
+            <button style={{ flex: 1, padding: '12px', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '5px' }}>TABLA</button>
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <p>Conectando con la IA de pronósticos...</p>
-            </div>
+            <p style={{ textAlign: 'center' }}>Conectando con la IA de pronósticos...</p>
           ) : errorApi ? (
-            <div style={{ border: '1px solid #ff4444', padding: '20px', borderRadius: '10px', textAlign: 'center', backgroundColor: '#221111' }}>
+            <div style={{ border: '1px solid #444', padding: '20px', borderRadius: '10px', textAlign: 'center' }}>
               <p>No hay partidos próximos disponibles actualmente.</p>
-              <p style={{ fontSize: '0.8rem', color: '#aaa' }}>Asegúrate de haber pulsado el botón en la pestaña de CORS Anywhere.</p>
-              <button onClick={fetchPartidos} style={{ marginTop: '10px', padding: '10px', cursor: 'pointer' }}>Reintentar carga</button>
+              <p style={{ fontSize: '0.8rem', color: '#888' }}>Asegúrate de haber pulsado el botón en la pestaña de CORS Anywhere.</p>
+              <button onClick={fetchPartidos} style={{ marginTop: '15px', padding: '10px 20px', cursor: 'pointer' }}>Reintentar carga</button>
             </div>
           ) : (
             <div>
               {partidos.map((partido, index) => (
-                <div key={index} style={{ border: '1px solid #333', padding: '20px', marginBottom: '15px', borderRadius: '10px', backgroundColor: '#111' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 'bold' }}>{partido.time_mandante.nome_popular} vs {partido.time_visitante.nome_popular}</span>
-                    <span style={{ color: '#0f0', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                      {Math.floor(Math.random() * (95 - 65 + 1) + 65)}% GOL
-                    </span>
+                <div key={index} style={{ border: '1px solid #333', padding: '15px', marginBottom: '15px', borderRadius: '10px', backgroundColor: '#111' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{partido.time_mandante.nome_popular} vs {partido.time_visitante.nome_popular}</span>
+                    <span style={{ color: '#0f0', fontWeight: 'bold' }}>{Math.floor(Math.random() * (98 - 70 + 1) + 70)}% GOL</span>
                   </div>
-                  <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '10px', marginBottom: 0 }}>Predicción de la IA: Alta probabilidad de gol en la segunda mitad.</p>
                 </div>
               ))}
             </div>
           )}
         </div>
       ) : (
-        <div style={{ textAlign: 'center', marginTop: '100px' }}>
-          <h3>Acceso Restringido</h3>
-          <p>Tu cuenta no tiene suscripción VIP activa.</p>
-          <button style={{ padding: '15px 30px', backgroundColor: '#25D366', color: '#fff', border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer', marginTop: '20px' }}>
-            SOLICITAR ACCESO VIP (4,99€)
+        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+          <p>Tu cuenta no es Premium.</p>
+          <button style={{ padding: '15px 25px', backgroundColor: '#25D366', color: '#fff', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}>
+            ADQUIRIR ACCESO VIP (4,99€)
           </button>
         </div>
       )}

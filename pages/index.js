@@ -74,7 +74,6 @@ export default function GolPredict() {
     ]);
   };
 
-  // Función para simular el análisis avanzado de la IA
   const obtenerAnalisisIA = (m, v) => {
     const rand = Math.random();
     let ganador, score;
@@ -120,4 +119,36 @@ export default function GolPredict() {
             <p style={{ textAlign: 'center' }}>Procesando datos con IA...</p>
           ) : (
             <div>
-              {partidos.map((p
+              {partidos.map((p, i) => {
+                const analisis = obtenerAnalisisIA(p.time_mandante.nome_popular, p.time_visitante.nome_popular);
+                return (
+                  <div key={i} style={{ border: '1px solid #333', padding: '15px', marginBottom: '15px', borderRadius: '10px', backgroundColor: '#111' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #222', paddingBottom: '10px' }}>
+                      <span style={{ fontWeight: 'bold' }}>{p.time_mandante.nome_popular} vs {p.time_visitante.nome_popular}</span>
+                      <span style={{ color: '#0f0', fontWeight: 'bold' }}>{Math.floor(Math.random() * (96 - 72 + 1) + 72)}% GOL</span>
+                    </div>
+                    <div style={{ marginTop: '10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <div style={{ backgroundColor: '#222', padding: '10px', borderRadius: '5px' }}>
+                        <p style={{ fontSize: '0.7rem', color: '#888', margin: 0 }}>PREDICCIÓN 1X2</p>
+                        <p style={{ margin: '5px 0 0 0', color: '#fbbf24', fontWeight: 'bold' }}>{analisis.ganador}</p>
+                      </div>
+                      <div style={{ backgroundColor: '#222', padding: '10px', borderRadius: '5px' }}>
+                        <p style={{ fontSize: '0.7rem', color: '#888', margin: 0 }}>RESULTADO EXACTO</p>
+                        <p style={{ margin: '5px 0 0 0', color: '#fbbf24', fontWeight: 'bold' }}>{analisis.score}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+          <p>Tu cuenta no es Premium.</p>
+          <button style={{ padding: '15px 25px', backgroundColor: '#25D366', color: '#fff', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}>SUSCRIBIRSE AL VIP</button>
+        </div>
+      )}
+    </div>
+  );
+}

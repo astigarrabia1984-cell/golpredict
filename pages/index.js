@@ -31,7 +31,6 @@ export default function GolPredict() {
         setUser(currentUser);
         const docRef = doc(db, "usuarios", currentUser.email);
         const docSnap = await getDoc(docRef);
-        
         if (docSnap.exists() && docSnap.data().esPremium) {
           setIsPremium(true);
           fetchPartidos();
@@ -53,7 +52,6 @@ export default function GolPredict() {
       const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.api-futebol.com.br/v1/campeonatos/10/partidas/proximas', {
         headers: { 'Authorization': 'Bearer test_786526153725162715' }
       });
-      
       const data = await response.json();
       if (data.partidas && data.partidas.length > 0) {
         setPartidos(data.partidas);
@@ -76,15 +74,31 @@ export default function GolPredict() {
     ]);
   };
 
+  // Función para simular el análisis avanzado de la IA
+  const obtenerAnalisisIA = (m, v) => {
+    const rand = Math.random();
+    let ganador, score;
+    if (rand > 0.6) {
+      ganador = `Victoria ${m}`;
+      score = `${Math.floor(Math.random() * 3) + 1}-${Math.floor(Math.random() * 2)}`;
+    } else if (rand > 0.2) {
+      ganador = `Victoria ${v}`;
+      score = `${Math.floor(Math.random() * 2)}-${Math.floor(Math.random() * 3) + 1}`;
+    } else {
+      ganador = "Empate";
+      const g = Math.floor(Math.random() * 3);
+      score = `${g}-${g}`;
+    }
+    return { ganador, score };
+  };
+
   const login = () => signInWithPopup(auth, provider);
 
   if (!user) {
     return (
       <div style={{ textAlign: 'center', backgroundColor: '#000', color: '#fff', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <h1>GOL PREDICT PRO</h1>
-        <button onClick={login} style={{ padding: '15px 30px', fontSize: '18px', cursor: 'pointer', margin: 'auto', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '5px' }}>
-          ENTRAR CON GOOGLE
-        </button>
+        <button onClick={login} style={{ padding: '15px 30px', cursor: 'pointer', margin: 'auto', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', border: 'none', borderRadius: '5px' }}>ENTRAR CON GOOGLE</button>
       </div>
     );
   }
@@ -93,42 +107,17 @@ export default function GolPredict() {
     <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '20px' }}>
         <h2 style={{ margin: 0 }}>GOL PREDICT PRO</h2>
-        <span>Hola, {user.displayName}</span>
+        <span>{user.displayName}</span>
       </header>
       
       {isPremium ? (
         <div>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <button onClick={fetchPartidos} style={{ flex: 1, padding: '12px', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '5px' }}>PARTIDOS</button>
-            <button style={{ flex: 1, padding: '12px', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '5px' }}>TABLA</button>
+            <button onClick={fetchPartidos} style={{ flex: 1, padding: '12px', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '5px' }}>ACTUALIZAR</button>
           </div>
 
           {loading ? (
-            <p style={{ textAlign: 'center' }}>Conectando con la IA de pronósticos...</p>
+            <p style={{ textAlign: 'center' }}>Procesando datos con IA...</p>
           ) : (
             <div>
-              {partidos.map((partido, index) => (
-                <div key={index} style={{ border: '1px solid #333', padding: '15px', marginBottom: '15px', borderRadius: '10px', backgroundColor: '#111' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 'bold' }}>{partido.time_mandante.nome_popular} vs {partido.time_visitante.nome_popular}</span>
-                    <span style={{ color: '#0f0', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                       {Math.floor(Math.random() * (94 - 68 + 1) + 68)}% GOL
-                    </span>
-                  </div>
-                  <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '10px' }}>Análisis IA: Alta probabilidad en el mercado 0.5 HT.</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div style={{ textAlign: 'center', marginTop: '50px' }}>
-          <p>Tu cuenta no es Premium.</p>
-          <button style={{ padding: '15px 25px', backgroundColor: '#25D366', color: '#fff', border: 'none', borderRadius: '5px', fontWeight: 'bold' }}>
-            SUSCRIBIRSE AL VIP (4,99€)
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+              {partidos.map((p

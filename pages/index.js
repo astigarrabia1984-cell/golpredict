@@ -22,7 +22,7 @@ export default function GolPredict() {
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const miWhatsapp = "34600000000"; // Cambia por tu número real
+  const miWhatsapp = "618923117"; // Cambia por tu número real
 
   // DATOS DE LA JORNADA 27 ANALIZADOS POR IA (Inyectados directamente)
   const partidosJornada = [

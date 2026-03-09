@@ -14,7 +14,7 @@ if (!getApps().length) initializeApp(firebaseConfig);
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
 
-export default function AlphaOmegaUltimateTerminal() {
+export default function AlphaOmegaQuantumFinal() {
   const [user, setUser] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
   const [liga, setLiga] = useState('ESPAÑA');
@@ -88,7 +88,10 @@ export default function AlphaOmegaUltimateTerminal() {
         const vips = ['astigarrabia1984@gmail.com', 'vieirajuandavid9@gmail.com'];
         setIsPremium(vips.includes(u.email.toLowerCase()));
         runQuantumEngine();
-      } else { setUser(null); setIsPremium(false); }
+      } else { 
+        setUser(null); 
+        setIsPremium(false); 
+      }
     });
     return () => unsub();
   }, [runQuantumEngine]);
@@ -199,7 +202,8 @@ export default function AlphaOmegaUltimateTerminal() {
       </div>
     </div>
   );
-}
+    }
+          
 
                                                                  }
                 

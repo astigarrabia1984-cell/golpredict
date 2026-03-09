@@ -14,11 +14,11 @@ if (!getApps().length) initializeApp(firebaseConfig);
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
 
-export default function AlphaOmegaQuantumFinal() {
+export default function AlphaOmegaApp() {
   const [user, setUser] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
   const [liga, setLiga] = useState('ESPAÑA');
-  const [ticket, setTicket] = useState([]); 
+  const [ticket, setTicket] = useState([]);
   const [activeTab, setActiveTab] = useState('mercado');
   const [analysedDb, setAnalysedDb] = useState({});
   const [isAnalysing, setIsAnalysing] = useState(true);
@@ -66,14 +66,15 @@ export default function AlphaOmegaQuantumFinal() {
           const rV = Math.floor(Math.random() * (parseFloat(xGV) + 1.5));
           if(rL > rV) wL++; else if(rL === rV) dr++; else wV++;
         }
-        const pL = (wL/100); const pV = (wV/100);
+        const pL = (wL/100);
+        const pV = (wV/100);
         const realProb = Math.max(pL, pV);
         const bookieProb = (1 / p.odd) * 100;
-        const hasValue = realProb > bookieProb + 5;
+        const hasValue = realProb > (bookieProb + 5);
         let suggestion = "Hándicap 0.0";
         if(pL > 65) suggestion = "Gana Local";
         else if(pV > 65) suggestion = "Gana Visitante";
-        else if(parseFloat(xGL) + parseFloat(xGV) > 2.7) suggestion = "Over 2.5";
+        else if((parseFloat(xGL) + parseFloat(xGV)) > 2.7) suggestion = "Over 2.5";
         return { ...p, xGL, xGV, pL: pL.toFixed(1), pE: (dr/100).toFixed(1), pV: pV.toFixed(1), ml: suggestion, hasValue };
       });
     });
@@ -88,9 +89,9 @@ export default function AlphaOmegaQuantumFinal() {
         const vips = ['astigarrabia1984@gmail.com', 'vieirajuandavid9@gmail.com'];
         setIsPremium(vips.includes(u.email.toLowerCase()));
         runQuantumEngine();
-      } else { 
-        setUser(null); 
-        setIsPremium(false); 
+      } else {
+        setUser(null);
+        setIsPremium(false);
       }
     });
     return () => unsub();
@@ -105,13 +106,11 @@ export default function AlphaOmegaQuantumFinal() {
     setTicket(prev => prev.find(x => x.id === p.id) ? prev.filter(x => x.id !== p.id) : [...prev, p]);
   };
 
-  const clearTicket = () => setTicket([]);
-
   if (!user || !isPremium) {
     return (
       <div style={{background:'#000', height:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'20px'}}>
         <h1 style={{color:'#fbbf24', fontWeight:'900', fontSize:'2.2rem'}}>ALPHA OMEGA</h1>
-        <button onClick={() => signInWithPopup(auth, provider)} style={{background:'#fbbf24', padding:'20px', borderRadius:'15px', border:'none', fontWeight:'900', width:'100%', cursor:'pointer'}}>LOGUEAR VIP</button>
+        <button onClick={() => signInWithPopup(auth, provider)} style={{background:'#fbbf24', padding:'20px', borderRadius:'15px', border:'none', fontWeight:'900', width:'100%', cursor:'pointer'}}>ACCESO VIP</button>
       </div>
     );
   }
@@ -120,8 +119,8 @@ export default function AlphaOmegaQuantumFinal() {
     <div style={{background:'#000', color:'#fff', minHeight:'100vh', fontFamily:'sans-serif', maxWidth:'480px', margin:'0 auto', paddingBottom:'120px'}}>
       
       <div style={{padding:'15px', background:'#0a0a0a', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid #1a1a1a'}}>
-        <span style={{color:'#fbbf24', fontWeight:'900', fontSize:'0.75rem'}}>QUANTUM TERMINAL V5</span>
-        <button onClick={() => signOut(auth)} style={{background:'#222', color:'#fff', border:'none', padding:'8px 15px', borderRadius:'8px', fontSize:'0.6rem', fontWeight:'900', cursor:'pointer'}}>CERRAR SESIÓN</button>
+        <span style={{color:'#fbbf24', fontWeight:'900', fontSize:'0.75rem'}}>QUANTUM ENGINE V5</span>
+        <button onClick={() => signOut(auth)} style={{background:'#222', color:'#fff', border:'none', padding:'8px 15px', borderRadius:'8px', fontSize:'0.6rem', fontWeight:'900', cursor:'pointer'}}>LOGOUT</button>
       </div>
 
       <nav style={{display:'flex', background:'#050505', position:'sticky', top:0, zIndex:100}}>
@@ -140,19 +139,15 @@ export default function AlphaOmegaQuantumFinal() {
                 <button key={l} onClick={() => setLiga(l)} style={{flex:1, padding:'12px', borderRadius:'12px', background: liga === l ? '#fbbf24' : '#111', color: liga === l ? '#000' : '#fff', border:'none', fontWeight:'900', fontSize:'0.55rem'}}>{l}</button>
               ))}
             </div>
-
             {analysedDb[liga].map(p => (
-              <div key={p.id} style={{background:'#080808', border: p.hasValue ? '1px solid #fbbf24' : '1px solid #1a1a1a', padding:'20px', borderRadius:'30px', marginBottom:'15px', position:'relative'}}>
+              <div key={p.id} style={{background:'#080808', border: p.hasValue ? '1px solid #fbbf24' : '1px solid #1a1a1a', padding:'20px', borderRadius:'30px', marginBottom:'15px'}}>
                 <div style={{display:'flex', gap:'5px', marginBottom:'12px'}}>
-                  <span style={{background:'#111', color:'#fbbf24', flex:1, textAlign:'center', padding:'8px', borderRadius:'10px', fontSize:'0.55rem', fontWeight:'900'}}>POISSON: {Math.round(p.xGL)}-{Math.round(p.xGV)}</span>
-                  <span style={{background:'#111', color:'#fff', flex:1, textAlign:'center', padding:'8px', borderRadius:'10px', fontSize:'0.55rem', fontWeight:'900'}}>xG: {p.xGL} vs {p.xGV}</span>
-                </div>
-                <div style={{display:'flex', justifyContent:'space-between', background:'#111', padding:'10px', borderRadius:'10px', marginBottom:'12px', fontSize:'0.6rem', fontWeight:'900'}}>
-                  <span style={{color:'#fbbf24'}}>L: {p.pL}%</span><span style={{color:'#555'}}>E: {p.pE}%</span><span style={{color:'#fff'}}>V: {p.pV}%</span>
+                  <span style={{background:'#111', color:'#fbbf24', flex:1, textAlign:'center', padding:'8px', borderRadius:'10px', fontSize:'0.55rem', fontWeight:'900'}}>P: {Math.round(p.xGL)}-{Math.round(p.xGV)}</span>
+                  <span style={{background:'#111', color:'#fff', flex:1, textAlign:'center', padding:'8px', borderRadius:'10px', fontSize:'0.55rem', fontWeight:'900'}}>xG: {p.xGL} / {p.xGV}</span>
                 </div>
                 <div style={{textAlign:'center', fontWeight:'900', fontSize:'1rem', marginBottom:'12px'}}>{p.local} v {p.visitante}</div>
-                <div style={{background:'rgba(251,191,36,0.05)', color:'#fbbf24', padding:'10px', borderRadius:'10px', fontSize:'0.6rem', fontWeight:'900', textAlign:'center', marginBottom:'15px', border:'1px dashed #333'}}>
-                  SUGERENCIA IA: {p.ml} {p.hasValue && "⭐"}
+                <div style={{background: p.hasValue ? 'rgba(251,191,36,0.1)' : '#111', color: p.hasValue ? '#fbbf24' : '#666', padding:'10px', borderRadius:'10px', fontSize:'0.6rem', fontWeight:'900', textAlign:'center', marginBottom:'15px', border: p.hasValue ? '1px dashed #fbbf24' : 'none'}}>
+                  IA: {p.ml} {p.hasValue ? "⭐ (VALOR)" : ""}
                 </div>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                   <span style={{fontSize:'1.5rem', fontWeight:'900', color:'#fbbf24'}}>@{p.odd.toFixed(2)}</span>
@@ -168,32 +163,30 @@ export default function AlphaOmegaQuantumFinal() {
         {activeTab === 'ia' && (
           <div style={{background:'#fbbf24', color:'#000', padding:'40px 20px', borderRadius:'40px', textAlign:'center'}}>
             <h2 style={{fontWeight:'900', fontSize:'1.5rem', marginBottom:'10px'}}>IA ELITE COMBO</h2>
-            <p style={{fontSize:'0.6rem', fontWeight:'900', marginBottom:'30px'}}>SELECCIÓN AUTOMÁTICA DE ALTA PROBABILIDAD</p>
             {iaCombo.map(p => (
-              <div key={p.id} style={{display:'flex', justifyContent:'space-between', marginBottom:'10px', fontWeight:'900', borderBottom:'1px solid rgba(0,0,0,0.1)', paddingBottom:'5px'}}>
+              <div key={p.id} style={{display:'flex', justifyContent:'space-between', marginBottom:'10px', fontWeight:'900', fontSize:'0.8rem'}}>
                 <span>{p.local} ({p.ml})</span> <span>@{p.odd.toFixed(2)}</span>
               </div>
             ))}
             <div style={{marginTop:'30px'}}>
               <div style={{fontSize:'4rem', fontWeight:'900'}}>@{iaCombo.reduce((acc, p) => acc * p.odd, 1).toFixed(2)}</div>
-              <p style={{fontWeight:'900', fontSize:'0.7rem'}}>PROBABILIDAD ESTIMADA: 94.2%</p>
             </div>
           </div>
         )}
 
         {activeTab === 'ticket' && (
           <div style={{background:'#111', padding:'30px', borderRadius:'40px', border:'1px solid #333'}}>
-            <h2 style={{color:'#fbbf24', fontWeight:'900', textAlign:'center', marginBottom:'25px'}}>MI TICKET PERSONAL</h2>
-            {ticket.length === 0 ? <p style={{textAlign:'center', color:'#555'}}>No hay partidos seleccionados</p> : 
+            <h2 style={{color:'#fbbf24', fontWeight:'900', textAlign:'center', marginBottom:'25px'}}>MI TICKET</h2>
+            {ticket.length === 0 ? <p style={{textAlign:'center', color:'#555'}}>Vacío</p> : 
               <>
                 {ticket.map(p => (
-                  <div key={p.id} style={{display:'flex', justifyContent:'space-between', marginBottom:'15px', fontWeight:'900', fontSize:'0.9rem'}}>
-                    <span>{p.local} v {p.visitante}</span> <span>@{p.odd.toFixed(2)}</span>
+                  <div key={p.id} style={{display:'flex', justifyContent:'space-between', marginBottom:'15px', fontWeight:'900'}}>
+                    <span>{p.local}</span> <span>@{p.odd.toFixed(2)}</span>
                   </div>
                 ))}
-                <div style={{marginTop:'30px', borderTop:'2px solid #222', paddingTop:'20px', textAlign:'center'}}>
-                  <div style={{color:'#fbbf24', fontSize:'3rem', fontWeight:'900'}}>@{ticket.reduce((acc, p) => acc * p.odd, 1).toFixed(2)}</div>
-                  <button onClick={clearTicket} style={{marginTop:'20px', background:'#ff4444', color:'#fff', border:'none', padding:'12px 20px', borderRadius:'12px', fontWeight:'900', fontSize:'0.7rem', cursor:'pointer', width:'100%'}}>LIMPIAR TICKET</button>
+                <div style={{marginTop:'20px', borderTop:'2px solid #222', paddingTop:'20px', textAlign:'center'}}>
+                  <div style={{color:'#fbbf24', fontSize:'2.5rem', fontWeight:'900', marginBottom:'20px'}}>@{ticket.reduce((acc, p) => acc * p.odd, 1).toFixed(2)}</div>
+                  <button onClick={() => setTicket([])} style={{background:'#ff4444', color:'#fff', border:'none', padding:'12px', borderRadius:'12px', fontWeight:'900', width:'100%'}}>LIMPIAR TICKET</button>
                 </div>
               </>
             }
@@ -202,14 +195,15 @@ export default function AlphaOmegaQuantumFinal() {
       </div>
     </div>
   );
-    }
+        }
+                                       
           
 
-                                                                 }
+                                                                 
                 
                                                  
                                   
-                                                                    }
+                                                                    
                       
                    
                                   

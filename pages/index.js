@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+       import React, { useState, useEffect } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
@@ -185,5 +185,7 @@ export default function GolPredictionProApp() {
   );
 }
                   
+            
+                                           
             
                                 

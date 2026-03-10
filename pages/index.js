@@ -1,3 +1,5 @@
+
+  
 import React, { useState, useEffect } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, signOut } from 'firebase/auth';
@@ -162,7 +164,7 @@ export default function GolpredictPro() {
       </div>
     </div>
   );
-  }
+}
 
             
                                                                                       

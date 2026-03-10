@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 
@@ -14,42 +14,39 @@ if (!getApps().length) initializeApp(firebaseConfig);
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
 
-export default function AlphaOmegaQuantum() {
+export default function GolpredictPro() {
   const [user, setUser] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
   const [liga, setLiga] = useState('ESPAÑA');
   const [ticket, setTicket] = useState([]);
   const [activeTab, setActiveTab] = useState('mercado');
   const [analysedDb, setAnalysedDb] = useState({});
+  const [stats, setStats] = useState({ aciertos: 0, perdidos: 0 });
   const [isAnalysing, setIsAnalysing] = useState(true);
 
   const baseData = {
     'ESPAÑA': [
-      { id: 101, local: 'Alavés', visitante: 'Villarreal', attL: 1.1, defL: 1.2, attV: 1.6, defV: 1.3, odd: 2.45 },
-      { id: 102, local: 'Girona', visitante: 'Athletic Club', attL: 1.9, defL: 1.5, attV: 1.7, defV: 1.1, odd: 2.10 },
-      { id: 103, local: 'Atlético de Madrid', visitante: 'Getafe', attL: 2.2, defL: 0.7, attV: 0.8, defV: 1.4, odd: 1.45 },
-      { id: 104, local: 'Real Oviedo', visitante: 'Valencia', attL: 1.0, defL: 1.0, attV: 1.4, defV: 1.6, odd: 2.25 },
-      { id: 105, local: 'Real Madrid', visitante: 'Elche', attL: 3.4, defL: 0.6, attV: 0.6, defV: 2.8, odd: 1.22 },
-      { id: 106, local: 'Mallorca', visitante: 'Espanyol', attL: 1.3, defL: 1.0, attV: 1.1, defV: 1.5, odd: 2.05 },
-      { id: 107, local: 'Barcelona', visitante: 'Sevilla', attL: 2.8, defL: 0.9, attV: 1.4, defV: 2.1, odd: 1.65 },
-      { id: 108, local: 'Real Sociedad', visitante: 'Osasuna', attL: 1.8, defL: 0.8, attV: 1.2, defV: 1.4, odd: 1.80 },
-      { id: 109, local: 'Betis', visitante: 'Celta de Vigo', attL: 1.9, defL: 1.2, attV: 1.5, defV: 1.7, odd: 1.95 },
-      { id: 110, local: 'Rayo Vallecano', visitante: 'Leganés', attL: 1.2, defL: 1.1, attV: 1.0, defV: 1.3, odd: 2.15 }
+      { id: 101, fecha: '2026-03-09T21:00:00', local: 'Alavés', visitante: 'Villarreal', attL: 1.2, defL: 1.1, attV: 1.5, defV: 1.3, oddL: 2.65, oddE: 3.30, oddV: 2.70, scoreL: 1, scoreV: 2 },
+      { id: 102, fecha: '2026-03-10T14:00:00', local: 'Girona', visitante: 'Athletic Club', attL: 1.8, defL: 1.4, attV: 1.6, defV: 1.2, oddL: 2.30, oddE: 3.40, oddV: 3.10, scoreL: 2, scoreV: 2 },
+      { id: 103, fecha: '2026-03-14T16:15:00', local: 'Atlético de Madrid', visitante: 'Getafe', attL: 1.9, defL: 0.8, attV: 0.9, defV: 1.2, oddL: 1.50, oddE: 4.20, oddV: 7.00 },
+      { id: 105, fecha: '2026-03-14T21:00:00', local: 'Real Madrid', visitante: 'Elche', attL: 2.9, defL: 0.6, attV: 0.7, defV: 2.1, oddL: 1.18, oddE: 7.50, oddV: 15.0 }
     ],
     'PREMIER': [
-      { id: 201, local: 'Arsenal', visitante: 'Everton', attL: 2.7, defL: 0.7, attV: 1.0, defV: 2.1, odd: 1.35 },
-      { id: 202, local: 'Chelsea', visitante: 'Newcastle', attL: 1.9, defL: 1.4, attV: 1.8, defV: 1.5, odd: 2.15 },
-      { id: 203, local: 'West Ham', visitante: 'Man. City', attL: 1.1, defL: 1.9, attV: 3.1, defV: 0.9, odd: 1.45 },
-      { id: 204, local: 'Liverpool', visitante: 'Tottenham', attL: 2.5, defL: 1.3, attV: 1.9, defV: 1.7, odd: 1.75 }
+      { id: 203, fecha: '2026-03-14T18:30:00', local: 'Arsenal', visitante: 'Everton', attL: 2.7, defL: 0.7, attV: 1.0, defV: 1.9, oddL: 1.25, oddE: 6.50, oddV: 12.0 },
+      { id: 205, fecha: '2026-03-14T21:00:00', local: 'West Ham', visitante: 'Man. City', attL: 1.3, defL: 2.2, attV: 2.8, defV: 1.0, oddL: 9.00, oddE: 5.75, oddV: 1.30 }
     ],
     'CHAMPIONS': [
-      { id: 301, local: 'Galatasaray', visitante: 'Liverpool', attL: 1.4, defL: 2.1, attV: 2.6, defV: 1.0, odd: 1.62 },
-      { id: 302, local: 'Real Madrid', visitante: 'Man. City', attL: 2.2, defL: 1.5, attV: 2.4, defV: 1.2, odd: 2.40 }
+      { id: 301, fecha: '2026-03-10T18:45:00', local: 'Galatasaray', visitante: 'Liverpool', attL: 1.5, defL: 1.8, attV: 2.2, defV: 1.2, oddL: 4.20, oddE: 4.00, oddV: 1.75, scoreL: 0, scoreV: 3 },
+      { id: 308, fecha: '2026-03-11T21:00:00', local: 'Real Madrid', visitante: 'Man. City', attL: 2.1, defL: 1.7, attV: 2.3, defV: 1.4, oddL: 2.80, oddE: 3.75, oddV: 2.35 }
     ]
   };
 
   const runQuantumEngine = useCallback(() => {
     setIsAnalysing(true);
+    let wins = 0;
+    let losses = 0;
+    const now = new Date();
+
     let newDb = {};
     Object.keys(baseData).forEach(lKey => {
       newDb[lKey] = baseData[lKey].map(p => {
@@ -57,20 +54,33 @@ export default function AlphaOmegaQuantum() {
         const xGV = (p.attV * (p.defL / 1.5)).toFixed(2);
         let wL = 0, dr = 0, wV = 0;
         for(let i=0; i<10000; i++) {
-          const rL = Math.floor(Math.random() * (parseFloat(xGL) + 1.5));
-          const rV = Math.floor(Math.random() * (parseFloat(xGV) + 1.5));
+          const rL = Math.floor(Math.random() * (parseFloat(xGL) + 1.2));
+          const rV = Math.floor(Math.random() * (parseFloat(xGV) + 1.2));
           if(rL > rV) wL++; else if(rL === rV) dr++; else wV++;
         }
+        
         const pL = (wL/100).toFixed(1);
         const pE = (dr/100).toFixed(1);
         const pV = (wV/100).toFixed(1);
-        let winner = "Empate";
-        if(parseFloat(pL) > parseFloat(pV) && parseFloat(pL) > parseFloat(pE)) winner = p.local;
-        if(parseFloat(pV) > parseFloat(pL) && parseFloat(pV) > parseFloat(pE)) winner = p.visitante;
-        return { ...p, xGL, xGV, pL, pE, pV, winner };
+        
+        let winnerPick = "Empate";
+        if(parseFloat(pL) > parseFloat(pV) && parseFloat(pL) > parseFloat(pE)) winnerPick = p.local;
+        if(parseFloat(pV) > parseFloat(pL) && parseFloat(pV) > parseFloat(pE)) winnerPick = p.visitante;
+
+        const gameDate = new Date(p.fecha);
+        const isFinished = now > gameDate.setHours(gameDate.getHours() + 2);
+
+        // Lógica de contador
+        if (isFinished && p.scoreL !== undefined) {
+            const actualWinner = p.scoreL > p.scoreV ? p.local : (p.scoreL === p.scoreV ? "Empate" : p.visitante);
+            if (winnerPick === actualWinner) wins++; else losses++;
+        }
+
+        return { ...p, pL, pE, pV, winnerPick, isFinished };
       });
     });
     setAnalysedDb(newDb);
+    setStats({ aciertos: wins, perdidos: losses });
     setIsAnalysing(false);
   }, []);
 
@@ -81,134 +91,90 @@ export default function AlphaOmegaQuantum() {
         const vips = ['astigarrabia1984@gmail.com', 'vieirajuandavid9@gmail.com'];
         setIsPremium(vips.includes(u.email.toLowerCase()));
         runQuantumEngine();
-      } else {
-        setUser(null);
-        setIsPremium(false);
-      }
+      } else { setUser(null); setIsPremium(false); }
     });
     return () => unsub();
   }, [runQuantumEngine]);
 
-  const iaCombo = useMemo(() => {
-    const all = Object.values(analysedDb).flat();
-    return all.filter(p => parseFloat(p.pL) > 70 || parseFloat(p.pV) > 70).slice(0, 3);
-  }, [analysedDb]);
-
-  const toggleTicket = (p) => {
-    setTicket(prev => prev.find(x => x.id === p.id) ? prev.filter(x => x.id !== p.id) : [...prev, p]);
-  };
-
   if (!user || !isPremium) {
     return (
       <div style={{background:'#000', height:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}>
-        <h1 style={{color:'#fbbf24', fontWeight:'900'}}>ALPHA OMEGA</h1>
-        <button onClick={() => signInWithPopup(auth, provider)} style={{background:'#fbbf24', padding:'15px 30px', borderRadius:'10px', border:'none', fontWeight:'900', cursor:'pointer'}}>LOGIN VIP</button>
+        <h1 style={{color:'#fbbf24', fontSize:'2.5rem', fontWeight:'900'}}>GOLPREDICT PRO</h1>
+        <button onClick={() => signInWithPopup(auth, provider)} style={{background:'#fbbf24', padding:'15px 40px', border:'none', borderRadius:'10px', fontWeight:'900', cursor:'pointer'}}>ACCESO VIP</button>
       </div>
     );
   }
 
   return (
-    <div style={{background:'#000', color:'#fff', minHeight:'100vh', fontFamily:'sans-serif', maxWidth:'480px', margin:'0 auto', paddingBottom:'100px'}}>
+    <div style={{background:'#000', color:'#fff', minHeight:'100vh', fontFamily:'monospace', maxWidth:'480px', margin:'0 auto', paddingBottom:'80px'}}>
       
-      <div style={{padding:'15px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid #222', background:'#050505'}}>
-        <span style={{color:'#fbbf24', fontWeight:'900', fontSize:'0.8rem'}}>QUANTUM ENGINE V5.1</span>
-        <button onClick={() => signOut(auth)} style={{background:'#ff4444', color:'#fff', border:'none', padding:'6px 15px', borderRadius:'8px', fontSize:'0.7rem', fontWeight:'900'}}>SALIR</button>
+      {/* HEADER PRINCIPAL */}
+      <div style={{padding:'20px', textAlign:'center', borderBottom:'1px solid #222'}}>
+        <h1 style={{color:'#fbbf24', margin:0, fontSize:'1.5rem', letterSpacing:'2px'}}>GOLPREDICT PRO</h1>
+        <div style={{display:'flex', justifyContent:'center', gap:'20px', marginTop:'10px'}}>
+            <div style={{color:'#4ade80', fontSize:'0.7rem'}}>ACIERTOS: {stats.aciertos}</div>
+            <div style={{color:'#ff4444', fontSize:'0.7rem'}}>PERDIDOS: {stats.perdidos}</div>
+        </div>
       </div>
 
       <nav style={{display:'flex', background:'#0a0a0a', position:'sticky', top:0, zIndex:10}}>
         {['mercado', 'ia', 'ticket'].map(t => (
-          <button key={t} onClick={() => setActiveTab(t)} style={{flex:1, padding:'15px', background:'none', border:'none', color: activeTab === t ? '#fbbf24' : '#666', fontWeight:'900', fontSize:'0.7rem', borderBottom: activeTab === t ? '2px solid #fbbf24' : 'none'}}>{t.toUpperCase()}</button>
+          <button key={t} onClick={() => setActiveTab(t)} style={{flex:1, padding:'15px', background:'none', border:'none', color: activeTab === t ? '#fbbf24' : '#444', fontWeight:'900', fontSize:'0.7rem', borderBottom: activeTab === t ? '2px solid #fbbf24' : 'none'}}>{t.toUpperCase()}</button>
         ))}
       </nav>
 
       <div style={{padding:'15px'}}>
-        {activeTab === 'mercado' && !isAnalysing && analysedDb[liga] && (
+        {activeTab === 'mercado' && !isAnalysing && (
           <>
             <div style={{display:'flex', gap:'5px', marginBottom:'20px'}}>
               {Object.keys(baseData).map(l => (
-                <button key={l} onClick={() => setLiga(l)} style={{flex:1, padding:'12px', borderRadius:'10px', background: liga === l ? '#fbbf24' : '#111', color: liga === l ? '#000' : '#fff', border:'none', fontSize:'0.65rem', fontWeight:'900'}}>{l}</button>
+                <button key={l} onClick={() => setLiga(l)} style={{flex:1, padding:'10px', borderRadius:'5px', background: liga === l ? '#fbbf24' : '#111', color: liga === l ? '#000' : '#555', border:'none', fontSize:'0.6rem', fontWeight:'900'}}>{l}</button>
               ))}
             </div>
 
-            {analysedDb[liga].map(p => (
-              <div key={p.id} style={{background:'#0a0a0a', padding:'20px', borderRadius:'30px', marginBottom:'15px', border:'1px solid #222', boxShadow:'0 4px 15px rgba(0,0,0,0.5)'}}>
-                <div style={{textAlign:'center', color:'#fbbf24', fontSize:'0.65rem', fontWeight:'900', marginBottom:'15px', background:'rgba(251,191,36,0.1)', padding:'8px', borderRadius:'10px'}}>
-                  GANADOR PROYECTADO: {p.winner.toUpperCase()}
-                </div>
+            {analysedDb[liga]?.map(p => (
+              <div key={p.id} style={{background:'#080808', padding:'20px', borderRadius:'20px', marginBottom:'15px', border: p.isFinished ? '1px solid #333' : '1px solid #1a1a1a', opacity: p.isFinished ? 0.7 : 1}}>
                 
-                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'20px', textAlign:'center'}}>
-                   <div style={{flex:1}}>
-                      <div style={{fontSize:'0.6rem', color:'#4ade80', fontWeight:'900', marginBottom:'5px'}}>LOCAL (L)</div>
-                      <div style={{fontWeight:'900', color:'#fff', fontSize:'1.1rem'}}>{p.pL}%</div>
-                   </div>
-                   <div style={{flex:1, borderLeft:'1px solid #222', borderRight:'1px solid #222'}}>
-                      <div style={{fontSize:'0.6rem', color:'#fbbf24', fontWeight:'900', marginBottom:'5px'}}>EMPATE (X)</div>
-                      <div style={{fontWeight:'900', color:'#fff', fontSize:'1.1rem'}}>{p.pE}%</div>
-                   </div>
-                   <div style={{flex:1}}>
-                      <div style={{fontSize:'0.6rem', color:'#22d3ee', fontWeight:'900', marginBottom:'5px'}}>VISITA (V)</div>
-                      <div style={{fontWeight:'900', color:'#fff', fontSize:'1.1rem'}}>{p.pV}%</div>
-                   </div>
+                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                    <span style={{fontSize:'0.6rem', color:'#555'}}>{new Date(p.fecha).toLocaleString([], {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</span>
+                    {p.isFinished ? 
+                        <span style={{color:'#ff4444', fontWeight:'900', fontSize:'0.6rem'}}>● FINALIZADO</span> : 
+                        <span style={{color:'#4ade80', fontWeight:'900', fontSize:'0.6rem'}}>● EN ESPERA</span>
+                    }
                 </div>
 
-                <div style={{textAlign:'center', fontWeight:'900', fontSize:'1.1rem', marginBottom:'20px', color:'#eee'}}>{p.local} <span style={{color:'#333'}}>vs</span> {p.visitante}</div>
-                
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                  <span style={{color:'#fbbf24', fontWeight:'900', fontSize:'1.3rem'}}>@{p.odd}</span>
-                  <button 
-                    onClick={() => toggleTicket(p)} 
-                    style={{
-                      background: ticket.find(x => x.id === p.id) ? '#ff4444' : '#fbbf24', 
-                      color: ticket.find(x => x.id === p.id) ? '#fff' : '#000', 
-                      border:'none', padding:'12px 25px', borderRadius:'15px', fontWeight:'900', fontSize:'0.75rem', transition:'all 0.3s'
-                    }}>
-                    {ticket.find(x => x.id === p.id) ? 'QUITAR' : 'AÑADIR'}
-                  </button>
+                {p.isFinished && p.scoreL !== undefined && (
+                    <div style={{textAlign:'center', background:'#111', padding:'10px', borderRadius:'10px', marginBottom:'10px'}}>
+                        <div style={{fontSize:'0.6rem', color:'#555'}}>RESULTADO FINAL</div>
+                        <div style={{fontSize:'1.5rem', fontWeight:'900'}}>{p.scoreL} - {p.scoreV}</div>
+                    </div>
+                )}
+
+                <div style={{display:'flex', gap:'10px', marginBottom:'15px'}}>
+                    {[ {l:'L', v:p.pL, q:p.oddL, c:'#4ade80'}, {l:'X', v:p.pE, q:p.oddE, c:'#fbbf24'}, {l:'V', v:p.pV, q:p.oddV, c:'#22d3ee'} ].map(i => (
+                        <div key={i.l} style={{flex:1, textAlign:'center'}}>
+                            <div style={{fontSize:'0.55rem', color:i.c}}>{i.l} @{i.q}</div>
+                            <div style={{fontWeight:'900', fontSize:'1rem'}}>{i.v}%</div>
+                        </div>
+                    ))}
                 </div>
+
+                <div style={{textAlign:'center', fontWeight:'900', marginBottom:'15px'}}>{p.local} v {p.visitante}</div>
+                
+                {!p.isFinished && (
+                    <button onClick={() => setTicket([...ticket, p])} style={{width:'100%', background:'#fbbf24', border:'none', padding:'10px', borderRadius:'10px', fontWeight:'900', fontSize:'0.7rem'}}>AÑADIR AL TICKET</button>
+                )}
               </div>
             ))}
           </>
         )}
-
-        {activeTab === 'ia' && (
-          <div style={{background:'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color:'#000', padding:'30px', borderRadius:'30px', textAlign:'center', boxShadow:'0 10px 20px rgba(251,191,36,0.3)'}}>
-            <h2 style={{fontWeight:'900', marginBottom:'20px'}}>IA ELITE COMBO</h2>
-            {iaCombo.map(p => (
-              <div key={p.id} style={{display:'flex', justifyContent:'space-between', margin:'12px 0', fontWeight:'900', fontSize:'0.9rem', borderBottom:'1px solid rgba(0,0,0,0.1)', paddingBottom:'8px'}}>
-                <span>{p.local} <small>(Gana)</small></span> <span>@{p.odd}</span>
-              </div>
-            ))}
-            <div style={{marginTop:'25px', fontSize:'2.5rem', fontWeight:'900'}}>
-               @{iaCombo.reduce((acc, p) => acc * p.odd, 1).toFixed(2)}
-            </div>
-            <div style={{fontSize:'0.7rem', fontWeight:'900', marginTop:'5px'}}>PROBABILIDAD IA: 94.8%</div>
-          </div>
-        )}
-
-        {activeTab === 'ticket' && (
-          <div style={{background:'#111', padding:'25px', borderRadius:'30px', border:'1px solid #222'}}>
-             <h2 style={{color:'#fbbf24', textAlign:'center', fontWeight:'900', marginBottom:'20px'}}>MI TICKET</h2>
-             {ticket.length === 0 ? (
-               <p style={{textAlign:'center', color:'#444'}}>No hay selecciones</p>
-             ) : (
-               <>
-                 {ticket.map((p, i) => (
-                   <div key={i} style={{display:'flex', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #222', fontWeight:'900'}}>
-                     <span>{p.local}</span> <span>@{p.odd}</span>
-                   </div>
-                 ))}
-                 <div style={{marginTop:'25px', textAlign:'center'}}>
-                    <div style={{fontSize:'2.5rem', fontWeight:'900', color:'#fbbf24'}}>@{ticket.reduce((acc, p) => acc * p.odd, 1).toFixed(2)}</div>
-                    <button onClick={() => setTicket([])} style={{width:'100%', background:'#ff4444', color:'#fff', border:'none', padding:'15px', marginTop:'20px', borderRadius:'15px', fontWeight:'900'}}>LIMPIAR TODO</button>
-                 </div>
-               </>
-             )}
-          </div>
-        )}
       </div>
     </div>
   );
-}
+          }
+       
+
+
 
                                        
           

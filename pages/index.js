@@ -6,7 +6,9 @@ import {
   GoogleAuthProvider, 
   onAuthStateChanged, 
   getRedirectResult,
-  signOut 
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -20,6 +22,8 @@ const firebaseConfig = {
 if (!getApps().length) initializeApp(firebaseConfig);
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
+// Esto asegura que la sesión no se borre al cerrar el navegador
+setPersistence(auth, browserLocalPersistence);
 
 export default function GolpredictPro() {
   const [user, setUser] = useState(null);
@@ -29,7 +33,6 @@ export default function GolpredictPro() {
   const [activeTab, setActiveTab] = useState('mercado');
   const [analysedDb, setAnalysedDb] = useState({});
   const [stats, setStats] = useState({ aciertos: 0, perdidos: 0 });
-  const [isAnalysing, setIsAnalysing] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const baseData = {
@@ -70,7 +73,6 @@ export default function GolpredictPro() {
   };
 
   const runQuantumEngine = useCallback(() => {
-    setIsAnalysing(true);
     let wins = 0; let losses = 0;
     const now = new Date();
     let newDb = {};
@@ -79,14 +81,14 @@ export default function GolpredictPro() {
         const xGL = (p.attL * (p.defV / 1.5)).toFixed(2);
         const xGV = (p.attV * (p.defL / 1.5)).toFixed(2);
         let wL = 0, dr = 0, wV = 0;
-        for(let i=0; i<10000; i++) {
+        for(let i=0; i<5000; i++) {
           const rL = Math.floor(Math.random() * (parseFloat(xGL) + 1.2));
           const rV = Math.floor(Math.random() * (parseFloat(xGV) + 1.2));
           if(rL > rV) wL++; else if(rL === rV) dr++; else wV++;
         }
-        const pL = (wL/100).toFixed(1);
-        const pE = (dr/100).toFixed(1);
-        const pV = (wV/100).toFixed(1);
+        const pL = (wL/50).toFixed(1);
+        const pE = (dr/50).toFixed(1);
+        const pV = (wV/50).toFixed(1);
         let winnerPick = parseFloat(pL) > parseFloat(pV) && parseFloat(pL) > parseFloat(pE) ? p.local : (parseFloat(pV) > parseFloat(pL) && parseFloat(pV) > parseFloat(pE) ? p.visitante : "Empate");
         const isFinished = now > new Date(p.fecha);
         if (isFinished && p.scoreL !== undefined) {
@@ -98,16 +100,28 @@ export default function GolpredictPro() {
     });
     setAnalysedDb(newDb);
     setStats({ aciertos: wins, perdidos: losses });
-    setIsAnalysing(false);
   }, []);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    // Escuchar el resultado del redireccionamiento cuando volvemos de Google
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) {
+        setUser(result.user);
+      }
+    }).catch(e => console.error("Error redirect:", e));
+
+    const unsub = onAuthStateChanged(auth, (u) => {
       if (u) {
+        // CORREO TUYO Y DE JUAN DAVID VERIFICADOS
         const vips = ['astigarrabia1984@gmail.com', 'vieirajuandavid9@gmail.com'];
-        setIsPremium(vips.includes(u.email.toLowerCase()));
-        setUser(u);
-        runQuantumEngine();
+        if(vips.includes(u.email.toLowerCase())) {
+          setIsPremium(true);
+          setUser(u);
+          runQuantumEngine();
+        } else {
+          setIsPremium(false);
+          setUser(u);
+        }
       } else {
         setUser(null);
         setIsPremium(false);
@@ -117,19 +131,22 @@ export default function GolpredictPro() {
     return () => unsub();
   }, [runQuantumEngine]);
 
-  const handleLogout = () => signOut(auth).then(() => window.location.reload());
+  const handleLogin = () => signInWithRedirect(auth, provider);
+  const handleLogout = () => signOut(auth).then(() => { window.location.href = "/"; });
 
-  if (loading) return <div style={{background:'#000', height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#fbbf24', fontFamily:'monospace'}}>GOLPREDICT PRO...</div>;
+  if (loading) return <div style={{background:'#000', height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#fbbf24', fontFamily:'monospace'}}>GOLPREDICT PRO: SINCRONIZANDO...</div>;
 
   if (!user || !isPremium) {
     return (
       <div style={{background:'#000', height:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'30px', textAlign:'center', fontFamily:'monospace'}}>
-        <h1 style={{color:'#fbbf24', fontSize:'2.2rem', fontWeight:'900', marginBottom:'10px'}}>GOLPREDICT PRO</h1>
-        <button onClick={() => signInWithRedirect(auth, provider)} style={{background:'#fbbf24', color:'#000', padding:'20px 40px', border:'none', borderRadius:'15px', fontWeight:'900', cursor:'pointer', marginBottom:'20px'}}>ACCESO VIP</button>
-        {user && !isPremium && (
+        <h1 style={{color:'#fbbf24', fontSize:'2.5rem', fontWeight:'900', marginBottom:'10px'}}>GOLPREDICT PRO</h1>
+        <p style={{color:'#444', fontSize:'0.7rem', marginBottom:'30px'}}>V.2.0 - ACCESO RESTRINGIDO</p>
+        {!user ? (
+           <button onClick={handleLogin} style={{background:'#fbbf24', color:'#000', padding:'20px 40px', border:'none', borderRadius:'15px', fontWeight:'900', cursor:'pointer', fontSize:'1rem'}}>ENTRAR COMO VIP</button>
+        ) : (
           <div>
-            <p style={{color:'#ff4444', fontSize:'0.8rem', fontWeight:'bold'}}>SIN RANGO VIP: {user.email}</p>
-            <button onClick={handleLogout} style={{color:'#666', background:'none', border:'none', textDecoration:'underline', cursor:'pointer'}}>PROBAR OTRO CORREO</button>
+            <p style={{color:'#ff4444', fontWeight:'bold', marginBottom:'20px'}}>ACCESO DENEGADO PARA: {user.email}</p>
+            <button onClick={handleLogout} style={{background:'#333', color:'#fff', padding:'15px 30px', border:'none', borderRadius:'10px', cursor:'pointer'}}>CAMBIAR CUENTA</button>
           </div>
         )}
       </div>
@@ -142,8 +159,8 @@ export default function GolpredictPro() {
       <div style={{padding:'20px', textAlign:'center', borderBottom:'1px solid #222'}}>
         <h1 style={{color:'#fbbf24', margin:0, fontSize:'1.6rem', fontWeight:'900'}}>GOLPREDICT PRO</h1>
         <div style={{display:'flex', justifyContent:'center', gap:'20px', marginTop:'10px'}}>
-            <div style={{color:'#4ade80', fontSize:'0.7rem', fontWeight:'900'}}>ACIERTOS: {stats.aciertos}</div>
-            <div style={{color:'#ff4444', fontSize:'0.7rem', fontWeight:'900'}}>PERDIDOS: {stats.perdidos}</div>
+            <div style={{color:'#4ade80', fontSize:'0.7rem', fontWeight:'900'}}>WINS: {stats.aciertos}</div>
+            <div style={{color:'#ff4444', fontSize:'0.7rem', fontWeight:'900'}}>LOSS: {stats.perdidos}</div>
         </div>
       </div>
 
@@ -164,8 +181,8 @@ export default function GolpredictPro() {
             {analysedDb[liga]?.map(p => (
               <div key={p.id} style={{background:'#080808', padding:'20px', borderRadius:'25px', marginBottom:'15px', border:'1px solid #1a1a1a', opacity: p.isFinished ? 0.6 : 1}}>
                 <div style={{display:'flex', justifyContent:'space-between', marginBottom:'12px'}}>
-                    <span style={{fontSize:'0.6rem', color:'#555'}}>{new Date(p.fecha).toLocaleDateString([], {day:'2-digit', month:'2-digit'})} {new Date(p.fecha).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                    {p.isFinished ? <span style={{color:'#ff4444', fontWeight:'900', fontSize:'0.6rem'}}>● FINALIZADO</span> : <span style={{color:'#4ade80', fontWeight:'900', fontSize:'0.6rem'}}>● EN ESPERA</span>}
+                    <span style={{fontSize:'0.6rem', color:'#555'}}>{new Date(p.fecha).toLocaleDateString()} {new Date(p.fecha).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                    {p.isFinished ? <span style={{color:'#ff4444', fontWeight:'900', fontSize:'0.6rem'}}>● FINALIZADO</span> : <span style={{color:'#4ade80', fontWeight:'900', fontSize:'0.6rem'}}>● PRÓXIMO</span>}
                 </div>
                 {p.isFinished && p.scoreL !== undefined && (
                     <div style={{textAlign:'center', background:'#111', padding:'10px', borderRadius:'15px', marginBottom:'15px'}}>
@@ -180,9 +197,9 @@ export default function GolpredictPro() {
                         </div>
                     ))}
                 </div>
-                <div style={{textAlign:'center', fontWeight:'900'}}>{p.local} v {p.visitante}</div>
+                <div style={{textAlign:'center', fontWeight:'900', fontSize:'1.1rem'}}>{p.local} v {p.visitante}</div>
                 {!p.isFinished && (
-                    <button onClick={() => setTicket([...ticket, p])} style={{width:'100%', background:'#fbbf24', border:'none', padding:'12px', borderRadius:'12px', fontWeight:'900', marginTop:'15px', cursor:'pointer'}}>AÑADIR TICKET</button>
+                    <button onClick={() => setTicket([...ticket, p])} style={{width:'100%', background:'#fbbf24', border:'none', padding:'15px', borderRadius:'12px', fontWeight:'900', marginTop:'20px', cursor:'pointer'}}>AÑADIR AL TICKET</button>
                 )}
               </div>
             ))}
@@ -194,8 +211,9 @@ export default function GolpredictPro() {
               <h2 style={{color:'#fbbf24', fontWeight:'900'}}>IA MASTER PICK</h2>
               {Object.values(analysedDb).flat().filter(p => !p.isFinished).sort((a,b) => Math.max(b.pL, b.pV) - Math.max(a.pL, a.pV)).slice(0,1).map(p => (
                 <div key={p.id} style={{marginTop:'20px'}}>
-                   <div style={{fontSize:'1.2rem', fontWeight:'bold'}}>{p.local} v {p.visitante}</div>
-                   <div style={{fontSize:'3.5rem', color:'#fbbf24', fontWeight:'900'}}>@{p.winnerPick === p.local ? p.oddL : (p.winnerPick === p.visitante ? p.oddV : p.oddE)}</div>
+                   <div style={{fontSize:'1.3rem', fontWeight:'bold'}}>{p.local} v {p.visitante}</div>
+                   <div style={{fontSize:'4rem', color:'#fbbf24', fontWeight:'900'}}>@{p.winnerPick === p.local ? p.oddL : (p.winnerPick === p.visitante ? p.oddV : p.oddE)}</div>
+                   <div style={{color:'#4ade80', fontWeight:'900'}}>CONFIANZA: {Math.max(p.pL, p.pV)}%</div>
                 </div>
               ))}
            </div>
@@ -203,30 +221,28 @@ export default function GolpredictPro() {
 
         {activeTab === 'ticket' && (
            <div style={{background:'#111', padding:'25px', borderRadius:'20px'}}>
-              <h3 style={{color:'#fbbf24', textAlign:'center', marginBottom:'20px'}}>OPERACIÓN COMBINADA</h3>
-              {ticket.map((p, idx) => (
-                <div key={idx} style={{display:'flex', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #222'}}>
-                  <span style={{fontSize:'0.8rem'}}>{p.winnerPick}</span> <span style={{color:'#fbbf24', fontWeight:'900'}}>@{p.winnerPick === p.local ? p.oddL : (p.winnerPick === p.visitante ? p.oddV : p.oddE)}</span>
-                </div>
-              ))}
-              {ticket.length > 0 && (
-                <button onClick={() => setTicket([])} style={{width:'100%', background:'#ff4444', color:'#fff', border:'none', padding:'15px', marginTop:'20px', borderRadius:'12px', fontWeight:'900'}}>LIMPIAR</button>
+              <h3 style={{color:'#fbbf24', textAlign:'center', marginBottom:'20px'}}>MI APUESTA</h3>
+              {ticket.length === 0 ? <p style={{textAlign:'center', color:'#444'}}>VACÍO</p> : (
+                <>
+                  {ticket.map((p, idx) => (
+                    <div key={idx} style={{display:'flex', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #222'}}>
+                      <span>{p.winnerPick}</span> <span style={{color:'#fbbf24', fontWeight:'900'}}>@{p.winnerPick === p.local ? p.oddL : (p.winnerPick === p.visitante ? p.oddV : p.oddE)}</span>
+                    </div>
+                  ))}
+                  <button onClick={() => setTicket([])} style={{width:'100%', background:'#ff4444', color:'#fff', border:'none', padding:'15px', marginTop:'20px', borderRadius:'12px', fontWeight:'900', cursor:'pointer'}}>BORRAR TODO</button>
+                </>
               )}
            </div>
         )}
 
-        <div style={{marginTop:'50px', textAlign:'center', paddingBottom:'20px'}}>
-            <button 
-                onClick={handleLogout}
-                style={{background:'none', border:'1px solid #222', color:'#444', padding:'10px 20px', borderRadius:'10px', fontSize:'0.6rem', fontWeight:'900', cursor:'pointer'}}
-            >
-                CERRAR SESIÓN ({user.email})
-            </button>
+        <div style={{marginTop:'60px', textAlign:'center'}}>
+            <button onClick={handleLogout} style={{background:'none', border:'1px solid #222', color:'#444', padding:'10px 20px', borderRadius:'10px', fontSize:'0.7rem', fontWeight:'900', cursor:'pointer'}}>CERRAR SESIÓN DE {user.email}</button>
         </div>
       </div>
     </div>
   );
-          }
+        }
+    
 
           
     

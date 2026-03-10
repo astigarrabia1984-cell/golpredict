@@ -37,15 +37,10 @@ const FULL_DB = {
     { id: 'l3', d: '14.03. 16:15', h: 'Atlético', a: 'Getafe', oL: 1.55, oE: 4.00, oV: 6.50 },
     { id: 'l4', d: '14.03. 18:30', h: 'Real Oviedo', a: 'Valencia', oL: 3.20, oE: 3.10, oV: 2.40 },
     { id: 'l5', d: '14.03. 21:00', h: 'Real Madrid', a: 'Elche', oL: 1.15, oE: 8.00, oV: 17.0 },
-    { id: 'l6', d: '15.03. 14:00', h: 'Mallorca', a: 'Espanyol', oL: 2.10, oE: 3.10, oV: 3.80 },
     { id: 'l7', d: '15.03. 16:15', h: 'Barcelona', a: 'Sevilla', oL: 1.35, oE: 5.50, oV: 8.50 },
-    { id: 'l8', d: '15.03. 18:30', h: 'Betis', a: 'Celta', oL: 2.00, oE: 3.50, oV: 3.70 },
-    { id: 'l9', d: '15.03. 21:00', h: 'Real Sociedad', a: 'Osasuna', oL: 1.80, oE: 3.40, oV: 5.00 },
-    { id: 'l10', d: '16.03. 21:00', h: 'Rayo', a: 'Levante', oL: 2.20, oE: 3.20, oV: 3.40 },
     { id: 'l14', d: '22.03. 21:00', h: 'Real Madrid', a: 'Atlético', oL: 1.85, oE: 3.75, oV: 4.00 }
   ],
   'epl': [
-    { id: 'e1', d: '14.03. 16:00', h: 'Burnley', a: 'Bournemouth', oL: 2.60, oE: 3.40, oV: 2.70 },
     { id: 'e3', d: '14.03. 18:30', h: 'Arsenal', a: 'Everton', oL: 1.25, oE: 6.00, oV: 11.0 },
     { id: 'e5', d: '15.03. 15:00', h: 'Man. Utd', a: 'Aston Villa', oL: 1.95, oE: 3.70, oV: 3.60 },
     { id: 'e6', d: '15.03. 17:30', h: 'Liverpool', a: 'Tottenham', oL: 1.60, oE: 4.20, oV: 5.00 },
@@ -109,39 +104,39 @@ export default function GolpredictPro() {
   const totalOdd = sel.reduce((acc, b) => acc * b.o, 1);
 
   return (
-    <div style={{background:'#000', color:'#fff', minHeight:'100vh', fontFamily:'sans-serif', maxWidth:'480px', margin:'0 auto'}}>
-      <div style={{padding:'20px', background:'#050505', borderBottom:'1px solid #222', position:'sticky', top:0, zIndex:100}}>
-        <div style={{display:'flex', justifyContent:'space-between', marginBottom:'15px'}}>
-           <h1 style={{color:'#fbbf24', fontSize:'1rem', margin:0}}>GOLPREDICT QUANTUM</h1>
-           <button onClick={() => signOut(auth)} style={{background:'#ff4444', border:'none', color:'#fff', fontSize:'0.6rem', padding:'5px 10px', borderRadius:'5px'}}>SALIR</button>
+    <div style={{background:'#000', color:'#fff', minHeight:'100vh', fontFamily:'-apple-system, sans-serif', maxWidth:'480px', margin:'0 auto'}}>
+      <div style={{padding:'20px', background:'#050505', borderBottom:'1px solid #333', position:'sticky', top:0, zIndex:100}}>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'15px'}}>
+           <h1 style={{color:'#fbbf24', fontSize:'1.2rem', margin:0, fontWeight:'900', letterSpacing:'-0.5px'}}>GOLPREDICT PRO</h1>
+           <button onClick={() => signOut(auth)} style={{background:'#ff4444', border:'none', color:'#fff', fontSize:'0.7rem', padding:'8px 12px', borderRadius:'6px', fontWeight:'bold'}}>SALIR</button>
         </div>
-        <div style={{display:'flex', gap:'5px', overflowX:'auto'}}>
+        <div style={{display:'flex', gap:'6px', overflowX:'auto', paddingBottom:'5px'}}>
           {['CHAMPIONS', 'LALIGA', 'PREMIER'].map((n, i) => (
-            <button key={i} onClick={() => setLiga(['ucl','laliga','epl'][i])} style={{flex:1, padding:'10px', borderRadius:'8px', background: liga === ['ucl','laliga','epl'][i] ? '#fbbf24' : '#111', color: liga === ['ucl','laliga','epl'][i] ? '#000' : '#888', border:'none', fontSize:'0.55rem', fontWeight:'bold', whiteSpace:'nowrap'}}>{n}</button>
+            <button key={i} onClick={() => setLiga(['ucl','laliga','epl'][i])} style={{flex:1, padding:'12px', borderRadius:'10px', background: liga === ['ucl','laliga','epl'][i] ? '#fbbf24' : '#1a1a1a', color: liga === ['ucl','laliga','epl'][i] ? '#000' : '#ffffff', border:'none', fontSize:'0.65rem', fontWeight:'bold', whiteSpace:'nowrap'}}>{n}</button>
           ))}
         </div>
       </div>
 
-      <div style={{display:'flex', background:'#080808', borderBottom:'1px solid #222'}}>
+      <div style={{display:'flex', background:'#080808', borderBottom:'1px solid #333'}}>
         {['p', 'ia', 'c'].map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{flex:1, padding:'15px', background:'none', border:'none', color: tab===t?'#fbbf24':'#555', borderBottom: tab===t?'2px solid #fbbf24':'none', fontSize:'0.7rem', fontWeight:'bold'}}>
+          <button key={t} onClick={() => setTab(t)} style={{flex:1, padding:'16px', background:'none', border:'none', color: tab===t?'#fbbf24':'#888', borderBottom: tab===t?'3px solid #fbbf24':'none', fontSize:'0.75rem', fontWeight:'bold'}}>
             {t==='p'?'PARTIDOS' : t==='ia'?'IA COMBOS' : `TICKET (${sel.length})`}
           </button>
         ))}
       </div>
 
-      <div style={{padding:'10px'}}>
+      <div style={{padding:'12px'}}>
         {tab === 'p' && db[liga]?.map(p => (
-          <div key={p.id} style={{background:'#0c0c0c', padding:'12px', borderRadius:'12px', marginBottom:'10px', border:'1px solid #1a1a1a'}}>
-            <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.6rem', color:'#fbbf24', marginBottom:'8px'}}>
-              <span>{p.d}</span><span>IA: {p.pick} ({p.prob}%)</span>
+          <div key={p.id} style={{background:'#111', padding:'15px', borderRadius:'16px', marginBottom:'12px', border:'1px solid #222'}}>
+            <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.7rem', color:'#fbbf24', marginBottom:'10px', fontWeight:'bold'}}>
+              <span>{p.d}</span><span style={{background:'#222', padding:'2px 8px', borderRadius:'4px'}}>IA: {p.pick} ({p.prob}%)</span>
             </div>
-            <div style={{textAlign:'center', fontWeight:'bold', marginBottom:'10px', fontSize:'0.9rem'}}>{p.h} vs {p.a}</div>
-            <div style={{display:'flex', gap:'5px'}}>
+            <div style={{textAlign:'center', fontWeight:'800', marginBottom:'15px', fontSize:'1rem', color:'#fff'}}>{p.h} <span style={{color:'#444'}}>vs</span> {p.a}</div>
+            <div style={{display:'flex', gap:'8px'}}>
               {[{q:p.oL,t:'1'}, {q:p.oE,t:'X'}, {q:p.oV,t:'2'}].map((o,i) => (
-                <button key={i} onClick={() => handleBet(p, o.t, o.q)} style={{flex:1, padding:'8px', borderRadius:'8px', background: sel.find(b=>b.id===`${p.id}-${o.t}`) ? '#fbbf24' : '#151515', color: sel.find(b=>b.id===`${p.id}-${o.t}`) ? '#000' : '#fff', border:'1px solid #333'}}>
-                  <div style={{fontSize:'0.8rem', fontWeight:'bold'}}>{o.q.toFixed(2)}</div>
-                  <div style={{fontSize:'0.5rem'}}>{o.t}</div>
+                <button key={i} onClick={() => handleBet(p, o.t, o.q)} style={{flex:1, padding:'12px 0', borderRadius:'12px', background: sel.find(b=>b.id===`${p.id}-${o.t}`) ? '#fbbf24' : '#1a1a1a', color: sel.find(b=>b.id===`${p.id}-${o.t}`) ? '#000' : '#fff', border:'1px solid #333', cursor:'pointer'}}>
+                  <div style={{fontSize:'1rem', fontWeight:'900'}}>@{o.q.toFixed(2)}</div>
+                  <div style={{fontSize:'0.6rem', fontWeight:'bold', opacity:0.7}}>{o.t}</div>
                 </button>
               ))}
             </div>
@@ -149,33 +144,37 @@ export default function GolpredictPro() {
         ))}
 
         {tab === 'ia' && ['Básica', 'Moderada', 'Arriesgada'].map(type => (
-          <div key={type} style={{background:'#0c0c0c', padding:'15px', borderRadius:'15px', marginBottom:'15px', borderLeft:`4px solid ${type==='Básica'?'#4ade80':type==='Moderada'?'#fbbf24':'#ff4444'}`}}>
-            <h3 style={{fontSize:'0.8rem', margin:'0 0 10px 0', color:type==='Básica'?'#4ade80':type==='Moderada'?'#fbbf24':'#ff4444'}}>{type.toUpperCase()}</h3>
+          <div key={type} style={{background:'#111', padding:'20px', borderRadius:'20px', marginBottom:'15px', border:'1px solid #222', borderLeft:`6px solid ${type==='Básica'?'#4ade80':type==='Moderada'?'#fbbf24':'#ff4444'}`}}>
+            <h3 style={{fontSize:'0.9rem', margin:'0 0 12px 0', color:type==='Básica'?'#4ade80':type==='Moderada'?'#fbbf24':'#ff4444', fontWeight:'900'}}>{type.toUpperCase()}</h3>
             {getIACombo(type).map(m => (
-              <div key={m.id} style={{fontSize:'0.7rem', display:'flex', justifyContent:'space-between', margin:'5px 0', opacity:0.8}}>
-                <span>{m.h}-{m.a}</span><span>Gana {m.pick} (@{m.pickOdd.toFixed(2)})</span>
+              <div key={m.id} style={{fontSize:'0.8rem', display:'flex', justifyContent:'space-between', margin:'8px 0', color:'#eee', fontWeight:'500'}}>
+                <span>{m.h} - {m.a}</span><span style={{color:'#fbbf24'}}>Pick {m.pick} (@{m.pickOdd.toFixed(2)})</span>
               </div>
             ))}
-            <div style={{marginTop:'10px', textAlign:'right', fontWeight:'bold', color:'#4ade80', fontSize:'0.9rem'}}>
-              Total: @{getIACombo(type).reduce((acc, m) => acc * m.pickOdd, 1).toFixed(2)}
+            <div style={{marginTop:'15px', paddingTop:'10px', borderTop:'1px solid #222', textAlign:'right', fontWeight:'900', color:'#4ade80', fontSize:'1.1rem'}}>
+              CUOTA TOTAL: @{getIACombo(type).reduce((acc, m) => acc * m.pickOdd, 1).toFixed(2)}
             </div>
           </div>
         ))}
 
         {tab === 'c' && (
-          <div style={{padding:'10px'}}>
-            {sel.length === 0 ? <p style={{textAlign:'center', color:'#555'}}>No hay apuestas seleccionadas</p> : 
-              <div style={{background:'#0c0c0c', padding:'15px', borderRadius:'15px', border:'1px solid #fbbf24'}}>
+          <div style={{padding:'5px'}}>
+            {sel.length === 0 ? <div style={{textAlign:'center', padding:'50px', color:'#666', fontWeight:'bold'}}>SELECCIONA CUOTAS EN PARTIDOS</div> : 
+              <div style={{background:'#111', padding:'20px', borderRadius:'20px', border:'2px solid #fbbf24'}}>
+                <h2 style={{fontSize:'0.8rem', color:'#fbbf24', textAlign:'center', marginBottom:'15px'}}>RESUMEN DE TICKET</h2>
                 {sel.map(b => (
-                  <div key={b.id} style={{display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #222', fontSize:'0.75rem'}}>
-                    <span>{b.name} <b>({b.p})</b></span><b>@{b.o.toFixed(2)}</b>
+                  <div key={b.id} style={{display:'flex', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid #222', fontSize:'0.85rem', color:'#fff'}}>
+                    <span>{b.name} <b style={{color:'#fbbf24'}}>({b.p})</b></span><b style={{fontSize:'1rem'}}>@{b.o.toFixed(2)}</b>
                   </div>
                 ))}
-                <div style={{marginTop:'20px', textAlign:'center'}}>
-                  <input type="number" value={bet} onChange={e=>setBet(e.target.value)} style={{background:'#000', border:'1px solid #fbbf24', color:'#fbbf24', fontSize:'1.2rem', width:'70px', textAlign:'center', marginBottom:'10px'}} />
-                  <div style={{color:'#4ade80', fontWeight:'bold'}}>CUOTA: {totalOdd.toFixed(2)}</div>
-                  <div style={{background:'#fbbf24', color:'#000', padding:'10px', borderRadius:'8px', marginTop:'10px', fontWeight:'bold'}}>GANANCIA: {(bet * totalOdd).toFixed(2)}€</div>
-                  <button onClick={()=>setSel([])} style={{marginTop:'15px', display:'block', width:'100%', color:'#ff4444', background:'none', border:'none', fontSize:'0.6rem'}}>BORRAR TICKET</button>
+                <div style={{marginTop:'25px', textAlign:'center'}}>
+                  <div style={{fontSize:'0.7rem', color:'#aaa', marginBottom:'5px'}}>CANTIDAD APOSTADA</div>
+                  <input type="number" value={bet} onChange={e=>setBet(e.target.value)} style={{background:'#000', border:'2px solid #fbbf24', color:'#fbbf24', fontSize:'1.8rem', width:'100px', textAlign:'center', borderRadius:'10px', padding:'5px', marginBottom:'15px'}} />
+                  <div style={{color:'#4ade80', fontWeight:'900', fontSize:'1.2rem', marginBottom:'10px'}}>CUOTA FINAL: @{totalOdd.toFixed(2)}</div>
+                  <div style={{background:'#fbbf24', color:'#000', padding:'18px', borderRadius:'14px', fontWeight:'900', fontSize:'1.4rem', boxShadow:'0 4px 15px rgba(251, 191, 36, 0.3)'}}>
+                    GANANCIA: {(bet * totalOdd).toFixed(2)}€
+                  </div>
+                  <button onClick={()=>setSel([])} style={{marginTop:'20px', display:'block', width:'100%', color:'#ff4444', background:'none', border:'none', fontSize:'0.75rem', fontWeight:'bold', textDecoration:'underline', cursor:'pointer'}}>ELIMINAR APUESTAS</button>
                 </div>
               </div>
             }
@@ -184,7 +183,9 @@ export default function GolpredictPro() {
       </div>
     </div>
   );
-  }
+}
+
+  
                                               
 
             

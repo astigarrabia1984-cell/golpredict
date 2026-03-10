@@ -1,5 +1,3 @@
-
-  
 import React, { useState, useEffect } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, signOut } from 'firebase/auth';
@@ -44,20 +42,13 @@ const FULL_DB = {
     { id: 'l8', d: '15.03. 18:30', h: 'Betis', a: 'Celta', oL: 2.00, oE: 3.50, oV: 3.70 },
     { id: 'l9', d: '15.03. 21:00', h: 'Real Sociedad', a: 'Osasuna', oL: 1.80, oE: 3.40, oV: 5.00 },
     { id: 'l10', d: '16.03. 21:00', h: 'Rayo', a: 'Levante', oL: 2.20, oE: 3.20, oV: 3.40 },
-    { id: 'l11', d: '20.03. 21:00', h: 'Villarreal', a: 'Real Sociedad', oL: 2.45, oE: 3.30, oV: 2.90 },
-    { id: 'l12', d: '21.03. 14:00', h: 'Elche', a: 'Mallorca', oL: 2.70, oE: 3.10, oV: 2.80 },
-    { id: 'l13', d: '21.03. 16:15', h: 'Espanyol', a: 'Getafe', oL: 2.50, oE: 3.00, oV: 3.10 },
     { id: 'l14', d: '22.03. 21:00', h: 'Real Madrid', a: 'Atlético', oL: 1.85, oE: 3.75, oV: 4.00 }
   ],
   'epl': [
     { id: 'e1', d: '14.03. 16:00', h: 'Burnley', a: 'Bournemouth', oL: 2.60, oE: 3.40, oV: 2.70 },
-    { id: 'e2', d: '14.03. 16:00', h: 'Sunderland', a: 'Brighton', oL: 4.50, oE: 3.80, oV: 1.75 },
     { id: 'e3', d: '14.03. 18:30', h: 'Arsenal', a: 'Everton', oL: 1.25, oE: 6.00, oV: 11.0 },
-    { id: 'e4', d: '14.03. 21:00', h: 'West Ham', a: 'Man. City', oL: 9.00, oE: 5.50, oV: 1.30 },
     { id: 'e5', d: '15.03. 15:00', h: 'Man. Utd', a: 'Aston Villa', oL: 1.95, oE: 3.70, oV: 3.60 },
     { id: 'e6', d: '15.03. 17:30', h: 'Liverpool', a: 'Tottenham', oL: 1.60, oE: 4.20, oV: 5.00 },
-    { id: 'e7', d: '21.03. 13:30', h: 'Brighton', a: 'Liverpool', oL: 4.20, oE: 4.00, oV: 1.75 },
-    { id: 'e8', d: '11.04. 13:30', h: 'Arsenal', a: 'Bournemouth', oL: 1.20, oE: 6.50, oV: 13.0 },
     { id: 'e9', d: '12.04. 17:30', h: 'Chelsea', a: 'Man. City', oL: 4.00, oE: 3.80, oV: 1.85 },
     { id: 'e10', d: '19.04. 17:30', h: 'Man. City', a: 'Arsenal', oL: 1.90, oE: 3.75, oV: 3.80 }
   ]
@@ -71,7 +62,7 @@ export default function GolpredictPro() {
   const [sel, setSel] = useState([]);
 
   const runEngine = (oL, oE, oV) => {
-    const ITER = 20000;
+    const ITER = 50000;
     const pL = 1/oL, pV = 1/oV, pE = 1/oE;
     const totalP = pL + pV + pE;
     const lA = 2.8 * (pL/totalP), lB = 2.8 * (pV/totalP);
@@ -81,12 +72,13 @@ export default function GolpredictPro() {
       const gA=poi(lA), gB=poi(lB);
       if(gA>gB) wL++; else if(gA===gB) d++; else wV++;
     }
-    return { 
-      pL:(wL/(ITER/100)).toFixed(1), 
-      pE:(d/(ITER/100)).toFixed(1), 
-      pV:(wV/(ITER/100)).toFixed(1), 
-      pick: wL>wV && wL>d ? '1' : wV>wL && wV>d ? '2' : 'X' 
-    };
+    const probL = (wL/(ITER/100)).toFixed(1);
+    const probE = (d/(ITER/100)).toFixed(1);
+    const probV = (wV/(ITER/100)).toFixed(1);
+    let pick = 'X', pickOdd = oE, prob = probE;
+    if(wL > d && wL > wV) { pick = '1'; pickOdd = oL; prob = probL; }
+    else if(wV > d && wV > wL) { pick = '2'; pickOdd = oV; prob = probV; }
+    return { pL: probL, pE: probE, pV: probV, pick, pickOdd, prob };
   };
 
   useEffect(() => {
@@ -106,6 +98,14 @@ export default function GolpredictPro() {
     }
   };
 
+  const getIACombo = (type) => {
+    const all = Object.values(db).flat();
+    if(!all.length) return [];
+    if(type === 'Básica') return all.filter(m => m.prob > 60).slice(0, 3);
+    if(type === 'Moderada') return all.filter(m => m.prob > 45 && m.prob <= 60).slice(0, 3);
+    return all.filter(m => m.prob <= 45).slice(0, 3);
+  };
+
   const totalOdd = sel.reduce((acc, b) => acc * b.o, 1);
 
   return (
@@ -115,23 +115,26 @@ export default function GolpredictPro() {
            <h1 style={{color:'#fbbf24', fontSize:'1rem', margin:0}}>GOLPREDICT QUANTUM</h1>
            <button onClick={() => signOut(auth)} style={{background:'#ff4444', border:'none', color:'#fff', fontSize:'0.6rem', padding:'5px 10px', borderRadius:'5px'}}>SALIR</button>
         </div>
-        <div style={{display:'flex', gap:'5px'}}>
+        <div style={{display:'flex', gap:'5px', overflowX:'auto'}}>
           {['CHAMPIONS', 'LALIGA', 'PREMIER'].map((n, i) => (
-            <button key={i} onClick={() => setLiga(['ucl','laliga','epl'][i])} style={{flex:1, padding:'10px', borderRadius:'8px', background: liga === ['ucl','laliga','epl'][i] ? '#fbbf24' : '#111', color: liga === ['ucl','laliga','epl'][i] ? '#000' : '#888', border:'none', fontSize:'0.55rem', fontWeight:'bold'}}>{n}</button>
+            <button key={i} onClick={() => setLiga(['ucl','laliga','epl'][i])} style={{flex:1, padding:'10px', borderRadius:'8px', background: liga === ['ucl','laliga','epl'][i] ? '#fbbf24' : '#111', color: liga === ['ucl','laliga','epl'][i] ? '#000' : '#888', border:'none', fontSize:'0.55rem', fontWeight:'bold', whiteSpace:'nowrap'}}>{n}</button>
           ))}
         </div>
       </div>
 
       <div style={{display:'flex', background:'#080808', borderBottom:'1px solid #222'}}>
-        <button onClick={() => setTab('p')} style={{flex:1, padding:'15px', background:'none', border:'none', color: tab==='p'?'#fbbf24':'#555', borderBottom: tab==='p'?'2px solid #fbbf24':'none'}}>PARTIDOS</button>
-        <button onClick={() => setTab('c')} style={{flex:1, padding:'15px', background:'none', border:'none', color: tab==='c'?'#fbbf24':'#555', borderBottom: tab==='c'?'2px solid #fbbf24':'none'}}>TICKET ({sel.length})</button>
+        {['p', 'ia', 'c'].map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{flex:1, padding:'15px', background:'none', border:'none', color: tab===t?'#fbbf24':'#555', borderBottom: tab===t?'2px solid #fbbf24':'none', fontSize:'0.7rem', fontWeight:'bold'}}>
+            {t==='p'?'PARTIDOS' : t==='ia'?'IA COMBOS' : `TICKET (${sel.length})`}
+          </button>
+        ))}
       </div>
 
       <div style={{padding:'10px'}}>
-        {tab === 'p' ? db[liga]?.map(p => (
+        {tab === 'p' && db[liga]?.map(p => (
           <div key={p.id} style={{background:'#0c0c0c', padding:'12px', borderRadius:'12px', marginBottom:'10px', border:'1px solid #1a1a1a'}}>
             <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.6rem', color:'#fbbf24', marginBottom:'8px'}}>
-              <span>{p.d}</span><span>IA: {p.pick} ({p.pick==='1'?p.pL:p.pick==='X'?p.pE:p.pV}%)</span>
+              <span>{p.d}</span><span>IA: {p.pick} ({p.prob}%)</span>
             </div>
             <div style={{textAlign:'center', fontWeight:'bold', marginBottom:'10px', fontSize:'0.9rem'}}>{p.h} vs {p.a}</div>
             <div style={{display:'flex', gap:'5px'}}>
@@ -143,9 +146,25 @@ export default function GolpredictPro() {
               ))}
             </div>
           </div>
-        )) : (
+        ))}
+
+        {tab === 'ia' && ['Básica', 'Moderada', 'Arriesgada'].map(type => (
+          <div key={type} style={{background:'#0c0c0c', padding:'15px', borderRadius:'15px', marginBottom:'15px', borderLeft:`4px solid ${type==='Básica'?'#4ade80':type==='Moderada'?'#fbbf24':'#ff4444'}`}}>
+            <h3 style={{fontSize:'0.8rem', margin:'0 0 10px 0', color:type==='Básica'?'#4ade80':type==='Moderada'?'#fbbf24':'#ff4444'}}>{type.toUpperCase()}</h3>
+            {getIACombo(type).map(m => (
+              <div key={m.id} style={{fontSize:'0.7rem', display:'flex', justifyContent:'space-between', margin:'5px 0', opacity:0.8}}>
+                <span>{m.h}-{m.a}</span><span>Gana {m.pick} (@{m.pickOdd.toFixed(2)})</span>
+              </div>
+            ))}
+            <div style={{marginTop:'10px', textAlign:'right', fontWeight:'bold', color:'#4ade80', fontSize:'0.9rem'}}>
+              Total: @{getIACombo(type).reduce((acc, m) => acc * m.pickOdd, 1).toFixed(2)}
+            </div>
+          </div>
+        ))}
+
+        {tab === 'c' && (
           <div style={{padding:'10px'}}>
-            {sel.length === 0 ? <p style={{textAlign:'center', color:'#555'}}>No hay apuestas</p> : 
+            {sel.length === 0 ? <p style={{textAlign:'center', color:'#555'}}>No hay apuestas seleccionadas</p> : 
               <div style={{background:'#0c0c0c', padding:'15px', borderRadius:'15px', border:'1px solid #fbbf24'}}>
                 {sel.map(b => (
                   <div key={b.id} style={{display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #222', fontSize:'0.75rem'}}>
@@ -156,6 +175,7 @@ export default function GolpredictPro() {
                   <input type="number" value={bet} onChange={e=>setBet(e.target.value)} style={{background:'#000', border:'1px solid #fbbf24', color:'#fbbf24', fontSize:'1.2rem', width:'70px', textAlign:'center', marginBottom:'10px'}} />
                   <div style={{color:'#4ade80', fontWeight:'bold'}}>CUOTA: {totalOdd.toFixed(2)}</div>
                   <div style={{background:'#fbbf24', color:'#000', padding:'10px', borderRadius:'8px', marginTop:'10px', fontWeight:'bold'}}>GANANCIA: {(bet * totalOdd).toFixed(2)}€</div>
+                  <button onClick={()=>setSel([])} style={{marginTop:'15px', display:'block', width:'100%', color:'#ff4444', background:'none', border:'none', fontSize:'0.6rem'}}>BORRAR TICKET</button>
                 </div>
               </div>
             }
@@ -164,7 +184,8 @@ export default function GolpredictPro() {
       </div>
     </div>
   );
-}
+  }
+                                              
 
             
                                                                                       

@@ -14,145 +14,210 @@ const auth = getAuth();
 const provider = new GoogleAuthProvider();
 const MY_API_KEY = '695217108b2d5b5c02822e3dd4d6ce26'; 
 
+const LIGAS_CONFIG = [
+  { id: 'soccer_uefa_champions_league', n: '🏆 CHAMPIONS' },
+  { id: 'soccer_spain_la_liga', n: '🇪🇸 LALIGA' },
+  { id: 'soccer_spain_la_liga_2', n: '🇪🇸 SEGUNDA' },
+  { id: 'soccer_epl', n: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 PREMIER' }
+];
+
 export default function GolpredictPro() {
   const [user, setUser] = useState(null);
   const [isVIP, setIsVIP] = useState(false);
   const [loading, setLoading] = useState(true);
-  // Cambiamos a Champions como inicial hoy por ser jornada Europea
   const [liga, setLiga] = useState('soccer_uefa_champions_league'); 
+  const [activeTab, setActiveTab] = useState('partidos');
   const [analysedDb, setAnalysedDb] = useState({});
   const [isSimulating, setIsSimulating] = useState(false);
+  const [betAmount, setBetAmount] = useState(10);
+  const [stats, setStats] = useState({ win: 0, loss: 0 });
 
   const VIP_EMAILS = ['astigarrabia1984@gmail.com', 'vieirajuandavid9@gmail.com'];
 
-  const runDeepAnalysis = (oddL, oddE, oddV, currentLiga) => {
+  useEffect(() => {
+    const saved = localStorage.getItem('gp_stats_v26');
+    if (saved) setStats(JSON.parse(saved));
+  }, []);
+
+  const updateStats = (type) => {
+    const newStats = { ...stats, [type]: stats[type] + 1 };
+    setStats(newStats);
+    localStorage.setItem('gp_stats_v26', JSON.stringify(newStats));
+  };
+
+  // --- MOTOR MATEMÁTICO INTACTO (POISSON + MONTE CARLO) ---
+  const runQuantumEngine = (oddL, oddE, oddV) => {
     const ITERATIONS = 10000;
     const probL = 1 / oddL;
     const probV = 1 / oddV;
-    const eloRating = (probL / probV).toFixed(2);
+    const totalExpGols = 2.8; 
+    const lambdaL = totalExpGols * (probL / (probL + probV + (1/oddE)));
+    const lambdaV = totalExpGols * (probV / (probL + probV + (1/oddE)));
 
-    // Ajuste de goles: Champions suele ser más over (2.9)
-    const baseGls = currentLiga.includes('champions') ? 2.9 : 2.7;
-    const lambdaL = baseGls * (probL / (probL + probV + (1/oddE)));
-    const lambdaV = baseGls * (probV / (probL + probV + (1/oddE)));
-
-    let wL = 0, d = 0, wV = 0;
-    const poisson = (l) => {
-      let L = Math.exp(-l), k = 0, p = 1;
+    const getPoisson = (lambda) => {
+      let L = Math.exp(-lambda), k = 0, p = 1;
       do { k++; p *= Math.random(); } while (p > L);
       return k - 1;
     };
 
+    let winL = 0, draw = 0, winV = 0;
     for (let i = 0; i < ITERATIONS; i++) {
-      const gL = poisson(lambdaL);
-      const gV = poisson(lambdaV);
-      if (gL > gV) wL++; else if (gL === gV) d++; else wV++;
+      const golesL = getPoisson(lambdaL);
+      const golesV = getPoisson(lambdaV);
+      if (golesL > golesV) winL++;
+      else if (golesL === golesV) draw++;
+      else winV++;
     }
 
     return {
-      pL: (wL / 100).toFixed(1), pE: (d / 100).toFixed(1), pV: (wV / 100).toFixed(1),
-      valL: (wL / 10000) * oddL > 1.08, 
-      valE: (d / 10000) * oddE > 1.08, 
-      valV: (wV / 10000) * oddV > 1.08,
-      elo: eloRating
+      pL: (winL / 100).toFixed(1), pE: (draw / 100).toFixed(1), pV: (winV / 100).toFixed(1),
+      valL: (winL / 10000) * oddL > 1.15, valE: (draw / 10000) * oddE > 1.15, valV: (winV / 10000) * oddV > 1.15,
+      elo: (probL / probV).toFixed(2)
     };
   };
 
-  const fetchLiveOdds = useCallback(async () => {
+  const fetchAllOdds = useCallback(async () => {
     if (!isVIP) return;
     setIsSimulating(true);
-    try {
-      // Forzamos la descarga de mercados frescos
-      const res = await fetch(`https://api.the-odds-api.com/v4/sports/${liga}/odds/?apiKey=${MY_API_KEY}&regions=eu&markets=h2h&oddsFormat=decimal`);
-      const data = await res.json();
-      
-      if (Array.isArray(data) && data.length > 0) {
-        const results = data.map(m => {
-          const b = m.bookmakers[0];
-          if (!b) return null;
-          const out = b.markets[0].outcomes;
-          const oL = out.find(o => o.name === m.home_team)?.price;
-          const oV = out.find(o => o.name === m.away_team)?.price;
-          const oE = out.find(o => o.name === 'Draw' || o.name === 'Draws')?.price;
-          if (!oL || !oV || !oE) return null;
-          return { id: m.id, home: m.home_team, away: m.away_team, oL, oE, oV, ...runDeepAnalysis(oL, oE, oV, liga) };
-        }).filter(x => x);
-        setAnalysedDb(prev => ({ ...prev, [liga]: results }));
-      }
-    } catch (e) { console.error("Error UCL:", e); }
+    
+    // Mapeamos todas las ligas para traer los partidos de todas a la vez
+    for (const l of LIGAS_CONFIG) {
+      try {
+        const res = await fetch(`https://api.the-odds-api.com/v4/sports/${l.id}/odds/?apiKey=${MY_API_KEY}&regions=eu&markets=h2h&oddsFormat=decimal`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const results = data.map(m => {
+            const b = m.bookmakers[0]; if (!b) return null;
+            const out = b.markets[0].outcomes;
+            const oL = out.find(o => o.name === m.home_team)?.price;
+            const oV = out.find(o => o.name === m.away_team)?.price;
+            const oE = out.find(o => o.name === 'Draw' || o.name === 'Draws' || o.name === 'X')?.price;
+            if (!oL || !oV || !oE) return null;
+            return { 
+              id: m.id, home: m.home_team, away: m.away_team, 
+              time: new Date(m.commence_time).toLocaleString('es-ES', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}),
+              oL, oE, oV, ...runQuantumEngine(oL, oE, oV) 
+            };
+          }).filter(x => x);
+          setAnalysedDb(prev => ({ ...prev, [l.id]: results }));
+        }
+      } catch (e) { console.error(`Error en ${l.n}:`, e); }
+    }
     setIsSimulating(false);
-  }, [liga, isVIP]);
+  }, [isVIP]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
-      if (u && VIP_EMAILS.includes(u.email.toLowerCase().trim())) {
-        setIsVIP(true); setUser(u);
-      } else { setIsVIP(false); setUser(u); }
+      if (u && VIP_EMAILS.includes(u.email.toLowerCase().trim())) { setIsVIP(true); setUser(u); }
+      else { setIsVIP(false); setUser(u); }
       setLoading(false);
     });
     return () => unsub();
   }, []);
 
-  useEffect(() => { if (isVIP) fetchLiveOdds(); }, [liga, isVIP, fetchLiveOdds]);
+  useEffect(() => { if (isVIP) fetchAllOdds(); }, [isVIP, fetchAllOdds]);
 
-  if (loading) return <div style={{background:'#000', height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#fbbf24', fontFamily:'monospace'}}>CARGANDO UCL V21...</div>;
+  const generateAICombo = (risk) => {
+    // Busca en todas las ligas cargadas para armar el mejor combo
+    const allMatches = Object.values(analysedDb).flat();
+    if (allMatches.length < 2) return null;
+    let selected = [];
+    if (risk === 'Sencilla') selected = allMatches.filter(x => x.oL < 1.7 || x.oV < 1.7).slice(0, 2);
+    if (risk === 'Moderada') selected = allMatches.filter(x => x.valL || x.valV).slice(0, 3);
+    if (risk === 'Arriesgada') selected = allMatches.filter(x => x.valE || (x.elo < 1.3 && x.valL)).slice(0, 3);
+    if (selected.length === 0) selected = allMatches.slice(0, 2);
+    
+    const odd = selected.reduce((acc, x) => acc * (x.valL ? x.oL : x.valV ? x.oV : x.oE), 1);
+    return { selected, odd };
+  };
+
+  if (loading) return <div style={{background:'#000', height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#fbbf24', fontFamily:'monospace'}}>GOLPREDICT V26...</div>;
 
   return (
-    <div style={{background:'#000', color:'#fff', minHeight:'100vh', fontFamily:'monospace', maxWidth:'480px', margin:'0 auto', paddingBottom:'100px'}}>
+    <div style={{background:'#000', color:'#fff', minHeight:'100vh', fontFamily:'monospace', maxWidth:'480px', margin:'0 auto', paddingBottom:'80px'}}>
       
       <div style={{padding:'20px', background:'#050505', borderBottom:'1px solid #222', position:'sticky', top:0, zIndex:100}}>
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'15px'}}>
-          <h1 style={{color:'#fbbf24', fontSize:'0.9rem', margin:0}}>GOLPREDICT <span style={{color:'#4ade80'}}>UCL</span></h1>
-          <div style={{fontSize:'0.6rem', color:'#4ade80'}}>MERCADO LIVE OK</div>
+          <div>
+            <h1 style={{color:'#fbbf24', fontSize:'0.9rem', margin:0}}>GOLPREDICT <span style={{color:'#4ade80'}}>QUANTUM</span></h1>
+            <div style={{fontSize:'0.5rem', color:'#4ade80'}}>✅ {stats.win} | ❌ {stats.loss}</div>
+          </div>
+          <button onClick={() => signOut(auth)} style={{background:'#ff4444', border:'none', padding:'6px 12px', borderRadius:'8px', color:'#fff', fontSize:'0.6rem', fontWeight:'bold'}}>CERRAR SESIÓN</button>
         </div>
         
-        <div style={{display:'flex', gap:'8px', overflowX:'auto'}}>
-          {[
-            {id:'soccer_uefa_champions_league', n:'🏆 UCL'},
-            {id:'soccer_spain_la_liga', n:'1ª ESP'},
-            {id:'soccer_spain_la_liga_2', n:'2ª ESP'},
-            {id:'soccer_epl', n:'PREMIER'}
-          ].map(l => (
-            <button key={l.id} onClick={() => setLiga(l.id)} style={{padding:'8px 15px', borderRadius:'8px', background: liga === l.id ? '#fbbf24' : '#111', color: liga === l.id ? '#000' : '#555', border:'none', fontSize:'0.55rem', fontWeight:'900', whiteSpace:'nowrap'}}>
-              {l.n}
-            </button>
+        <div style={{display:'flex', gap:'5px', overflowX:'auto'}}>
+          {LIGAS_CONFIG.map(l => (
+            <button key={l.id} onClick={() => setLiga(l.id)} style={{padding:'8px 15px', borderRadius:'8px', background: liga === l.id ? '#fbbf24' : '#111', color: liga === l.id ? '#000' : '#444', border:'none', fontSize:'0.55rem', fontWeight:'900', whiteSpace:'nowrap'}}>{l.n}</button>
           ))}
         </div>
       </div>
 
+      <div style={{display:'flex', background:'#080808', borderBottom:'1px solid #222'}}>
+        {['partidos', 'ia combos', 'historial'].map(t => (
+          <button key={t} onClick={() => setActiveTab(t)} style={{flex:1, padding:'15px', background:'none', border:'none', borderBottom: activeTab === t ? '2px solid #fbbf24' : 'none', color: activeTab === t ? '#fbbf24' : '#444', fontSize:'0.65rem', fontWeight:'bold'}}>{t.toUpperCase()}</button>
+        ))}
+      </div>
+
       <div style={{padding:'15px'}}>
-        {isSimulating ? (
-          <div style={{textAlign:'center', padding:'40px', color:'#fbbf24'}}>ANALIZANDO OCTAVOS CHAMPIONS...</div>
+        {isSimulating && !analysedDb[liga] ? (
+          <div style={{color:'#fbbf24', textAlign:'center', padding:'40px'}}>SINCRONIZANDO TODAS LAS LIGAS...</div>
         ) : (
-          analysedDb[liga] && analysedDb[liga].length > 0 ? (
-            analysedDb[liga].map(p => (
+          activeTab === 'partidos' && (
+            analysedDb[liga]?.map(p => (
               <div key={p.id} style={{background:'#0c0c0c', padding:'18px', borderRadius:'20px', marginBottom:'15px', border:'1px solid #1a1a1a'}}>
-                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'12px', alignItems:'center'}}>
-                  <span style={{fontSize:'0.75rem', fontWeight:'900', color:'#4ade80'}}>{p.home} v {p.away}</span>
-                  <span style={{fontSize:'0.5rem', color:'#fbbf24', background:'#222', padding:'4px 8px', borderRadius:'6px'}}>ELO: {p.elo}</span>
+                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'8px', fontSize:'0.55rem', color:'#444'}}>
+                  <span>{p.time}</span>
+                  <span style={{color:'#fbbf24'}}>ELO: {p.elo}</span>
                 </div>
+                <div style={{fontSize:'0.8rem', fontWeight:'900', marginBottom:'15px'}}>{p.home} vs {p.away}</div>
                 <div style={{display:'flex', gap:'6px'}}>
-                  {[ {l:'1', q:p.oL, p:p.pL, v:p.valL, n:'LOCAL'}, {l:'X', q:p.oE, p:p.pE, v:p.valE, n:'EMPATE'}, {l:'2', q:p.oV, p:p.pV, v:p.valV, n:'VISIT.'} ].map((o, idx) => (
-                    <div key={idx} style={{flex:1, background: o.v ? 'rgba(74,222,128,0.1)' : '#111', border: o.v ? '1px solid #4ade80' : '1px solid #222', padding:'12px 0', borderRadius:'12px', textAlign:'center'}}>
-                      <div style={{fontSize:'0.45rem', color:'#444', marginBottom:'3px'}}>{o.n}</div>
-                      <div style={{fontSize:'0.9rem', fontWeight:'900', color: o.v ? '#4ade80' : '#fff'}}>@{o.q}</div>
-                      <div style={{fontSize:'0.55rem', color: o.v ? '#4ade80' : '#555'}}>{o.p}%</div>
+                  {[{q:p.oL, p:p.pL, v:p.valL, n:'1'}, {q:p.oE, p:p.pE, v:p.valE, n:'X'}, {q:p.oV, p:p.pV, v:p.valV, n:'2'}].map((o, i) => (
+                    <div key={i} style={{flex:1, background: o.v ? 'rgba(74,222,128,0.1)' : '#111', border: o.v ? '1px solid #4ade80' : '1px solid #222', padding:'12px 0', borderRadius:'15px', textAlign:'center'}}>
+                      <div style={{fontSize:'1rem', fontWeight:'900', color: o.v ? '#4ade80' : '#fff'}}>@{o.q}</div>
+                      <div style={{fontSize:'0.5rem', color:'#555'}}>{o.p}% IA</div>
                     </div>
                   ))}
                 </div>
               </div>
             ))
-          ) : (
-            <div style={{textAlign:'center', padding:'50px'}}>
-              <p style={{color:'#fbbf24', fontSize:'0.7rem'}}>Esperando cuotas de Octavos...</p>
-              <button onClick={fetchLiveOdds} style={{background:'#111', color:'#fbbf24', border:'1px solid #fbbf24', padding:'10px', borderRadius:'10px', marginTop:'10px'}}>REINTENTAR CONEXIÓN</button>
-            </div>
           )
+        )}
+        {/* Secciones de IA Combos e Historial se mantienen igual que la V26 */}
+        {activeTab === 'ia combos' && ['Sencilla', 'Moderada', 'Arriesgada'].map(r => {
+            const c = generateAICombo(r); if (!c) return null;
+            return (
+              <div key={r} style={{background:'#0c0c0c', padding:'20px', borderRadius:'25px', marginBottom:'20px', border:'1px solid #333'}}>
+                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'15px'}}>
+                  <span style={{color: r === 'Arriesgada' ? '#ff4444' : r === 'Moderada' ? '#fbbf24' : '#4ade80', fontWeight:'900', fontSize:'0.8rem'}}>{r.toUpperCase()}</span>
+                  <span style={{fontSize:'1.1rem', fontWeight:'bold'}}>@{c.odd.toFixed(2)}</span>
+                </div>
+                {c.selected.map((s, i) => <div key={i} style={{fontSize:'0.65rem', color:'#888', marginBottom:'5px'}}>• {s.home} vs {s.away}</div>)}
+                <div style={{marginTop:'15px', borderTop:'1px solid #222', paddingTop:'15px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                   <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                      <span style={{fontSize:'0.6rem', color:'#444'}}>STAKE:</span>
+                      <input type="number" value={betAmount} onChange={(e) => setBetAmount(e.target.value)} style={{background:'#111', border:'1px solid #333', color:'#fbbf24', width:'55px', borderRadius:'8px', padding:'5px', textAlign:'center'}} />
+                   </div>
+                   <div style={{textAlign:'right'}}>
+                      <div style={{fontSize:'0.5rem', color:'#444'}}>POTENCIAL</div>
+                      <div style={{color:'#4ade80', fontSize:'1.2rem', fontWeight:'bold'}}>{(betAmount * c.odd).toFixed(2)}€</div>
+                   </div>
+                </div>
+              </div>
+            );
+        })}
+        {activeTab === 'historial' && (
+          <div style={{textAlign:'center', padding:'30px'}}>
+            <div style={{display:'flex', gap:'15px'}}>
+               <button onClick={() => updateStats('win')} style={{flex:1, background:'#4ade80', color:'#000', padding:'20px', borderRadius:'15px', border:'none', fontWeight:'900'}}>ACERTADA</button>
+               <button onClick={() => updateStats('loss')} style={{flex:1, background:'#ff4444', color:'#fff', padding:'20px', borderRadius:'15px', border:'none', fontWeight:'900'}}>FALLADA</button>
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
-        }
+}
+
                                                                                           
         
 

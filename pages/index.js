@@ -26,23 +26,17 @@ export default function GolpredictPro() {
 
   const VIP_EMAILS = ['astigarrabia1984@gmail.com', 'vieirajuandavid9@gmail.com'];
 
-  // --- NÚCLEO IA: ELO + POISSON + 10K MONTE CARLO ---
+  // --- MOTOR IA V20: ELO + POISSON + MONTE CARLO ---
   const runDeepAnalysis = (oddL, oddE, oddV, currentLiga) => {
     const ITERATIONS = 10000;
-    
-    // 1. INFERENCIA DE ELO (Fuerza Relativa)
-    // Calculamos el Rating ELO implícito por el mercado
     const probL = 1 / oddL;
     const probV = 1 / oddV;
-    const eloDiff = Math.log10(probL / probV) * 400; 
     const eloRating = (probL / probV).toFixed(2);
 
-    // 2. EXPECTATIVA DE GOLES (POISSON)
-    const baseGls = currentLiga.includes('la_liga_2') ? 2.2 : 2.8;
+    const baseGls = currentLiga.includes('la_liga_2') ? 2.1 : 2.7;
     const lambdaL = baseGls * (probL / (probL + probV + (1/oddE)));
     const lambdaV = baseGls * (probV / (probL + probV + (1/oddE)));
 
-    // 3. SIMULACIÓN MONTE CARLO
     let wL = 0, d = 0, wV = 0;
     const poisson = (l) => {
       let L = Math.exp(-l), k = 0, p = 1;
@@ -56,15 +50,11 @@ export default function GolpredictPro() {
       if (gL > gV) wL++; else if (gL === gV) d++; else wV++;
     }
 
-    const finalPL = (wL / 100).toFixed(1);
-    const finalPE = (d / 100).toFixed(1);
-    const finalPV = (wV / 100).toFixed(1);
-
     return {
-      pL: finalPL, pE: finalPE, pV: finalPV,
-      valL: (wL / 10000) * oddL > 1.12, 
-      valE: (d / 10000) * oddE > 1.12, 
-      valV: (wV / 10000) * oddV > 1.12,
+      pL: (wL / 100).toFixed(1), pE: (d / 100).toFixed(1), pV: (wV / 100).toFixed(1),
+      valL: (wL / 10000) * oddL > 1.10, 
+      valE: (d / 10000) * oddE > 1.10, 
+      valV: (wV / 10000) * oddV > 1.10,
       elo: eloRating
     };
   };
@@ -73,11 +63,13 @@ export default function GolpredictPro() {
     if (!isVIP) return;
     setIsSimulating(true);
     try {
+      // Buscamos partidos de los próximos 3 días para asegurar que NO salga vacío
       const res = await fetch(`https://api.the-odds-api.com/v4/sports/${liga}/odds/?apiKey=${MY_API_KEY}&regions=eu&markets=h2h&oddsFormat=decimal`);
       const data = await res.json();
-      if (Array.isArray(data)) {
+      
+      if (Array.isArray(data) && data.length > 0) {
         const results = data.map(m => {
-          const b = m.bookmakers[0];
+          const b = m.bookmakers.find(bookie => bookie.key === 'pinnacle' || bookie.key === 'betfair_ex_eu' || bookie.key === 'williamhill') || m.bookmakers[0];
           if (!b) return null;
           const out = b.markets[0].outcomes;
           const oL = out.find(o => o.name === m.home_team)?.price;
@@ -87,8 +79,13 @@ export default function GolpredictPro() {
           return { id: m.id, home: m.home_team, away: m.away_team, oL, oE, oV, ...runDeepAnalysis(oL, oE, oV, liga) };
         }).filter(x => x);
         setAnalysedDb(prev => ({ ...prev, [liga]: results }));
+      } else {
+        setAnalysedDb(prev => ({ ...prev, [liga]: [] }));
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+      console.error("Error API:", e);
+      setAnalysedDb(prev => ({ ...prev, [liga]: [] }));
+    }
     setIsSimulating(false);
   }, [liga, isVIP]);
 
@@ -104,35 +101,21 @@ export default function GolpredictPro() {
 
   useEffect(() => { if (isVIP) fetchLiveOdds(); }, [liga, isVIP, fetchLiveOdds]);
 
-  // GENERADOR DE COMBINADAS MEJORADO
-  const getCombos = (tipo) => {
-    const matches = analysedDb[liga] || [];
-    if (matches.length < 2) return null;
-    let picks = [];
-    if (tipo === 'Sencilla') picks = matches.filter(m => parseFloat(m.pL) > 60 || parseFloat(m.pV) > 60).slice(0, 2);
-    if (tipo === 'Moderada') picks = matches.filter(m => m.valL || m.valV).slice(0, 3);
-    if (tipo === 'Arriesgada') picks = matches.filter(m => m.valE || (m.elo < 1.3 && m.valL)).slice(0, 3);
-    
-    if (picks.length === 0) picks = matches.slice(0, 2);
-    const totalOdd = picks.reduce((acc, p) => acc * (p.valL ? p.oL : p.valV ? p.oV : p.oE), 1);
-    return { picks, totalOdd };
-  };
-
-  if (loading) return <div style={{background:'#000', height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#fbbf24', fontFamily:'monospace'}}>GOLPREDICT V19...</div>;
+  if (loading) return <div style={{background:'#000', height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#fbbf24', fontFamily:'monospace'}}>GOLPREDICT V20...</div>;
 
   return (
     <div style={{background:'#000', color:'#fff', minHeight:'100vh', fontFamily:'monospace', maxWidth:'480px', margin:'0 auto', paddingBottom:'100px'}}>
       
-      {/* HEADER DINÁMICO */}
+      {/* HEADER */}
       <div style={{padding:'20px', background:'#050505', borderBottom:'1px solid #222', position:'sticky', top:0, zIndex:100}}>
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'15px'}}>
-          <h1 style={{color:'#fbbf24', fontSize:'0.9rem', margin:0}}>GOLPREDICT <span style={{color:'#4ade80'}}>V19</span></h1>
+          <h1 style={{color:'#fbbf24', fontSize:'0.9rem', margin:0}}>GOLPREDICT <span style={{color:'#4ade80'}}>V20</span></h1>
           <button onClick={() => setActiveTab(activeTab === 'mercado' ? 'ia' : 'mercado')} style={{background:'#fbbf24', border:'none', padding:'6px 12px', borderRadius:'8px', fontWeight:'900', fontSize:'0.6rem', color:'#000'}}>
-            {activeTab === 'mercado' ? 'GENERAR COMBOS' : 'VER PARTIDOS'}
+            {activeTab === 'mercado' ? 'COMBINADAS IA' : 'PARTIDOS'}
           </button>
         </div>
         
-        <div style={{display:'flex', gap:'8px', overflowX:'auto', paddingBottom:'5px'}}>
+        <div style={{display:'flex', gap:'8px', overflowX:'auto'}}>
           {[
             {id:'soccer_spain_la_liga', n:'1ª ESP'},
             {id:'soccer_spain_la_liga_2', n:'2ª ESP'},
@@ -146,64 +129,40 @@ export default function GolpredictPro() {
         </div>
       </div>
 
-      {activeTab === 'mercado' ? (
-        <div style={{padding:'15px'}}>
-          {analysedDb[liga]?.map(p => (
-            <div key={p.id} style={{background:'#0c0c0c', padding:'18px', borderRadius:'20px', marginBottom:'15px', border:'1px solid #1a1a1a'}}>
-              <div style={{display:'flex', justifyContent:'space-between', marginBottom:'12px', alignItems:'center'}}>
-                <span style={{fontSize:'0.75rem', fontWeight:'900'}}>{p.home} v {p.away}</span>
-                <span style={{fontSize:'0.5rem', color:'#fbbf24', background:'#222', padding:'4px 8px', borderRadius:'6px'}}>ELO: {p.elo}</span>
+      <div style={{padding:'15px'}}>
+        {isSimulating ? (
+          <div style={{textAlign:'center', padding:'40px', color:'#fbbf24'}}>CONECTANDO CON MERCADO LIVE...</div>
+        ) : (
+          analysedDb[liga] && analysedDb[liga].length > 0 ? (
+            analysedDb[liga].map(p => (
+              <div key={p.id} style={{background:'#0c0c0c', padding:'18px', borderRadius:'20px', marginBottom:'15px', border:'1px solid #1a1a1a'}}>
+                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'12px', alignItems:'center'}}>
+                  <span style={{fontSize:'0.75rem', fontWeight:'900'}}>{p.home} v {p.away}</span>
+                  <span style={{fontSize:'0.5rem', color:'#fbbf24', background:'#222', padding:'4px 8px', borderRadius:'6px'}}>ELO: {p.elo}</span>
+                </div>
+                <div style={{display:'flex', gap:'6px'}}>
+                  {[ {l:'1', q:p.oL, p:p.pL, v:p.valL, n:'LOCAL'}, {l:'X', q:p.oE, p:p.pE, v:p.valE, n:'EMPATE'}, {l:'2', q:p.oV, p:p.pV, v:p.valV, n:'VISIT.'} ].map((o, idx) => (
+                    <div key={idx} style={{flex:1, background: o.v ? 'rgba(74,222,128,0.1)' : '#111', border: o.v ? '1px solid #4ade80' : '1px solid #222', padding:'12px 0', borderRadius:'12px', textAlign:'center'}}>
+                      <div style={{fontSize:'0.45rem', color:'#444', marginBottom:'3px'}}>{o.n}</div>
+                      <div style={{fontSize:'0.9rem', fontWeight:'900', color: o.v ? '#4ade80' : '#fff'}}>@{o.q}</div>
+                      <div style={{fontSize:'0.55rem', color: o.v ? '#4ade80' : '#555'}}>{o.p}%</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div style={{display:'flex', gap:'6px'}}>
-                {[ 
-                  {l:'1', q:p.oL, p:p.pL, v:p.valL, n:'LOCAL'}, 
-                  {l:'X', q:p.oE, p:p.pE, v:p.valE, n:'EMPATE'}, 
-                  {l:'2', q:p.oV, p:p.pV, v:p.valV, n:'VISIT.'} 
-                ].map((o, idx) => (
-                  <div key={idx} style={{flex:1, background: o.v ? 'rgba(74,222,128,0.1)' : '#111', border: o.v ? '1px solid #4ade80' : '1px solid #222', padding:'12px 0', borderRadius:'12px', textAlign:'center'}}>
-                    <div style={{fontSize:'0.45rem', color:'#444', marginBottom:'3px'}}>{o.n}</div>
-                    <div style={{fontSize:'0.9rem', fontWeight:'900', color: o.v ? '#4ade80' : '#fff'}}>@{o.q}</div>
-                    <div style={{fontSize:'0.55rem', color: o.v ? '#4ade80' : '#555'}}>{o.p}%</div>
-                  </div>
-                ))}
-              </div>
+            ))
+          ) : (
+            <div style={{textAlign:'center', padding:'50px'}}>
+              <p style={{color:'#444', fontSize:'0.7rem'}}>No hay partidos próximos para esta liga hoy.</p>
+              <p style={{color:'#fbbf24', fontSize:'0.6rem'}}>Prueba pulsando en "UCL" o "PREMIER"</p>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div style={{padding:'15px'}}>
-          <h2 style={{color:'#fbbf24', fontSize:'0.8rem', marginBottom:'20px'}}>ESTRATEGIA IA (Basada en ELO)</h2>
-          {['Sencilla', 'Moderada', 'Arriesgada'].map(tipo => {
-            const combo = getCombos(tipo);
-            if (!combo) return null;
-            return (
-              <div key={tipo} style={{background:'#0c0c0c', padding:'20px', borderRadius:'25px', marginBottom:'20px', border:'1px solid #333'}}>
-                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'15px'}}>
-                  <span style={{color: tipo === 'Arriesgada' ? '#ff4444' : tipo === 'Moderada' ? '#fbbf24' : '#4ade80', fontWeight:'900', fontSize:'0.8rem'}}>{tipo}</span>
-                  <span style={{color:'#fff', fontWeight:'900', fontSize:'1rem'}}>@{combo.totalOdd.toFixed(2)}</span>
-                </div>
-                {combo.picks.map((pick, i) => (
-                  <div key={i} style={{fontSize:'0.65rem', color:'#888', marginBottom:'6px'}}>✓ {pick.home} vs {pick.away}</div>
-                ))}
-                <div style={{marginTop:'15px', borderTop:'1px solid #222', paddingTop:'15px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                  <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                    <span style={{fontSize:'0.6rem', color:'#444'}}>STAKE:</span>
-                    <input type="number" value={betAmount} onChange={(e) => setBetAmount(e.target.value)} style={{background:'#111', border:'1px solid #333', color:'#fbbf24', width:'50px', padding:'5px', borderRadius:'8px', textAlign:'center'}} />
-                  </div>
-                  <div style={{textAlign:'right'}}>
-                    <div style={{fontSize:'0.5rem', color:'#444'}}>PREMIO ESTIMADO</div>
-                    <div style={{fontSize:'1.1rem', color:'#4ade80', fontWeight:'bold'}}>{(betAmount * combo.totalOdd).toFixed(2)}€</div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+          )
+        )}
+      </div>
     </div>
   );
-        }
-                                                                    
+  }
+        
         
 
     

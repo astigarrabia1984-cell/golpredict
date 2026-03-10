@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import { 
   getAuth, 
-  signInWithPopup, 
+  signInWithRedirect, 
   GoogleAuthProvider, 
   onAuthStateChanged, 
-  signOut 
+  signOut,
+  getRedirectResult 
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -27,7 +28,6 @@ export default function GolpredictPro() {
   const [ticket, setTicket] = useState([]);
   const [activeTab, setActiveTab] = useState('mercado');
   const [analysedDb, setAnalysedDb] = useState({});
-  const [stats, setStats] = useState({ aciertos: 3, perdidos: 1 }); // Basado en resultados reales de las capturas
   const [loading, setLoading] = useState(true);
 
   const baseData = {
@@ -79,22 +79,21 @@ export default function GolpredictPro() {
           const rV = Math.floor(Math.random() * (parseFloat(xGV) + 1.2));
           if(rL > rV) wL++; else if(rL === rV) dr++; else wV++;
         }
-        const pL = (wL/10).toFixed(1);
-        const pE = (dr/10).toFixed(1);
-        const pV = (wV/10).toFixed(1);
-        let winnerPick = parseFloat(pL) > parseFloat(pV) && parseFloat(pL) > parseFloat(pE) ? p.local : (parseFloat(pV) > parseFloat(pL) && parseFloat(pV) > parseFloat(pE) ? p.visitante : "Empate");
-        const isFinished = new Date() > new Date(p.fecha);
-        return { ...p, pL, pE, pV, winnerPick, isFinished };
+        return { ...p, pL: (wL/10).toFixed(1), pE: (dr/10).toFixed(1), pV: (wV/10).toFixed(1), isFinished: new Date() > new Date(p.fecha) };
       });
     });
     setAnalysedDb(newDb);
   }, []);
 
   useEffect(() => {
+    getRedirectResult(auth).catch(e => console.error("Redirect Error", e));
     const unsub = onAuthStateChanged(auth, (u) => {
       if (u) {
+        // LISTA VIP ACTUALIZADA Y LIMPIA
         const vips = ['astigarrabia1984@gmail.com', 'vieirajuandavid9@gmail.com'];
-        if (vips.includes(u.email.toLowerCase())) {
+        const emailClean = u.email.toLowerCase().trim();
+        
+        if (vips.includes(emailClean)) {
           setIsPremium(true);
           setUser(u);
           runQuantumEngine();
@@ -111,29 +110,20 @@ export default function GolpredictPro() {
     return () => unsub();
   }, [runQuantumEngine]);
 
-  const handleLogin = async () => {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (e) {
-      console.error(e);
-      alert("Error de conexión con Google. Revisa los dominios autorizados en Firebase.");
-    }
-  };
-
+  const handleLogin = () => signInRedirect(auth, provider);
   const handleLogout = () => signOut(auth).then(() => { window.location.reload(); });
 
-  if (loading) return <div style={{background:'#000', height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#fbbf24', fontFamily:'monospace'}}>GOLPREDICT PRO: CARGANDO DATOS...</div>;
+  if (loading) return <div style={{background:'#000', height:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#fbbf24', fontFamily:'monospace'}}>GOLPREDICT PRO V2.1...</div>;
 
   if (!user || !isPremium) {
     return (
       <div style={{background:'#000', height:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'30px', textAlign:'center', fontFamily:'monospace'}}>
         <h1 style={{color:'#fbbf24', fontSize:'2.2rem', fontWeight:'900', marginBottom:'10px'}}>GOLPREDICT PRO</h1>
-        <p style={{color:'#444', fontSize:'0.7rem', marginBottom:'30px'}}>SISTEMA VIP DE ALTA PRECISIÓN</p>
-        <button onClick={handleLogin} style={{background:'#fbbf24', color:'#000', padding:'20px 40px', border:'none', borderRadius:'15px', fontWeight:'900', cursor:'pointer'}}>IDENTIFICARSE CON GOOGLE</button>
+        <button onClick={() => signInWithRedirect(auth, provider)} style={{background:'#fbbf24', color:'#000', padding:'20px 40px', border:'none', borderRadius:'15px', fontWeight:'900', cursor:'pointer'}}>ACCEDER CON GOOGLE</button>
         {user && !isPremium && (
           <div style={{marginTop:'30px'}}>
-            <p style={{color:'#ff4444', fontWeight:'bold'}}>{user.email} NO TIENE RANGO VIP</p>
-            <button onClick={handleLogout} style={{color:'#666', background:'none', border:'none', textDecoration:'underline', marginTop:'10px', cursor:'pointer'}}>Cerrar sesión</button>
+            <p style={{color:'#ff4444', fontWeight:'bold'}}>ACCESO DENEGADO: {user.email}</p>
+            <button onClick={handleLogout} style={{color:'#666', background:'none', border:'none', textDecoration:'underline', marginTop:'15px', cursor:'pointer'}}>CERRAR SESIÓN / CAMBIAR CUENTA</button>
           </div>
         )}
       </div>
@@ -145,10 +135,6 @@ export default function GolpredictPro() {
       
       <div style={{padding:'20px', textAlign:'center', borderBottom:'1px solid #222'}}>
         <h1 style={{color:'#fbbf24', margin:0, fontSize:'1.4rem', fontWeight:'900'}}>GOLPREDICT PRO</h1>
-        <div style={{display:'flex', justifyContent:'center', gap:'15px', marginTop:'10px'}}>
-            <div style={{color:'#4ade80', fontSize:'0.6rem', fontWeight:'900'}}>HISTÓRICO ACIERTOS: {stats.aciertos}</div>
-            <div style={{color:'#ff4444', fontSize:'0.6rem', fontWeight:'900'}}>FALLOS: {stats.perdidos}</div>
-        </div>
       </div>
 
       <nav style={{display:'flex', background:'#0a0a0a', position:'sticky', top:0, zIndex:10}}>
@@ -167,15 +153,9 @@ export default function GolpredictPro() {
             </div>
             {analysedDb[liga]?.map(p => (
               <div key={p.id} style={{background:'#080808', padding:'15px', borderRadius:'20px', marginBottom:'12px', border:'1px solid #1a1a1a', opacity: p.isFinished ? 0.5 : 1}}>
-                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
-                    <span style={{fontSize:'0.6rem', color:'#555'}}>{new Date(p.fecha).toLocaleDateString()} {new Date(p.fecha).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                    {p.isFinished ? <span style={{color:'#ff4444', fontWeight:'900', fontSize:'0.5rem'}}>FINALIZADO</span> : <span style={{color:'#4ade80', fontWeight:'900', fontSize:'0.5rem'}}>PRÓXIMO</span>}
+                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px', fontSize:'0.6rem', color:'#555'}}>
+                    <span>{new Date(p.fecha).toLocaleDateString()} {new Date(p.fecha).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                 </div>
-                {p.isFinished && p.scoreL !== undefined && (
-                    <div style={{textAlign:'center', background:'#111', padding:'5px', borderRadius:'10px', marginBottom:'10px'}}>
-                        <div style={{fontSize:'1.2rem', fontWeight:'900'}}>{p.scoreL} - {p.scoreV}</div>
-                    </div>
-                )}
                 <div style={{display:'flex', gap:'8px', marginBottom:'15px'}}>
                     {[ {l:'L', v:p.pL, q:p.oddL, c:'#4ade80'}, {l:'X', v:p.pE, q:p.oddE, c:'#fbbf24'}, {l:'V', v:p.pV, q:p.oddV, c:'#22d3ee'} ].map(i => (
                         <div key={i.l} style={{flex:1, textAlign:'center', background:'#111', padding:'8px', borderRadius:'10px', border:'1px solid #222'}}>
@@ -184,9 +164,9 @@ export default function GolpredictPro() {
                         </div>
                     ))}
                 </div>
-                <div style={{textAlign:'center', fontWeight:'900', fontSize:'0.9rem'}}>{p.local} <span style={{color:'#fbbf24'}}>VS</span> {p.visitante}</div>
+                <div style={{textAlign:'center', fontWeight:'900', fontSize:'0.9rem'}}>{p.local} VS {p.visitante}</div>
                 {!p.isFinished && (
-                    <button onClick={() => setTicket([...ticket, p])} style={{width:'100%', background:'#fbbf24', border:'none', padding:'12px', borderRadius:'10px', fontWeight:'900', marginTop:'15px', cursor:'pointer', fontSize:'0.7rem'}}>AÑADIR AL TICKET</button>
+                    <button onClick={() => setTicket([...ticket, p])} style={{width:'100%', background:'#fbbf24', color:'#000', border:'none', padding:'12px', borderRadius:'10px', fontWeight:'900', marginTop:'15px', cursor:'pointer', fontSize:'0.7rem'}}>AÑADIR TICKET</button>
                 )}
               </div>
             ))}
@@ -195,29 +175,16 @@ export default function GolpredictPro() {
 
         {activeTab === 'ia' && (
            <div style={{padding:'40px 20px', border:'2px dashed #fbbf24', borderRadius:'20px', textAlign:'center'}}>
-              <h2 style={{color:'#fbbf24', fontWeight:'900'}}>MASTER PICK DEL DÍA</h2>
-              {Object.values(analysedDb).flat().filter(p => !p.isFinished).sort((a,b) => Math.max(b.pL, b.pV) - Math.max(a.pL, a.pV)).slice(0,1).map(p => (
-                <div key={p.id} style={{marginTop:'20px'}}>
-                   <div style={{fontSize:'1.1rem', fontWeight:'bold'}}>{p.local} v {p.visitante}</div>
-                   <div style={{fontSize:'3.5rem', color:'#fbbf24', fontWeight:'900'}}>@{p.winnerPick === p.local ? p.oddL : (p.winnerPick === p.visitante ? p.oddV : p.oddE)}</div>
-                   <p style={{color:'#666', fontSize:'0.7rem'}}>PROBABILIDAD: {Math.max(p.pL, p.pV)}%</p>
-                </div>
-              ))}
+              <h2 style={{color:'#fbbf24', fontWeight:'900'}}>PRONÓSTICO IA</h2>
+              <p style={{color:'#666', fontSize:'0.7rem'}}>ANÁLISIS DE ALTA PROBABILIDAD</p>
            </div>
         )}
 
         {activeTab === 'ticket' && (
            <div style={{background:'#111', padding:'20px', borderRadius:'15px'}}>
-              <h3 style={{color:'#fbbf24', textAlign:'center', marginBottom:'15px'}}>MI OPERACIÓN</h3>
+              <h3 style={{color:'#fbbf24', textAlign:'center', marginBottom:'15px'}}>OPERACIÓN</h3>
               {ticket.length === 0 ? <p style={{textAlign:'center', color:'#444', fontSize:'0.7rem'}}>VACÍO</p> : (
-                <>
-                  {ticket.map((p, idx) => (
-                    <div key={idx} style={{display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #222'}}>
-                      <span style={{fontSize:'0.7rem'}}>{p.winnerPick}</span> <span style={{color:'#fbbf24', fontWeight:'900', fontSize:'0.7rem'}}>@{p.winnerPick === p.local ? p.oddL : (p.winnerPick === p.visitante ? p.oddV : p.oddE)}</span>
-                    </div>
-                  ))}
-                  <button onClick={() => setTicket([])} style={{width:'100%', background:'#ff4444', color:'#fff', border:'none', padding:'12px', marginTop:'15px', borderRadius:'10px', fontWeight:'900', cursor:'pointer'}}>LIMPIAR TICKET</button>
-                </>
+                <button onClick={() => setTicket([])} style={{width:'100%', background:'#ff4444', color:'#fff', border:'none', padding:'12px', marginTop:'15px', borderRadius:'10px', fontWeight:'900'}}>LIMPIAR</button>
               )}
            </div>
         )}
@@ -228,7 +195,8 @@ export default function GolpredictPro() {
       </div>
     </div>
   );
-          }
+                                         }
+
 
     
 

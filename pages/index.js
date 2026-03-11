@@ -12,12 +12,10 @@ if (!getApps().length) initializeApp(firebaseConfig);
 
 const FULL_DB = {
   'ucl': [
-    // RESULTADOS REALES CAPTURA 10.03
     { id: 'u1', d: '10.03', h: 'Galatasaray', a: 'Liverpool', oL: 3.10, oE: 3.60, oV: 2.20, status: 'lost', res: '1-0', pick: '2' },
     { id: 'u2', d: '10.03', h: 'Atalanta', a: 'Bayern', oL: 3.40, oE: 3.80, oV: 2.00, status: 'won', res: '1-6', pick: '2' },
     { id: 'u3', d: '10.03', h: 'Atlético', a: 'Tottenham', oL: 2.10, oE: 3.40, oV: 3.50, status: 'won', res: '5-2', pick: '1' },
     { id: 'u4', d: '10.03', h: 'Newcastle', a: 'Barcelona', oL: 3.20, oE: 3.70, oV: 2.10, status: 'lost', res: '1-1', pick: '2' },
-    // PRÓXIMOS
     { id: 'u5', d: '11.03 18:45', h: 'Bayer Leverkusen', a: 'Arsenal', oL: 2.60, oE: 3.40, oV: 2.70, status: 'pending' },
     { id: 'u6', d: '11.03 21:00', h: 'Bodo/Glimt', a: 'Sporting CP', oL: 3.80, oE: 3.90, oV: 1.85, status: 'pending' },
     { id: 'u7', d: '11.03 21:00', h: 'PSG', a: 'Chelsea', oL: 1.95, oE: 3.75, oV: 3.60, status: 'pending' },
@@ -85,6 +83,16 @@ export default function GolpredictPro() {
     setDb(newDb);
   }, []);
 
+  // Función para manejar la selección/deselección
+  const toggleSelection = (matchName, pick, odd) => {
+    const isSelected = sel.some(s => s.name === matchName && s.p === pick);
+    if (isSelected) {
+      setSel(sel.filter(s => !(s.name === matchName && s.p === pick)));
+    } else {
+      setSel([...sel, { name: matchName, p: pick, o: odd }]);
+    }
+  };
+
   const getIACombos = () => {
     const all = Object.values(db).flat().filter(m => m.status === 'pending');
     return [
@@ -116,41 +124,60 @@ export default function GolpredictPro() {
       </div>
 
       <div style={{padding:'12px'}}>
-        {tab === 'p' && db[liga]?.filter(m => m.status === 'pending').map(p => (
-          <div key={p.id} style={{background:'#111', padding:'15px', borderRadius:'18px', marginBottom:'12px', border:'1px solid #222'}}>
-            <div onClick={() => setExpanded(expanded === p.id ? null : p.id)} style={{cursor:'pointer', textAlign:'center', marginBottom:'12px'}}>
-              <div style={{fontSize:'0.6rem', color:'#fbbf24', fontWeight:'bold', marginBottom:'5px'}}>{p.d} • ANALIZAR ▾</div>
-              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                <div style={{flex:1}}><div style={{fontWeight:'900'}}>{p.h}</div><div style={{color:'#4ade80', fontSize:'0.75rem'}}>{p.pL}%</div></div>
-                <div style={{fontSize:'0.6rem', color:'#666'}}>VS</div>
-                <div style={{flex:1}}><div style={{fontWeight:'900'}}>{p.a}</div><div style={{color:'#4ade80', fontSize:'0.75rem'}}>{p.pV}%</div></div>
+        {tab === 'p' && db[liga]?.filter(m => m.status === 'pending').map(p => {
+          const mName = `${p.h}-${p.a}`;
+          return (
+            <div key={p.id} style={{background:'#111', padding:'15px', borderRadius:'18px', marginBottom:'12px', border:'1px solid #222'}}>
+              <div onClick={() => setExpanded(expanded === p.id ? null : p.id)} style={{cursor:'pointer', textAlign:'center', marginBottom:'12px'}}>
+                <div style={{fontSize:'0.6rem', color:'#fbbf24', fontWeight:'bold', marginBottom:'5px'}}>{p.d} • ANALIZAR ▾</div>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <div style={{flex:1}}><div style={{fontWeight:'900'}}>{p.h}</div><div style={{color:'#4ade80', fontSize:'0.75rem'}}>{p.pL}%</div></div>
+                  <div style={{fontSize:'0.6rem', color:'#666'}}>VS</div>
+                  <div style={{flex:1}}><div style={{fontWeight:'900'}}>{p.a}</div><div style={{color:'#4ade80', fontSize:'0.75rem'}}>{p.pV}%</div></div>
+                </div>
               </div>
-            </div>
 
-            {expanded === p.id && (
-              <div style={{background:'#000', padding:'12px', borderRadius:'12px', marginBottom:'12px', border:'1px solid #fbbf24'}}>
-                <div style={{fontSize:'0.7rem', color:'#fbbf24', marginBottom:'8px', fontWeight:'bold'}}>DOBLE OPORTUNIDAD:</div>
-                <div style={{display:'flex', gap:'5px', marginBottom:'12px'}}>
-                  {[{t:'1X', q:p.o1X}, {t:'X2', q:p.oX2}, {t:'12', q:p.o12}].map((dopp, i) => (
-                    <button key={i} onClick={() => setSel([...sel, {name:`${p.h}-${p.a}`, p:dopp.t, o:dopp.q}])} style={{flex:1, background:'#222', border:'1px solid #444', color:'#fff', padding:'10px', borderRadius:'10px', fontSize:'0.7rem', fontWeight:'bold'}}>
-                      {dopp.t} @{dopp.q.toFixed(2)}
+              {expanded === p.id && (
+                <div style={{background:'#000', padding:'12px', borderRadius:'12px', marginBottom:'12px', border:'1px solid #fbbf24'}}>
+                  <div style={{fontSize:'0.7rem', color:'#fbbf24', marginBottom:'8px', fontWeight:'bold'}}>DOBLE OPORTUNIDAD:</div>
+                  <div style={{display:'flex', gap:'5px', marginBottom:'12px'}}>
+                    {[{t:'1X', q:p.o1X}, {t:'X2', q:p.oX2}, {t:'12', q:p.o12}].map((dopp, i) => {
+                      const isSelectedDO = sel.some(s => s.name === mName && s.p === dopp.t);
+                      return (
+                        <button 
+                          key={i} 
+                          onClick={() => toggleSelection(mName, dopp.t, dopp.q)} 
+                          style={{flex:1, background: isSelectedDO ? '#fbbf24' : '#222', border: isSelectedDO ? '1px solid #fff' : '1px solid #444', color: isSelectedDO ? '#000' : '#fff', padding:'10px', borderRadius:'10px', fontSize:'0.7rem', fontWeight:'bold', transition: 'all 0.2s'}}
+                        >
+                          {dopp.t} @{dopp.q.toFixed(2)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', fontSize:'0.7rem'}}>
+                    <span>Over 2.5: <b style={{color:'#fff'}}>{p.ov25}%</b></span>
+                    <span>Córners: <b style={{color:'#fbbf24'}}>{p.corners}</b></span>
+                  </div>
+                </div>
+              )}
+
+              <div style={{display:'flex', gap:'8px'}}>
+                {[{q:p.oL,t:'1'}, {q:p.oE,t:'X'}, {q:p.oV,t:'2'}].map((o,i) => {
+                  const isSelected = sel.some(s => s.name === mName && s.p === o.t);
+                  return (
+                    <button 
+                      key={i} 
+                      onClick={() => toggleSelection(mName, o.t, o.q)} 
+                      style={{flex:1, padding:'12px', borderRadius:'10px', background: isSelected ? '#fbbf24' : '#1a1a1a', color: isSelected ? '#000' : '#fff', border: isSelected ? '1px solid #fff' : '1px solid #333', fontWeight:'900', transition: 'all 0.2s'}}
+                    >
+                      @{o.q.toFixed(2)}
                     </button>
-                  ))}
-                </div>
-                <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', fontSize:'0.7rem'}}>
-                  <span>Over 2.5: <b style={{color:'#fff'}}>{p.ov25}%</b></span>
-                  <span>Córners: <b style={{color:'#fbbf24'}}>{p.corners}</b></span>
-                </div>
+                  );
+                })}
               </div>
-            )}
-
-            <div style={{display:'flex', gap:'8px'}}>
-              {[{q:p.oL,t:'1'}, {q:p.oE,t:'X'}, {q:p.oV,t:'2'}].map((o,i) => (
-                <button key={i} onClick={() => setSel([...sel, {name:`${p.h}-${p.a}`, p:o.t, o:o.q}])} style={{flex:1, padding:'12px', borderRadius:'10px', background:'#1a1a1a', color:'#fff', border:'1px solid #333', fontWeight:'900'}}>@{o.q.toFixed(2)}</button>
-              ))}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {tab === 'ia' && getIACombos().map((c, i) => (
           <div key={i} style={{background:'#111', padding:'15px', borderRadius:'15px', marginBottom:'12px', borderLeft:`5px solid ${c.c}`}}>
@@ -194,16 +221,21 @@ export default function GolpredictPro() {
 
         {tab === 'c' && (
           <div style={{background:'#111', padding:'20px', borderRadius:'20px', border:'2px solid #fbbf24', textAlign:'center'}}>
-            {sel.map((b,i) => <div key={i} style={{display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #222', fontSize:'0.85rem'}}><span>{b.name} ({b.p})</span><b>@{b.o.toFixed(2)}</b></div>)}
-            <input type="number" value={bet} onChange={e=>setBet(e.target.value)} style={{background:'#000', border:'2px solid #fbbf24', color:'#fbbf24', fontSize:'1.8rem', width:'100px', marginTop:'20px', borderRadius:'10px', textAlign:'center'}} />
-            <div style={{background:'#fbbf24', color:'#000', padding:'15px', borderRadius:'14px', marginTop:'20px', fontWeight:'900', fontSize:'1.4rem'}}>GANANCIA: {(bet * sel.reduce((acc,b)=>acc*b.o,1)).toFixed(2)}€</div>
-            <button onClick={()=>setSel([])} style={{marginTop:'20px', color:'#ff4444', background:'none', border:'none', fontSize:'0.75rem', fontWeight:'bold'}}>BORRAR TODO</button>
+            {sel.length === 0 ? <p style={{fontSize:'0.8rem', color:'#888'}}>No hay apuestas seleccionadas</p> : (
+              <>
+                {sel.map((b,i) => <div key={i} style={{display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #222', fontSize:'0.85rem'}}><span>{b.name} ({b.p})</span><b>@{b.o.toFixed(2)}</b></div>)}
+                <input type="number" value={bet} onChange={e=>setBet(e.target.value)} style={{background:'#000', border:'2px solid #fbbf24', color:'#fbbf24', fontSize:'1.8rem', width:'100px', marginTop:'20px', borderRadius:'10px', textAlign:'center'}} />
+                <div style={{background:'#fbbf24', color:'#000', padding:'15px', borderRadius:'14px', marginTop:'20px', fontWeight:'900', fontSize:'1.4rem'}}>GANANCIA: {(bet * sel.reduce((acc,b)=>acc*b.o,1)).toFixed(2)}€</div>
+                <button onClick={()=>setSel([])} style={{marginTop:'20px', color:'#ff4444', background:'none', border:'none', fontSize:'0.75rem', fontWeight:'bold'}}>BORRAR TODO</button>
+              </>
+            )}
           </div>
         )}
       </div>
     </div>
   );
-        }
+}
+
             
 
                                                         

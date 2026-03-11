@@ -203,7 +203,8 @@ export default function GolpredictPro() {
       </div>
     </div>
   );
-}
+        }
+            
 
                                                         
                   

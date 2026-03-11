@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCWaYEedL9BAbFs0lZ8_OTk1fOHE7UqBKc",
@@ -13,33 +12,36 @@ if (!getApps().length) initializeApp(firebaseConfig);
 
 const FULL_DB = {
   'ucl': [
-    // RESULTADOS REALES DEL 10 DE MARZO
-    { id: 'u1', d: '10.03. 18:45', h: 'Galatasaray', a: 'Liverpool', oL: 3.10, oE: 3.60, oV: 2.20, status: 'won', res: '1-2', pick: '2' },
-    { id: 'u2', d: '10.03. 21:00', h: 'Atalanta', a: 'Bayern', oL: 3.40, oE: 3.80, oV: 2.00, status: 'won', res: '0-2', pick: '2' },
-    { id: 'u3', d: '10.03. 21:00', h: 'AtlÃ©tico', a: 'Tottenham', oL: 2.10, oE: 3.40, oV: 3.50, status: 'lost', res: '0-0', pick: '1' },
-    { id: 'u4', d: '10.03. 21:00', h: 'Newcastle', a: 'Barcelona', oL: 3.20, oE: 3.70, oV: 2.10, status: 'won', res: '1-3', pick: '2' },
-    // PARTIDOS DE HOY 11 DE MARZO (PENDIENTES)
-    { id: 'u5', d: '11.03. 18:45', h: 'Leverkusen', a: 'Arsenal', oL: 2.60, oE: 3.40, oV: 2.70, status: 'pending' },
-    { id: 'u6', d: '11.03. 21:00', h: 'Bodo/Glimt', a: 'Sporting CP', oL: 3.80, oE: 3.90, oV: 1.85, status: 'pending' },
-    { id: 'u7', d: '11.03. 21:00', h: 'PSG', a: 'Chelsea', oL: 1.95, oE: 3.75, oV: 3.60, status: 'pending' },
-    { id: 'u8', d: '11.03. 21:00', h: 'Real Madrid', a: 'Man. City', oL: 2.80, oE: 3.60, oV: 2.40, status: 'pending' }
+    // RESULTADOS REALES CAPTURA 10.03
+    { id: 'u1', d: '10.03', h: 'Galatasaray', a: 'Liverpool', oL: 3.10, oE: 3.60, oV: 2.20, status: 'lost', res: '1-0', pick: '2' },
+    { id: 'u2', d: '10.03', h: 'Atalanta', a: 'Bayern', oL: 3.40, oE: 3.80, oV: 2.00, status: 'won', res: '1-6', pick: '2' },
+    { id: 'u3', d: '10.03', h: 'Atlético', a: 'Tottenham', oL: 2.10, oE: 3.40, oV: 3.50, status: 'won', res: '5-2', pick: '1' },
+    { id: 'u4', d: '10.03', h: 'Newcastle', a: 'Barcelona', oL: 3.20, oE: 3.70, oV: 2.10, status: 'lost', res: '1-1', pick: '2' },
+    // PRÓXIMOS
+    { id: 'u5', d: '11.03 18:45', h: 'Bayer Leverkusen', a: 'Arsenal', oL: 2.60, oE: 3.40, oV: 2.70, status: 'pending' },
+    { id: 'u6', d: '11.03 21:00', h: 'Bodo/Glimt', a: 'Sporting CP', oL: 3.80, oE: 3.90, oV: 1.85, status: 'pending' },
+    { id: 'u7', d: '11.03 21:00', h: 'PSG', a: 'Chelsea', oL: 1.95, oE: 3.75, oV: 3.60, status: 'pending' },
+    { id: 'u8', d: '11.03 21:00', h: 'Real Madrid', a: 'Man. City', oL: 2.80, oE: 3.60, oV: 2.40, status: 'pending' }
   ],
   'laliga': [
-    { id: 'l1', d: '13.03. 21:00', h: 'AlavÃ©s', a: 'Villarreal', oL: 2.85, oE: 3.30, oV: 2.55, status: 'pending' },
-    { id: 'l2', d: '14.03. 14:00', h: 'Girona', a: 'Athletic', oL: 2.45, oE: 3.40, oV: 2.95, status: 'pending' },
-    { id: 'l3', d: '14.03. 16:15', h: 'AtlÃ©tico', a: 'Getafe', oL: 1.57, oE: 4.00, oV: 6.25, status: 'pending' },
-    { id: 'l4', d: '14.03. 18:30', h: 'Real Oviedo', a: 'Valencia', oL: 3.10, oE: 3.10, oV: 2.45, status: 'pending' },
-    { id: 'l5', d: '14.03. 21:00', h: 'Real Madrid', a: 'Elche', oL: 1.18, oE: 7.50, oV: 15.0, status: 'pending' },
-    { id: 'l6', d: '15.03. 14:00', h: 'Mallorca', a: 'Espanyol', oL: 2.05, oE: 3.20, oV: 4.10, status: 'pending' },
-    { id: 'l7', d: '15.03. 16:15', h: 'Barcelona', a: 'Sevilla', oL: 1.38, oE: 5.25, oV: 8.00, status: 'pending' },
-    { id: 'l14', d: '22.03. 21:00', h: 'Real Madrid', a: 'AtlÃ©tico', oL: 1.90, oE: 3.70, oV: 4.00, status: 'pending' }
+    { id: 'l1', d: '14.03', h: 'Girona', a: 'Athletic Club', oL: 2.45, oE: 3.40, oV: 2.95, status: 'pending' },
+    { id: 'l2', d: '14.03', h: 'Atlético de Madrid', a: 'Getafe', oL: 1.57, oE: 4.00, oV: 6.25, status: 'pending' },
+    { id: 'l3', d: '14.03', h: 'Real Oviedo', a: 'Valencia', oL: 3.10, oE: 3.10, oV: 2.45, status: 'pending' },
+    { id: 'l4', d: '14.03', h: 'Real Madrid', a: 'Elche', oL: 1.18, oE: 7.50, oV: 15.0, status: 'pending' },
+    { id: 'l5', d: '15.03', h: 'Mallorca', a: 'Espanyol', oL: 2.05, oE: 3.20, oV: 4.10, status: 'pending' },
+    { id: 'l6', d: '15.03', h: 'Barcelona', a: 'Sevilla', oL: 1.38, oE: 5.25, oV: 8.00, status: 'pending' },
+    { id: 'l7', d: '15.03', h: 'Real Betis', a: 'Celta de Vigo', oL: 2.10, oE: 3.50, oV: 3.60, status: 'pending' },
+    { id: 'l8', d: '16.03', h: 'Rayo Vallecano', a: 'Levante', oL: 2.25, oE: 3.25, oV: 3.35, status: 'pending' }
   ],
   'epl': [
-    { id: 'e1', d: '14.03. 13:30', h: 'Man. City', a: 'Brighton', oL: 1.30, oE: 5.80, oV: 9.50, status: 'pending' },
-    { id: 'e3', d: '14.03. 16:00', h: 'Newcastle', a: 'Leicester', oL: 1.55, oE: 4.30, oV: 6.00, status: 'pending' },
-    { id: 'e5', d: '14.03. 18:30', h: 'Arsenal', a: 'Everton', oL: 1.25, oE: 6.25, oV: 12.0, status: 'pending' },
-    { id: 'e7', d: '15.03. 17:30', h: 'Liverpool', a: 'Tottenham', oL: 1.62, oE: 4.40, oV: 5.00, status: 'pending' },
-    { id: 'e10', d: '16.03. 21:00', h: 'Fulham', a: 'Wolves', oL: 1.95, oE: 3.50, oV: 3.80, status: 'pending' }
+    { id: 'e1', d: '14.03', h: 'Burnley', a: 'Bournemouth', oL: 2.80, oE: 3.40, oV: 2.50, status: 'pending' },
+    { id: 'e2', d: '14.03', h: 'Sunderland', a: 'Brighton', oL: 4.20, oE: 3.80, oV: 1.80, status: 'pending' },
+    { id: 'e3', d: '14.03', h: 'Arsenal', a: 'Everton', oL: 1.25, oE: 6.25, oV: 12.0, status: 'pending' },
+    { id: 'e4', d: '14.03', h: 'Chelsea', a: 'Newcastle', oL: 2.10, oE: 3.60, oV: 3.30, status: 'pending' },
+    { id: 'e5', d: '14.03', h: 'West Ham', a: 'Man. City', oL: 8.50, oE: 5.50, oV: 1.33, status: 'pending' },
+    { id: 'e6', d: '15.03', h: 'Man. Utd', a: 'Aston Villa', oL: 2.05, oE: 3.70, oV: 3.50, status: 'pending' },
+    { id: 'e7', d: '15.03', h: 'Liverpool', a: 'Tottenham', oL: 1.62, oE: 4.40, oV: 5.00, status: 'pending' },
+    { id: 'e8', d: '16.03', h: 'Brentford', a: 'Wolves', oL: 2.10, oE: 3.40, oV: 3.60, status: 'pending' }
   ]
 };
 
@@ -65,12 +67,12 @@ export default function GolpredictPro() {
       s.corn += (lA + lB) * 2.4 + (Math.random() * 4);
       const res = `${gA}-${gB}`; s.scores[res] = (s.scores[res] || 0) + 1;
     }
-    const exact = Object.entries(s.scores).sort((a,b) => b[1] - a[1]).slice(0,3).map(x => x[0]);
     const pick = s.wL > s.wV && s.wL > s.d ? '1' : s.wV > s.wL && s.wV > s.d ? '2' : 'X';
     return { 
       pL:(s.wL/500).toFixed(1), pE:(s.d/500).toFixed(1), pV:(s.wV/500).toFixed(1), 
-      ov25:(s.ov25/500).toFixed(1), corners:(s.corn/ITER).toFixed(1), exact, pick, 
-      probMax: Math.max(s.wL, s.d, s.wV)/500, pickOdd: pick==='1'?oL : pick==='2'?oV : oE,
+      ov25:(s.ov25/500).toFixed(1), corners:(s.corn/ITER).toFixed(1), 
+      exact: Object.entries(s.scores).sort((a,b) => b[1] - a[1]).slice(0,3).map(x => x[0]), 
+      pick, probMax: Math.max(s.wL, s.d, s.wV)/500, pickOdd: pick==='1'?oL : pick==='2'?oV : oE,
       o1X: 1/((1/oL)+(1/oE)), oX2: 1/((1/oV)+(1/oE)), o12: 1/((1/oL)+(1/oV))
     };
   };
@@ -117,7 +119,7 @@ export default function GolpredictPro() {
         {tab === 'p' && db[liga]?.filter(m => m.status === 'pending').map(p => (
           <div key={p.id} style={{background:'#111', padding:'15px', borderRadius:'18px', marginBottom:'12px', border:'1px solid #222'}}>
             <div onClick={() => setExpanded(expanded === p.id ? null : p.id)} style={{cursor:'pointer', textAlign:'center', marginBottom:'12px'}}>
-              <div style={{fontSize:'0.6rem', color:'#fbbf24', fontWeight:'bold', marginBottom:'5px'}}>{p.d} â€¢ ANALIZAR â–¾</div>
+              <div style={{fontSize:'0.6rem', color:'#fbbf24', fontWeight:'bold', marginBottom:'5px'}}>{p.d} • ANALIZAR ▾</div>
               <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <div style={{flex:1}}><div style={{fontWeight:'900'}}>{p.h}</div><div style={{color:'#4ade80', fontSize:'0.75rem'}}>{p.pL}%</div></div>
                 <div style={{fontSize:'0.6rem', color:'#666'}}>VS</div>
@@ -137,7 +139,7 @@ export default function GolpredictPro() {
                 </div>
                 <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', fontSize:'0.7rem'}}>
                   <span>Over 2.5: <b style={{color:'#fff'}}>{p.ov25}%</b></span>
-                  <span>CÃ³rners: <b style={{color:'#fbbf24'}}>{p.corners}</b></span>
+                  <span>Córners: <b style={{color:'#fbbf24'}}>{p.corners}</b></span>
                 </div>
               </div>
             )}
@@ -179,7 +181,7 @@ export default function GolpredictPro() {
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                   <div style={{fontSize:'0.75rem'}}>
                     <b>{p.h} {p.res} {p.a}</b>
-                    <div style={{color:'#666', fontSize:'0.6rem'}}>PronÃ³stico: {p.pick} (@{p.pickOdd.toFixed(2)})</div>
+                    <div style={{color:'#666', fontSize:'0.6rem'}}>Pronosticado: {p.pick}</div>
                   </div>
                   <span style={{background: p.status==='won'?'#4ade80':'#ff4444', color:'#000', padding:'4px 8px', borderRadius:'6px', fontSize:'0.6rem', fontWeight:'900'}}>
                     {p.status==='won'?'ACERTADO':'FALLADO'}
@@ -194,13 +196,15 @@ export default function GolpredictPro() {
           <div style={{background:'#111', padding:'20px', borderRadius:'20px', border:'2px solid #fbbf24', textAlign:'center'}}>
             {sel.map((b,i) => <div key={i} style={{display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #222', fontSize:'0.85rem'}}><span>{b.name} ({b.p})</span><b>@{b.o.toFixed(2)}</b></div>)}
             <input type="number" value={bet} onChange={e=>setBet(e.target.value)} style={{background:'#000', border:'2px solid #fbbf24', color:'#fbbf24', fontSize:'1.8rem', width:'100px', marginTop:'20px', borderRadius:'10px', textAlign:'center'}} />
-            <div style={{background:'#fbbf24', color:'#000', padding:'15px', borderRadius:'14px', marginTop:'20px', fontWeight:'900', fontSize:'1.4rem'}}>GANANCIA: {(bet * sel.reduce((acc,b)=>acc*b.o,1)).toFixed(2)}â‚¬</div>
-            <button onClick={()=>setSel([])} style={{marginTop:'20px', color:'#ff4444', background:'none', border:'none', fontSize:'0.75rem', fontWeight:'bold'}}>LIMPIAR</button>
+            <div style={{background:'#fbbf24', color:'#000', padding:'15px', borderRadius:'14px', marginTop:'20px', fontWeight:'900', fontSize:'1.4rem'}}>GANANCIA: {(bet * sel.reduce((acc,b)=>acc*b.o,1)).toFixed(2)}€</div>
+            <button onClick={()=>setSel([])} style={{marginTop:'20px', color:'#ff4444', background:'none', border:'none', fontSize:'0.75rem', fontWeight:'bold'}}>BORRAR TODO</button>
           </div>
         )}
       </div>
     </div>
   );
+}
+
                                                         
                   
         

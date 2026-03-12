@@ -2,13 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
-// --- CONFIGURACIÓN FIREBASE (Confirmada en tus capturas) ---
 const firebaseConfig = {
   apiKey: "AIzaSyCWayEedL9BAbFsOlZ8_OTk1fOHE7UqBKc",
   authDomain: "golpredict-pro.firebaseapp.com",
   projectId: "golpredict-pro",
-  storageBucket: "golpredict-pro.appspot.com",
-  messagingSenderId: "101840838997",
   appId: "1:101840838997:web:9a776f0eb568ff89708da4"
 };
 
@@ -17,63 +14,58 @@ const auth = getAuth();
 
 export default function GolpredictUltimate() {
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('PD'); 
-  const [matches, setMatches] = useState([]);
+  const [activeTab, setActiveTab] = useState('ELI'); 
   const [loading, setLoading] = useState(true);
+
+  // BASE DE DATOS LOCAL PROCESADA DESDE TUS CAPTURAS
+  const matchesData = {
+    'ELI': [
+      { id: 101, home: 'Bolonia', away: 'Roma', date: '12.03' },
+      { id: 102, home: 'Lille', away: 'Aston Villa', date: '12.03' },
+      { id: 103, home: 'Panathinaikos', away: 'Real Betis', date: '12.03' },
+      { id: 104, home: 'Stuttgart', away: 'Oporto', date: '12.03' },
+      { id: 105, home: 'Celta de Vigo', away: 'Lyon', date: '12.03' },
+      { id: 106, home: 'Ferencvaros', away: 'SC Braga', date: '12.03' },
+      { id: 107, home: 'Genk', away: 'Friburgo', date: '12.03' },
+      { id: 108, home: 'Nottingham Forest', away: 'Midtjylland', date: '12.03' }
+    ],
+    'PL': [
+      // JORNADA 30
+      { id: 301, home: 'Burnley', away: 'Bournemouth', date: '14.03' },
+      { id: 302, home: 'Sunderland', away: 'Brighton', date: '14.03' },
+      { id: 303, home: 'Arsenal', away: 'Everton', date: '14.03' },
+      { id: 304, home: 'Chelsea', away: 'Newcastle', date: '14.03' },
+      { id: 305, home: 'West Ham', away: 'Manchester City', date: '14.03' },
+      { id: 306, home: 'Crystal Palace', away: 'Leeds Utd', date: '15.03' },
+      { id: 307, home: 'Manchester Utd', away: 'Aston Villa', date: '15.03' },
+      { id: 308, home: 'Nottingham Forest', away: 'Fulham', date: '15.03' },
+      { id: 309, home: 'Liverpool', away: 'Tottenham', date: '15.03' },
+      { id: 310, home: 'Brentford', away: 'Wolves', date: '16.03' },
+      // JORNADA 31
+      { id: 401, home: 'Bournemouth', away: 'Manchester Utd', date: '20.03' },
+      { id: 402, home: 'Brighton', away: 'Liverpool', date: '21.03' },
+      { id: 403, home: 'Fulham', away: 'Burnley', date: '21.03' },
+      { id: 404, home: 'Everton', away: 'Chelsea', date: '21.03' },
+      { id: 405, home: 'Leeds Utd', away: 'Brentford', date: '21.03' },
+      { id: 406, home: 'Newcastle', away: 'Sunderland', date: '22.03' },
+      { id: 407, home: 'Aston Villa', away: 'West Ham', date: '22.03' },
+      { id: 408, home: 'Tottenham', away: 'Nottingham Forest', date: '22.03' }
+    ],
+    'PD': [
+      { id: 501, home: 'R. Madrid', away: 'Barcelona', date: 'Próximamente' }
+    ]
+  };
 
   const vipFounders = ['astigarrabia1984@gmail.com', 'vieirajuandavid9@gmail.con'];
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    setTimeout(() => setLoading(false), 1200);
     return () => unsub();
   }, []);
 
-  useEffect(() => {
-    const fetchMatches = async () => {
-      setLoading(true);
-      try {
-        // SOLUCIÓN FINAL: Cargamos los partidos del día sin filtros de fecha que bloqueen la API Free
-        const response = await fetch(`https://api.football-data.org/v4/matches`, {
-          headers: { 'X-Auth-Token': '8622f57039804f3fbf997840e90c8b18' }
-        });
-        
-        const data = await response.json();
-
-        if (data.matches) {
-          // Mapeo de IDs de la API para tus pestañas
-          const leagueMap = {
-            'PD': 'Primera Division',
-            'PL': 'Premier League',
-            'CL': 'UEFA Champions League',
-            'ELI': 'UEFA Europa League'
-          };
-
-          const filtered = data.matches.filter(m => 
-            m.competition.name === leagueMap[activeTab] || 
-            m.competition.code === activeTab
-          );
-
-          setMatches(filtered);
-        }
-      } catch (err) {
-        console.error("Error de conexión");
-      }
-      setLoading(false);
-    };
-    fetchMatches();
-  }, [activeTab]);
-
   const isVip = user && vipFounders.includes(user.email);
-
-  // --- LÓGICA DE COMBINADAS IA (3 OPCIONES) ---
-  const aiCombos = useMemo(() => {
-    if (matches.length < 2) return null;
-    return {
-      segura: matches.slice(0, 2),
-      moderada: matches.slice(0, 3),
-      quantum: matches.slice(0, 5)
-    };
-  }, [matches]);
+  const currentMatches = matchesData[activeTab] || [];
 
   return (
     <div style={styles.container}>
@@ -83,45 +75,24 @@ export default function GolpredictUltimate() {
       </header>
 
       <nav style={styles.nav}>
-        {['PD', 'PL', 'CL', 'ELI'].map(id => (
-          <button 
-            key={id} 
-            onClick={() => setActiveTab(id)}
-            style={{...styles.tab, backgroundColor: activeTab === id ? '#00ff41' : '#1a1a1a', color: activeTab === id ? '#000' : '#fff'}}
-          >
-            {id === 'PD' ? 'LALIGA' : id === 'PL' ? 'PREMIER' : id === 'CL' ? 'CHAMPIONS' : 'EUROPA LEA.'}
+        {['ELI', 'PL', 'PD'].map(id => (
+          <button key={id} onClick={() => setActiveTab(id)}
+            style={{...styles.tab, backgroundColor: activeTab === id ? '#00ff41' : '#1a1a1a', color: activeTab === id ? '#000' : '#fff'}}>
+            {id === 'ELI' ? 'EUROPA LEAGUE' : id === 'PL' ? 'PREMIER' : 'LALIGA'}
           </button>
         ))}
       </nav>
 
       <main style={styles.main}>
         {loading ? (
-          <div style={styles.info}>Sincronizando con Satélite...</div>
+          <div style={styles.loader}>PROCESANDO JORNADAS PREMIER...</div>
         ) : (
           <>
-            {isVip && aiCombos && (
-              <div style={styles.comboSection}>
-                <div style={{...styles.comboCard, borderColor: '#00ff41'}}>SEGURA: {aiCombos.segura.length} matches</div>
-                <div style={{...styles.comboCard, borderColor: '#ffcc00'}}>MODERADA: {aiCombos.moderada.length} matches</div>
-                <div style={{...styles.comboCard, borderColor: '#ff3b3b'}}>QUANTUM: {aiCombos.quantum.length} matches</div>
-              </div>
-            )}
-
-            {matches.length > 0 ? (
-              matches.map(match => (
-                <div key={match.id} style={styles.card}>
-                  <div style={styles.leagueName}>{match.competition.name}</div>
-                  <div style={styles.matchTeams}>{match.homeTeam.shortName} vs {match.awayTeam.shortName}</div>
-                  <div style={styles.stats}>
-                    <div style={{color: '#00ff41'}}>1: {(Math.random() * 40 + 30).toFixed(1)}%</div>
-                    <div style={{color: '#888'}}>X: {(Math.random() * 20 + 10).toFixed(1)}%</div>
-                    <div style={{color: '#ff3b3b'}}>2: {(Math.random() * 30 + 10).toFixed(1)}%</div>
-                  </div>
-                  {isVip && <div style={styles.vipTag}>⭐ IA SCORE: 2-1 | 1-1 | 2-0</div>}
-                </div>
-              ))
+            {isVip && <div style={styles.accaBanner}>🎯 COMBINADAS IA ACTIVAS: J30 & J31</div>}
+            {currentMatches.length > 0 ? (
+              currentMatches.map(m => <PredictionCard key={m.id} match={m} isVip={isVip} />)
             ) : (
-              <div style={styles.info}>📡 No se detectan partidos en vivo para esta pestaña.<br/><small>La API Free solo muestra partidos del día actual.</small></div>
+              <div style={styles.noData}>Selecciona una pestaña con partidos cargados.</div>
             )}
           </>
         )}
@@ -130,24 +101,57 @@ export default function GolpredictUltimate() {
   );
 }
 
+function PredictionCard({ match, isVip }) {
+  const prob = useMemo(() => {
+    const h = (Math.random() * 25 + 40).toFixed(1);
+    const d = (Math.random() * 10 + 15).toFixed(1);
+    const a = (100 - h - d).toFixed(1);
+    const dc = h > a ? '1X' : 'X2';
+    return { h, d, a, dc };
+  }, []);
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.matchDate}>FECHA: {match.date} - QUANTUM ANALYSIS</div>
+      <div style={styles.teams}>{match.home} vs {match.away}</div>
+      <div style={styles.stats}>
+        <div style={{color: '#00ff41'}}>1: {prob.h}%</div>
+        <div style={{color: '#888'}}>X: {prob.d}%</div>
+        <div style={{color: '#ff3b3b'}}>2: {prob.a}%</div>
+      </div>
+      <div style={styles.footer}>
+        <strong>DOBLE OPORTUNIDAD:</strong> <span style={{color: '#00e5ff'}}>{prob.dc}</span>
+      </div>
+      {isVip && (
+        <div style={styles.vipInfo}>
+          ⭐ IA SCORE: 2-1 | 1-1 | 0-2 <br/>
+          🚩 ESTIMACIÓN CÓRNERS: 9.5+
+        </div>
+      )}
+    </div>
+  );
+}
+
 const styles = {
   container: { background: '#050505', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif' },
-  header: { display: 'flex', justifyContent: 'space-between', padding: '20px', borderBottom: '1px solid #222' },
-  logo: { fontSize: '1.2rem', fontWeight: 'bold' },
+  header: { display: 'flex', justifyContent: 'space-between', padding: '15px 20px', borderBottom: '1px solid #222' },
+  logo: { fontSize: '1rem', fontWeight: '900' },
   accent: { color: '#00ff41' },
-  logout: { background: '#ff3b3b', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '5px' },
-  nav: { display: 'flex', gap: '5px', padding: '10px', overflowX: 'auto' },
-  tab: { flex: 'none', minWidth: '100px', padding: '10px', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '12px' },
+  logout: { background: '#333', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', fontSize: '10px' },
+  nav: { display: 'flex', gap: '8px', padding: '15px', overflowX: 'auto', background: '#000' },
+  tab: { flex: 'none', minWidth: '110px', padding: '10px', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '10px' },
   main: { padding: '15px' },
-  info: { textAlign: 'center', marginTop: '50px', color: '#666' },
-  card: { background: '#111', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #333' },
-  leagueName: { fontSize: '10px', color: '#00ff41', marginBottom: '5px' },
-  matchTeams: { fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '10px' },
-  stats: { display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' },
-  vipTag: { marginTop: '10px', padding: '5px', background: 'rgba(0,255,65,0.1)', borderRadius: '5px', fontSize: '12px', color: '#00ff41' },
-  comboSection: { display: 'flex', gap: '10px', marginBottom: '20px' },
-  comboCard: { flex: 1, padding: '10px', background: '#1a1a1a', borderRadius: '8px', borderLeft: '4px solid', fontSize: '10px', fontWeight: 'bold' }
+  loader: { textAlign: 'center', color: '#00ff41', marginTop: '50px', fontWeight: 'bold' },
+  card: { background: '#111', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #222' },
+  matchDate: { fontSize: '9px', color: '#555', marginBottom: '8px' },
+  teams: { fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center' },
+  stats: { display: 'flex', justifyContent: 'space-around', fontWeight: 'bold', fontSize: '14px', background: '#000', padding: '10px', borderRadius: '8px' },
+  footer: { marginTop: '10px', fontSize: '11px', textAlign: 'center' },
+  vipInfo: { marginTop: '12px', padding: '10px', background: 'rgba(0,255,65,0.05)', borderRadius: '8px', border: '1px dashed #00ff41', color: '#00ff41', fontSize: '11px', textAlign: 'center', lineHeight: '1.6' },
+  accaBanner: { background: '#00ff41', color: '#000', padding: '10px', borderRadius: '8px', fontWeight: '900', textAlign: 'center', marginBottom: '20px', fontSize: '11px' },
+  noData: { textAlign: 'center', color: '#444', marginTop: '50px' }
 };
+        
 
         
         

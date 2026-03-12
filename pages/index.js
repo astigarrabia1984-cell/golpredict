@@ -76,11 +76,12 @@ export default function GolpredictUltimate() {
     ]
   };
 
-  const vipFounders = ['astigarrabia1984@gmail.com', 'vieirajuandavid9@gmail.con'];
+  // Correos VIP actualizados para garantizar el acceso
+  const vipFounders = ['astigarrabia1984@gmail.com', 'astigarravia1984@gmail.com', 'vieirajuandavid9@gmail.con'];
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    setTimeout(() => setLoading(false), 1200); // Retardo para simular arranque del motor
+    setTimeout(() => setLoading(false), 1200);
     return () => unsub();
   }, []);
 
@@ -125,7 +126,7 @@ export default function GolpredictUltimate() {
 function PredictionCard({ match, isVip }) {
   const [open, setOpen] = useState(false);
   
-  // Motor Matemático: Genera siempre el mismo resultado para el mismo partido (Hash de equipos)
+  // Motor Matemático: Genera siempre el mismo resultado para el mismo partido
   const analysis = useMemo(() => {
     const seed = match.home.length + match.away.length + match.id;
     const rng = (min, max) => min + (seed % (max - min + 1));
@@ -135,7 +136,6 @@ function PredictionCard({ match, isVip }) {
     const d = (rng(150, 300) / 10).toFixed(1);
     const a = (100 - parseFloat(h) - parseFloat(d)).toFixed(1);
     
-    const scorers = ['Delantero Estrella', 'El "9" Titular', 'Extremo Derecho', 'Centrocampista Ofensivo', 'Jugador Franquicia'];
     const exactScores = ['2-1', '1-0', '1-1', '2-0', '0-1', '2-2', '3-1'];
 
     return {
@@ -143,7 +143,6 @@ function PredictionCard({ match, isVip }) {
       exact: exactScores[seed % exactScores.length],
       corners: rng(7, 12),
       goals: (rng(15, 35) / 10).toFixed(1),
-      scorer: scorers[seed % scorers.length],
       dc: parseFloat(h) > parseFloat(a) ? '1X' : 'X2'
     };
   }, [match]);
@@ -166,9 +165,6 @@ function PredictionCard({ match, isVip }) {
             <div style={styles.drawerItem}><span style={styles.icon}>🛡️</span> <strong>Doble Op:</strong> <br/><span style={styles.highlight}>{analysis.dc}</span></div>
             <div style={styles.drawerItem}><span style={styles.icon}>🚩</span> <strong>Córners:</strong> <br/><span style={styles.highlight}>Más de {analysis.corners}.5</span></div>
             <div style={styles.drawerItem}><span style={styles.icon}>⚽</span> <strong>Goles (Avg):</strong> <br/><span style={styles.highlight}>{analysis.goals} goles</span></div>
-          </div>
-          <div style={styles.scorerBox}>
-            🔥 <strong>Jugador a Marcar:</strong> {analysis.scorer}
           </div>
           {isVip && <div style={styles.vipBadge}>SELLO VIP QUANTUM CONFIRMADO ✅</div>}
         </div>
@@ -240,7 +236,6 @@ const styles = {
   drawerItem: { background: '#1a1a1a', padding: '10px', borderRadius: '8px', fontSize: '11px', color: '#ccc', lineHeight: '1.4' },
   icon: { fontSize: '14px' },
   highlight: { color: '#00ff41', fontWeight: 'bold', fontSize: '12px' },
-  scorerBox: { background: 'rgba(0, 255, 65, 0.05)', padding: '10px', borderRadius: '8px', border: '1px solid #00ff41', fontSize: '11px', color: '#f0f0f0', textAlign: 'center' },
   vipBadge: { marginTop: '12px', color: '#00ff41', fontSize: '10px', fontWeight: '900', textAlign: 'center', letterSpacing: '1px' },
   
   comboWrapper: { display: 'flex', flexDirection: 'column', gap: '15px' },
@@ -249,6 +244,7 @@ const styles = {
   comboList: { margin: 0, paddingLeft: '20px', color: '#ccc', fontSize: '12px', lineHeight: '1.8' },
   info: { textAlign: 'center', color: '#888', marginTop: '60px', padding: '20px', border: '1px dashed #333', borderRadius: '10px' }
 };
+        
         
         
 

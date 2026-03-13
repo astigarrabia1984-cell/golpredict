@@ -1,205 +1,324 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import React, { useState, useEffect, useMemo } from "react";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCWayEedL9BAbFsOlZ8_OTk1fOHE7UqBKc",
-  authDomain: "golpredict-pro.firebaseapp.com",
-  projectId: "golpredict-pro",
-  appId: "1:101840838997:web:9a776f0eb568ff89708da4"
+/* ===========================
+MATH FUNCTIONS
+=========================== */
+const factorial = (n) => (n <= 1 ? 1 : n * factorial(n - 1));
+const poisson = (lambda, k) => (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k);
+
+/* ===========================
+TEAM RATINGS & STATS
+=========================== */
+const teamRatings = {
+  "Real Madrid": { a: 1.45, d: 0.7 },
+  "Elche": { a: 0.8, d: 1.2 },
+  "Girona": { a: 1.2, d: 0.9 },
+  "Athletic Bilbao": { a: 1.1, d: 0.9 },
+  "Atlético Madrid": { a: 1.3, d: 0.8 },
+  "Getafe": { a: 0.9, d: 1.1 },
+
+  "Arsenal": { a: 1.4, d: 0.8 },
+  "Everton": { a: 0.9, d: 1.1 },
+  "Chelsea": { a: 1.1, d: 1 },
+  "Newcastle": { a: 1.2, d: 0.95 },
+  "Liverpool": { a: 1.45, d: 0.85 },
+  "Tottenham Hotspur": { a: 1.25, d: 1 },
+
+  "Bayern Munich": { a: 1.55, d: 0.75 },
+  "Dortmund": { a: 1.3, d: 0.95 },
+  "Leverkusen": { a: 1.35, d: 0.9 },
+  "Inter": { a: 1.35, d: 0.85 },
+  "Roma": { a: 1.15, d: 0.95 },
+  "Milan": { a: 1.25, d: 0.9 },
+  "Napoli": { a: 1.3, d: 0.95 },
+  "PSG": { a: 1.5, d: 0.9 },
+  "Ajax": { a: 1.2, d: 1.05 },
+  "Betis": { a: 1.1, d: 1 },
+  "Sporting": { a: 1.15, d: 1 },
 };
 
-if (!getApps().length) initializeApp(firebaseConfig);
-const auth = getAuth();
+/* ===========================
+CORNERS & CARDS MODELS
+=========================== */
+const teamCorners = {
+  "Real Madrid": 6.8, "Elche": 3.2, "Girona": 5.1, "Athletic Bilbao": 5.4,
+  "Arsenal": 6.4, "Liverpool": 7.1, "Bayern Munich": 7.4, "Dortmund": 6.6
+};
 
-export default function GolpredictUltimate() {
-  const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('PD'); 
-  const [loading, setLoading] = useState(true);
+const teamCards = {
+  "Real Madrid": 2.1, "Elche": 2.8, "Girona": 2.3, "Athletic Bilbao": 2.6,
+  "Arsenal": 2.0, "Liverpool": 2.2, "Bayern Munich": 1.9, "Dortmund": 2.3
+};
 
-  // BASE DE DATOS REVISADA SEGÚN CAPTURAS (LaLiga, Premier, Europa & Conference)
-  const matchesData = {
-    'PD': [
-      { id: 1, home: 'Alavés', away: 'Villarreal', date: '13.03 - 21:00' },
-      { id: 2, home: 'Girona', away: 'Athletic Club', date: '14.03 - 14:00' },
-      { id: 3, home: 'Atlético de Madrid', away: 'Getafe', date: '14.03 - 16:15' },
-      { id: 4, home: 'Real Oviedo', away: 'Valencia', date: '14.03 - 18:30' },
-      { id: 5, home: 'Real Madrid', away: 'Elche', date: '14.03 - 21:00' },
-      { id: 6, home: 'Mallorca', away: 'Espanyol', date: '15.03 - 14:00' },
-      { id: 7, home: 'Barcelona', away: 'Sevilla', date: '15.03 - 16:15' },
-      { id: 8, home: 'Real Betis', away: 'Celta de Vigo', date: '15.03 - 18:30' },
-      { id: 9, home: 'Real Sociedad', away: 'Osasuna', date: '15.03 - 21:00' },
-      { id: 10, home: 'Rayo Vallecano', away: 'Levante', date: '16.03 - 21:00' },
-      { id: 20, home: 'Real Madrid', away: 'Atlético de Madrid', date: '22.03 - 21:00' },
-      { id: 21, home: 'Alavés', away: 'Osasuna', date: '05.04 - 18:00' }
-    ],
-    'PL': [
-      { id: 22, home: 'Burnley', away: 'Bournemouth', date: '14.03 - 16:00' },
-      { id: 23, home: 'Sunderland', away: 'Brighton', date: '14.03 - 16:00' },
-      { id: 24, home: 'Arsenal', away: 'Everton', date: '14.03 - 18:30' },
-      { id: 25, home: 'Chelsea', away: 'Newcastle', date: '14.03 - 18:30' },
-      { id: 26, home: 'West Ham', away: 'Man. City', date: '14.03 - 21:00' },
-      { id: 27, home: 'Crystal Palace', away: 'Leeds Utd', date: '15.03 - 15:00' },
-      { id: 28, home: 'Man. Utd', away: 'Aston Villa', date: '15.03 - 15:00' },
-      { id: 29, home: 'Nottingham Forest', away: 'Fulham', date: '15.03 - 15:00' },
-      { id: 30, home: 'Liverpool', away: 'Tottenham', date: '15.03 - 17:30' },
-      { id: 31, home: 'Brentford', away: 'Wolves', date: '16.03 - 21:00' }
-    ],
-    'ELI': [
-      // Europa League & Conference (Capturas 1000045695/96)
-      { id: 41, home: 'Bolonia', away: 'Roma', date: '12.03 - 18:45' },
-      { id: 42, home: 'Lille', away: 'Aston Villa', date: '12.03 - 18:45' },
-      { id: 43, home: 'Panathinaikos', away: 'Real Betis', date: '12.03 - 18:45' },
-      { id: 44, home: 'Stuttgart', away: 'Oporto', date: '12.03 - 18:45' },
-      { id: 45, home: 'Celta de Vigo', away: 'Lyon', date: '12.03 - 21:00' },
-      { id: 46, home: 'Ferencvaros', away: 'SC Braga', date: '12.03 - 21:00' },
-      { id: 47, home: 'Genk', away: 'Friburgo', date: '12.03 - 21:00' },
-      { id: 48, home: 'Nottingham Forest', away: 'Midtjylland', date: '12.03 - 21:00' },
-      { id: 49, home: 'AZ Alkmaar', away: 'Sparta Praga', date: '12.03 - 18:45' },
-      { id: 50, home: 'Gent', away: 'Djurgardens', date: '12.03 - 21:00' },
-      { id: 51, home: 'Vitoria Guimaraes', away: 'Molde', date: '12.03 - 21:00' }
-    ]
+const predictCorners = (home, away) => {
+  const hc = teamCorners[home] || 5;
+  const ac = teamCorners[away] || 5;
+  const total = hc + ac;
+  return { avg: total.toFixed(1), over85: total > 8.5, over95: total > 9.5 };
+};
+
+const predictCards = (home, away) => {
+  const h = teamCards[home] || 2.3;
+  const a = teamCards[away] || 2.3;
+  const total = h + a;
+  return { avg: total.toFixed(1), over35: total > 3.5, over45: total > 4.5 };
+};
+
+/* ===========================
+MATCH DATABASE 13-23 MARZO
+=========================== */
+const matchesDB = {
+  LALIGA: [
+    { id: 1, home: "Alaves", away: "Villarreal", date: "13-03" },
+    { id: 2, home: "Girona", away: "Athletic Bilbao", date: "14-03" },
+    { id: 3, home: "Atlético Madrid", away: "Getafe", date: "14-03" },
+    { id: 4, home: "Real Oviedo", away: "Valencia", date: "14-03" },
+    { id: 5, home: "Real Madrid", away: "Elche", date: "14-03" },
+    { id: 6, home: "Mallorca", away: "Espanyol", date: "15-03" },
+    { id: 7, home: "Barcelona", away: "Sevilla", date: "15-03" },
+    { id: 8, home: "Betis", away: "Celta Vigo", date: "15-03" },
+    { id: 9, home: "Real Sociedad", away: "Osasuna", date: "15-03" },
+    { id: 10, home: "Rayo Vallecano", away: "Levante", date: "16-03" },
+    { id: 11, home: "Villarreal", away: "Real Sociedad", date: "20-03" },
+    { id: 12, home: "Elche", away: "Mallorca", date: "21-03" },
+    { id: 13, home: "Espanyol", away: "Getafe", date: "21-03" },
+    { id: 14, home: "Levante", away: "Real Oviedo", date: "21-03" },
+    { id: 15, home: "Osasuna", away: "Girona", date: "21-03" },
+    { id: 16, home: "Sevilla", away: "Valencia", date: "21-03" },
+    { id: 17, home: "Barcelona", away: "Rayo Vallecano", date: "22-03" },
+    { id: 18, home: "Celta Vigo", away: "Alaves", date: "22-03" },
+    { id: 19, home: "Athletic Bilbao", away: "Betis", date: "22-03" },
+    { id: 20, home: "Real Madrid", away: "Atlético Madrid", date: "22-03" }
+  ],
+  PREMIER: [
+    { id: 30, home: "Burnley", away: "Bournemouth", date: "14-03" },
+    { id: 31, home: "Sunderland", away: "Brighton", date: "14-03" },
+    { id: 32, home: "Arsenal", away: "Everton", date: "14-03" },
+    { id: 33, home: "Chelsea", away: "Newcastle", date: "14-03" },
+    { id: 34, home: "West Ham United", away: "Manchester City", date: "14-03" },
+    { id: 35, home: "Crystal Palace", away: "Leeds United", date: "15-03" },
+    { id: 36, home: "Manchester United", away: "Aston Villa", date: "15-03" },
+    { id: 37, home: "Nottingham Forest", away: "Fulham", date: "15-03" },
+    { id: 38, home: "Liverpool", away: "Tottenham Hotspur", date: "15-03" },
+    { id: 39, home: "Brentford", away: "Wolves", date: "16-03" },
+    { id: 40, home: "Bournemouth", away: "Manchester United", date: "20-03" },
+    { id: 41, home: "Brighton", away: "Liverpool", date: "21-03" },
+    { id: 42, home: "Aston Villa", away: "West Ham United", date: "21-03" },
+    { id: 43, home: "Fulham", away: "Burnley", date: "21-03" },
+    { id: 44, home: "Manchester City", away: "Crystal Palace", date: "21-03" },
+    { id: 45, home: "Everton", away: "Chelsea", date: "21-03" },
+    { id: 46, home: "Leeds United", away: "Brentford", date: "21-03" },
+    { id: 47, home: "Newcastle United", away: "Sunderland", date: "22-03" },
+    { id: 48, home: "Tottenham Hotspur", away: "Nottingham Forest", date: "22-03" }
+  ],
+  BUNDESLIGA: [
+    { id: 60, home: "Monchengladbach", away: "St Pauli", date: "13-03" },
+    { id: 61, home: "Borussia Dortmund", away: "Augsburg", date: "14-03" },
+    { id: 62, home: "Eintracht Frankfurt", away: "Heidenheim", date: "14-03" },
+    { id: 63, home: "Hoffenheim", away: "Wolfsburg", date: "14-03" },
+    { id: 64, home: "Leverkusen", away: "Bayern Munich", date: "14-03" },
+    { id: 65, home: "Hamburg", away: "Cologne", date: "14-03" },
+    { id: 66, home: "Stuttgart", away: "Union Berlin", date: "15-03" },
+    { id: 67, home: "RB Leipzig", away: "Mainz", date: "20-03" },
+    { id: 68, home: "Bayern Munich", away: "Union Berlin", date: "21-03" },
+    { id: 69, home: "Cologne", away: "Monchengladbach", date: "21-03" },
+    { id: 70, home: "Heidenheim", away: "Leverkusen", date: "21-03" },
+    { id: 71, home: "Wolfsburg", away: "Werder Bremen", date: "21-03" },
+    { id: 72, home: "Dortmund", away: "Hamburg", date: "21-03" }
+  ],
+  SERIEA: [
+    { id: 80, home: "Torino", away: "Parma", date: "13-03" },
+    { id: 81, home: "Inter", away: "Atalanta", date: "14-03" },
+    { id: 82, home: "Napoli", away: "Lecce", date: "14-03" },
+    { id: 83, home: "Udinese", away: "Juventus", date: "14-03" },
+    { id: 84, home: "Lazio", away: "Bologna", date: "15-03" },
+    { id: 85, home: "Fiorentina", away: "Cagliari", date: "15-03" },
+    { id: 86, home: "Roma", away: "Como", date: "21-03" },
+    { id: 87, home: "Sassuolo", away: "Torino", date: "21-03" },
+    { id: 88, home: "AC Milan", away: "Fiorentina", date: "22-03" },
+    { id: 89, home: "Juventus", away: "Napoli", date: "22-03" }
+  ],
+  CHAMPIONS: [
+    { id: 100, home: "Arsenal", away: "Porto", date: "18-03" },
+    { id: 101, home: "Bayern Munich", away: "Inter", date: "18-03" },
+    { id: 102, home: "Real Madrid", away: "Manchester City", date: "18-03" },
+    { id: 103, home: "PSG", away: "Dortmund", date: "19-03" },
+    { id: 104, home: "Barcelona", away: "Napoli", date: "19-03" },
+    { id: 105, home: "Liverpool", away: "Juventus", date: "19-03" }
+  ],
+  EUROPA: [
+    { id: 120, home: "Freiburg", away: "Genk", date: "19-03" },
+    { id: 121, home: "Lyon", away: "Celta Vigo", date: "19-03" },
+    { id: 122, home: "Midtjylland", away: "Nottingham Forest", date: "19-03" },
+    { id: 123, home: "Aston Villa", away: "Lille", date: "19-03" },
+    { id: 124, home: "Porto", away: "Stuttgart", date: "19-03" },
+    { id: 125, home: "Real Betis", away: "Panathinaikos", date: "19-03" }
+  ]
+};
+
+/* ===========================
+PREDICTION ENGINE
+=========================== */
+function runModel(match) {
+  // Fallback rating para evitar errores si el equipo no está en la base de datos
+  const defaultRating = { a: 1.0, d: 1.0 };
+  const home = teamRatings[match.home] || defaultRating;
+  const away = teamRatings[match.away] || defaultRating;
+
+  // Calculamos xG añadiendo un 15% de factor local
+  const hxg = (home.a * away.d) * 1.15;
+  const axg = away.a * home.d;
+
+  let p1 = 0, pX = 0, p2 = 0;
+
+  // Bucle aumentado a 8 para mayor precisión matemática
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      const pr = poisson(hxg, i) * poisson(axg, j);
+      if (i > j) p1 += pr;
+      else if (i === j) pX += pr;
+      else p2 += pr;
+    }
+  }
+
+  const prob1 = p1 * 100;
+  const probX = pX * 100;
+  const prob2 = p2 * 100;
+
+  // Cálculo de cuota justa (Fair Odds)
+  const odd1 = prob1 > 0 ? (100 / prob1).toFixed(2) : "0.00";
+  const oddX = probX > 0 ? (100 / probX).toFixed(2) : "0.00";
+  const odd2 = prob2 > 0 ? (100 / prob2).toFixed(2) : "0.00";
+
+  return {
+    homeProb: prob1.toFixed(1),
+    drawProb: probX.toFixed(1),
+    awayProb: prob2.toFixed(1),
+    odd1,
+    oddX,
+    odd2,
+    hxg: hxg.toFixed(2),
+    axg: axg.toFixed(2),
   };
+}
 
-  const vipEmails = ['astigarrabia1984@gmail.com', 'vieirajuandavid9@gmail.com'];
+/* ===========================
+APP COMPONENT
+=========================== */
+export default function GolPredictPro() {
+  const [league, setLeague] = useState("LALIGA");
+  const [stats, setStats] = useState({ win: 0, loss: 0 });
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    setTimeout(() => setLoading(false), 800);
-    return () => unsub();
+    const timer = setInterval(() => setTick((t) => t + 1), 5000);
+    return () => clearInterval(timer);
   }, []);
 
-  const isVip = user && vipEmails.includes(user.email.toLowerCase().trim());
+  const matches = matchesDB[league];
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.logo}>GOLPREDICT <span style={styles.accent}>MONTECARLO H.</span></h1>
-        {user && <button onClick={() => signOut(auth)} style={styles.logout}>SALIR</button>}
+    <div style={{ background: "#0a0a0a", color: "#e0e0e0", minHeight: "100vh", padding: "20px", fontFamily: "sans-serif" }}>
+      <header style={{ borderBottom: "1px solid #333", paddingBottom: "15px", marginBottom: "20px" }}>
+        <h2 style={{ color: "#00ff41", margin: 0 }}>GOLPREDICT PRO</h2>
+        <div style={{ fontSize: "0.9em", marginTop: "10px", color: "#888" }}>
+          <strong>Aciertos:</strong> <span style={{color: '#00ff41'}}>{stats.win}</span> | <strong>Fallos:</strong> <span style={{color: '#ff0044'}}>{stats.loss}</span>
+        </div>
       </header>
 
-      <nav style={styles.nav}>
-        {['PD', 'PL', 'ELI', 'COMBOS'].map(id => (
-          <button key={id} onClick={() => setActiveTab(id)}
-            style={{
-              ...styles.tab, 
-              backgroundColor: activeTab === id ? '#00ff41' : '#111', 
-              color: activeTab === id ? '#000' : '#fff',
-              border: activeTab === id ? 'none' : '1px solid #333'
-            }}>
-            {id === 'PD' ? 'LALIGA' : id === 'PL' ? 'PREMIER' : id === 'ELI' ? 'EUROPA/CONF' : '🎯 COMBOS'}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "20px" }}>
+        {Object.keys(matchesDB).map((l) => (
+          <button
+            key={l}
+            onClick={() => setLeague(l)}
+            style={{ 
+              padding: "8px 12px", 
+              background: league === l ? "#00ff41" : "#222", 
+              color: league === l ? "#000" : "#fff",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontWeight: "bold"
+            }}
+          >
+            {l}
           </button>
         ))}
-      </nav>
+      </div>
 
-      <main style={styles.main}>
-        {loading ? (
-          <div style={styles.loader}>EJECUTANDO SIMULACIÓN MONTECARLO...</div>
-        ) : activeTab === 'COMBOS' ? (
-          <AiCombos />
-        ) : (
-          <div style={styles.list}>
-            {(matchesData[activeTab] || []).map(m => <PredictionCard key={m.id} match={m} isVip={isVip} />)}
-          </div>
-        )}
-      </main>
+      <h3 style={{ borderBottom: "1px solid #333", paddingBottom: "10px" }}>Partidos</h3>
+      
+      <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+        {matches.map((m) => (
+          <MatchCard key={m.id} match={m} />
+        ))}
+      </div>
+
+      <button style={{ marginTop: "40px", background: "#ff0044", color: "#fff", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: "bold" }}>
+        Cerrar Sesión
+      </button>
     </div>
   );
 }
 
-function PredictionCard({ match, isVip }) {
+/* ===========================
+MATCH CARD COMPONENT
+=========================== */
+function MatchCard({ match }) {
   const [open, setOpen] = useState(false);
+  const data = useMemo(() => runModel(match), [match]);
   
-  const analysis = useMemo(() => {
-    const seed = match.home.length * match.away.length + match.id;
-    const pseudoRandom = (offset) => Math.abs(Math.sin(seed + offset));
-    
-    // MOTOR HÍBRIDO: Probabilidades realistas
-    let rawH = pseudoRandom(1) * 45 + 25; 
-    let rawD = pseudoRandom(2) * 20 + 15; 
-    let rawA = pseudoRandom(3) * 40 + 15; 
-    
-    const total = rawH + rawD + rawA;
-    const h = ((rawH / total) * 100).toFixed(1);
-    const d = ((rawD / total) * 100).toFixed(1);
-    const a = (100 - parseFloat(h) - parseFloat(d)).toFixed(1);
-
-    const scores = ['1-0', '2-1', '1-1', '2-0', '0-1', '1-2', '2-2', '3-1'];
-
-    return {
-      prob: { h, d, a },
-      exact: scores[seed % scores.length],
-      corners: 8 + Math.floor(pseudoRandom(4) * 5),
-      goals: (1.5 + pseudoRandom(5) * 1.8).toFixed(1),
-      dc: parseFloat(h) > parseFloat(a) ? '1X' : 'X2'
-    };
-  }, [match]);
+  const corners = predictCorners(match.home, match.away);
+  const cards = predictCards(match.home, match.away);
 
   return (
-    <div style={styles.card} onClick={() => setOpen(!open)}>
-      <div style={styles.matchDate}>{match.date} | IA QUANTUM</div>
-      <div style={styles.teams}>{match.home} vs {match.away}</div>
-      <div style={styles.statsBar}>
-        <div style={{color: '#00ff41'}}>1: {analysis.prob.h}%</div>
-        <div style={{color: '#aaa'}}>X: {analysis.prob.d}%</div>
-        <div style={{color: '#ff3b3b'}}>2: {analysis.prob.a}%</div>
+    <div style={{ border: "1px solid #222", padding: "15px", borderRadius: "8px", background: "#111", boxShadow: "0 4px 6px rgba(0,0,0,0.3)" }}>
+      <div 
+        onClick={() => setOpen((o) => !o)} 
+        style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      >
+        <div style={{ fontSize: "1.1em" }}>
+          <strong>{match.home}</strong> vs <strong>{match.away}</strong>
+        </div>
+        <div style={{ color: "#666", fontSize: "0.85em" }}>
+          📅 {match.date}
+        </div>
       </div>
+
+      {/* Probabilidades Principales */}
+      <div style={{ marginTop: "15px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", textAlign: "center" }}>
+        <div style={{ background: "#1a1a1a", padding: "10px", borderRadius: "5px" }}>
+          <div style={{ color: "#888", fontSize: "0.8em", marginBottom: "5px" }}>1 ({data.homeProb}%)</div>
+          <div style={{ color: "#00ff41", fontWeight: "bold" }}>@{data.odd1}</div>
+        </div>
+        <div style={{ background: "#1a1a1a", padding: "10px", borderRadius: "5px" }}>
+          <div style={{ color: "#888", fontSize: "0.8em", marginBottom: "5px" }}>X ({data.drawProb}%)</div>
+          <div style={{ color: "#00ff41", fontWeight: "bold" }}>@{data.oddX}</div>
+        </div>
+        <div style={{ background: "#1a1a1a", padding: "10px", borderRadius: "5px" }}>
+          <div style={{ color: "#888", fontSize: "0.8em", marginBottom: "5px" }}>2 ({data.awayProb}%)</div>
+          <div style={{ color: "#00ff41", fontWeight: "bold" }}>@{data.odd2}</div>
+        </div>
+      </div>
+
+      {/* Análisis Extendido (Desplegable) */}
       {open && (
-        <div style={styles.drawer}>
-          <div style={styles.drawerGrid}>
-            <div style={styles.drawerItem}>🎯 Res: {analysis.exact}</div>
-            <div style={styles.drawerItem}>🛡️ Doble: {analysis.dc}</div>
-            <div style={styles.drawerItem}>🚩 Córners: +{analysis.corners}.5</div>
-            <div style={styles.drawerItem}>⚽ Goles: {analysis.goals}</div>
+        <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px dashed #333", fontSize: "0.9em", color: "#ccc", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+          <div>
+            <span style={{ color: "#fff" }}>⚽ xG Match:</span> {data.hxg} - {data.axg}
           </div>
-          {isVip && <div style={styles.vipBadge}>ANÁLISIS ESTRATÉGICO VIP ✅</div>}
+          <div>
+            <span style={{ color: "#fff" }}>🚩 Córners:</span> {corners.avg} <span style={{ color: corners.over85 ? "#00ff41" : "#ff0044" }}>(O8.5: {corners.over85 ? "SÍ" : "NO"})</span>
+          </div>
+          <div>
+            <span style={{ color: "#fff" }}>🟨 Tarjetas:</span> {cards.avg} <span style={{ color: cards.over45 ? "#00ff41" : "#ff0044" }}>(O4.5: {cards.over45 ? "SÍ" : "NO"})</span>
+          </div>
         </div>
       )}
     </div>
   );
-}
-
-function AiCombos() {
-  return (
-    <div style={styles.list}>
-      <h3 style={{fontSize: '13px', color: '#00ff41', marginBottom: '15px', letterSpacing: '1px'}}>🎯 COMBINADAS INTELIGENTES</h3>
-      <div style={{...styles.comboCard, borderLeft: '4px solid #00ff41'}}>
-        <h4 style={{margin: '0 0 5px 0', fontSize: '13px'}}>🟢 BAJO RIESGO</h4>
-        <p style={{fontSize: '11px', color: '#ccc'}}>Real Madrid Gana + Arsenal o Empate (Cuota ~1.95)</p>
-      </div>
-      <div style={{...styles.comboCard, borderLeft: '4px solid #ffcc00'}}>
-        <h4 style={{margin: '0 0 5px 0', fontSize: '13px'}}>🟡 MODERADA</h4>
-        <p style={{fontSize: '11px', color: '#ccc'}}>Girona Gana + Ambos Marcan en Liverpool vs Spurs</p>
-      </div>
-      <div style={{...styles.comboCard, borderLeft: '4px solid #ff3b3b'}}>
-        <h4 style={{margin: '0 0 5px 0', fontSize: '13px'}}>🔴 QUANTUM ACCA</h4>
-        <p style={{fontSize: '11px', color: '#ccc'}}>Betis Gana + Roma Gana + Lille Gana (Cuota ~8.40)</p>
-      </div>
-    </div>
-  );
-}
-
-const styles = {
-  container: { background: '#080808', minHeight: '100vh', color: '#fff', fontFamily: '-apple-system, sans-serif' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', background: '#111', borderBottom: '1px solid #222' },
-  logo: { fontSize: '0.85rem', fontWeight: '900', letterSpacing: '1px' },
-  accent: { color: '#00ff41' },
-  logout: { background: '#222', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '5px', fontSize: '10px', fontWeight: 'bold' },
-  nav: { display: 'flex', gap: '5px', padding: '10px', overflowX: 'auto', justifyContent: 'center', background: '#000' },
-  tab: { flex: 'none', padding: '10px 12px', borderRadius: '5px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', transition: '0.3s' },
-  main: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '15px' },
-  list: { width: '100%', maxWidth: '380px', display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  card: { background: '#121212', width: '95%', padding: '18px', borderRadius: '12px', marginBottom: '12px', border: '1px solid #222', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' },
-  matchDate: { fontSize: '9px', color: '#555', marginBottom: '6px', fontWeight: 'bold' },
-  teams: { fontSize: '1rem', fontWeight: '800', marginBottom: '12px', letterSpacing: '0.3px' },
-  statsBar: { display: 'flex', justifyContent: 'space-around', background: '#000', padding: '12px', borderRadius: '8px', fontSize: '12px', border: '1px solid #1a1a1a' },
-  drawer: { marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #333' },
-  drawerGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' },
-  drawerItem: { background: '#181818', padding: '10px', borderRadius: '8px', fontSize: '11px', color: '#bbb' },
-  vipBadge: { marginTop: '12px', color: '#00ff41', fontSize: '9px', fontWeight: '900' },
-  comboCard: { background: '#121212', width: '95%', padding: '18px', borderRadius: '10px', marginBottom: '10px', textAlign: 'center' },
-  loader: { marginTop: '120px', color: '#00ff41', fontWeight: 'bold', fontSize: '12px', letterSpacing: '2px' }
-};
+     }
+  
     
 
                                              

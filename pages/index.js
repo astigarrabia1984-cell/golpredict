@@ -10,56 +10,34 @@ const poisson = (lambda, k) => (Math.pow(lambda, k) * Math.exp(-lambda)) / facto
 TEAM RATINGS & STATS
 =========================== */
 const teamRatings = {
-  "Real Madrid": { a: 1.45, d: 0.7 },
-  "Elche": { a: 0.8, d: 1.2 },
-  "Girona": { a: 1.2, d: 0.9 },
-  "Athletic Bilbao": { a: 1.1, d: 0.9 },
-  "Atlético Madrid": { a: 1.3, d: 0.8 },
-  "Getafe": { a: 0.9, d: 1.1 },
-
-  "Arsenal": { a: 1.4, d: 0.8 },
-  "Everton": { a: 0.9, d: 1.1 },
-  "Chelsea": { a: 1.1, d: 1 },
-  "Newcastle": { a: 1.2, d: 0.95 },
-  "Liverpool": { a: 1.45, d: 0.85 },
-  "Tottenham Hotspur": { a: 1.25, d: 1 },
-
-  "Bayern Munich": { a: 1.55, d: 0.75 },
-  "Dortmund": { a: 1.3, d: 0.95 },
-  "Leverkusen": { a: 1.35, d: 0.9 },
-  "Inter": { a: 1.35, d: 0.85 },
-  "Roma": { a: 1.15, d: 0.95 },
-  "Milan": { a: 1.25, d: 0.9 },
-  "Napoli": { a: 1.3, d: 0.95 },
-  "PSG": { a: 1.5, d: 0.9 },
-  "Ajax": { a: 1.2, d: 1.05 },
-  "Betis": { a: 1.1, d: 1 },
+  "Real Madrid": { a: 1.45, d: 0.7 }, "Elche": { a: 0.8, d: 1.2 },
+  "Girona": { a: 1.2, d: 0.9 }, "Athletic Bilbao": { a: 1.1, d: 0.9 },
+  "Atlético Madrid": { a: 1.3, d: 0.8 }, "Getafe": { a: 0.9, d: 1.1 },
+  "Arsenal": { a: 1.4, d: 0.8 }, "Everton": { a: 0.9, d: 1.1 },
+  "Chelsea": { a: 1.1, d: 1 }, "Newcastle": { a: 1.2, d: 0.95 },
+  "Liverpool": { a: 1.45, d: 0.85 }, "Tottenham Hotspur": { a: 1.25, d: 1 },
+  "Bayern Munich": { a: 1.55, d: 0.75 }, "Dortmund": { a: 1.3, d: 0.95 },
+  "Leverkusen": { a: 1.35, d: 0.9 }, "Inter": { a: 1.35, d: 0.85 },
+  "Roma": { a: 1.15, d: 0.95 }, "Milan": { a: 1.25, d: 0.9 },
+  "Napoli": { a: 1.3, d: 0.95 }, "PSG": { a: 1.5, d: 0.9 },
+  "Ajax": { a: 1.2, d: 1.05 }, "Betis": { a: 1.1, d: 1 },
   "Sporting": { a: 1.15, d: 1 },
 };
 
 /* ===========================
 CORNERS & CARDS MODELS
 =========================== */
-const teamCorners = {
-  "Real Madrid": 6.8, "Elche": 3.2, "Girona": 5.1, "Athletic Bilbao": 5.4,
-  "Arsenal": 6.4, "Liverpool": 7.1, "Bayern Munich": 7.4, "Dortmund": 6.6
-};
-
-const teamCards = {
-  "Real Madrid": 2.1, "Elche": 2.8, "Girona": 2.3, "Athletic Bilbao": 2.6,
-  "Arsenal": 2.0, "Liverpool": 2.2, "Bayern Munich": 1.9, "Dortmund": 2.3
-};
+const teamCorners = { "Real Madrid": 6.8, "Elche": 3.2, "Girona": 5.1, "Athletic Bilbao": 5.4, "Arsenal": 6.4, "Liverpool": 7.1, "Bayern Munich": 7.4, "Dortmund": 6.6 };
+const teamCards = { "Real Madrid": 2.1, "Elche": 2.8, "Girona": 2.3, "Athletic Bilbao": 2.6, "Arsenal": 2.0, "Liverpool": 2.2, "Bayern Munich": 1.9, "Dortmund": 2.3 };
 
 const predictCorners = (home, away) => {
-  const hc = teamCorners[home] || 5;
-  const ac = teamCorners[away] || 5;
+  const hc = teamCorners[home] || 5; const ac = teamCorners[away] || 5;
   const total = hc + ac;
   return { avg: total.toFixed(1), over85: total > 8.5, over95: total > 9.5 };
 };
 
 const predictCards = (home, away) => {
-  const h = teamCards[home] || 2.3;
-  const a = teamCards[away] || 2.3;
+  const h = teamCards[home] || 2.3; const a = teamCards[away] || 2.3;
   const total = h + a;
   return { avg: total.toFixed(1), over35: total > 3.5, over45: total > 4.5 };
 };
@@ -160,18 +138,16 @@ const matchesDB = {
 PREDICTION ENGINE
 =========================== */
 function runModel(match) {
-  // Fallback rating para evitar errores si el equipo no está en la base de datos
   const defaultRating = { a: 1.0, d: 1.0 };
   const home = teamRatings[match.home] || defaultRating;
   const away = teamRatings[match.away] || defaultRating;
 
-  // Calculamos xG añadiendo un 15% de factor local
+  // Factor cancha +15% ataque local
   const hxg = (home.a * away.d) * 1.15;
   const axg = away.a * home.d;
 
   let p1 = 0, pX = 0, p2 = 0;
 
-  // Bucle aumentado a 8 para mayor precisión matemática
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       const pr = poisson(hxg, i) * poisson(axg, j);
@@ -185,35 +161,163 @@ function runModel(match) {
   const probX = pX * 100;
   const prob2 = p2 * 100;
 
-  // Cálculo de cuota justa (Fair Odds)
-  const odd1 = prob1 > 0 ? (100 / prob1).toFixed(2) : "0.00";
-  const oddX = probX > 0 ? (100 / probX).toFixed(2) : "0.00";
-  const odd2 = prob2 > 0 ? (100 / prob2).toFixed(2) : "0.00";
-
   return {
     homeProb: prob1.toFixed(1),
     drawProb: probX.toFixed(1),
     awayProb: prob2.toFixed(1),
-    odd1,
-    oddX,
-    odd2,
+    odd1: prob1 > 0 ? (100 / prob1).toFixed(2) : "0.00",
+    oddX: probX > 0 ? (100 / probX).toFixed(2) : "0.00",
+    odd2: prob2 > 0 ? (100 / prob2).toFixed(2) : "0.00",
     hxg: hxg.toFixed(2),
     axg: axg.toFixed(2),
   };
 }
 
 /* ===========================
-APP COMPONENT
+COMBINADAS IA
+=========================== */
+function ComboCardIA({ type, matches }) {
+  let selection = [];
+  if (type === "Básica") selection = matches.slice(0, 2);
+  else if (type === "Moderada") selection = matches.slice(0, 3);
+  else selection = matches.slice(0, 4);
+
+  return (
+    <div style={{
+      border: type === "Básica" ? "1px solid #00ff41" :
+              type === "Moderada" ? "1px solid #ffaa00" :
+              "1px solid #ff0044",
+      padding: 15,
+      borderRadius: 10,
+      marginBottom: 10,
+      background: "#111"
+    }}>
+      <h4 style={{ margin: "0 0 10px 0", color: type === "Básica" ? "#00ff41" : type === "Moderada" ? "#ffaa00" : "#ff0044" }}>
+        Combinada {type}
+      </h4>
+      <ul style={{ margin: 0, paddingLeft: 20 }}>
+        {selection.map((m) => {
+          const data = runModel(m);
+          // Buscamos la probabilidad más alta
+          const probs = [parseFloat(data.homeProb), parseFloat(data.drawProb), parseFloat(data.awayProb)];
+          const maxProb = Math.max(...probs);
+          let pick = "1";
+          if (maxProb === parseFloat(data.drawProb)) pick = "X";
+          if (maxProb === parseFloat(data.awayProb)) pick = "2";
+
+          return (
+            <li key={m.id} style={{ marginBottom: 5 }}>
+              {m.home} vs {m.away} - Pick: <strong>{pick}</strong> ({maxProb.toFixed(1)}%)
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/* ===========================
+TICKET
+=========================== */
+function Ticket({ selected, setSelected }) {
+  if (selected.length === 0) return null;
+
+  const totalQuota = selected.reduce((acc, s) => acc * s.quota, 1).toFixed(2);
+
+  const removeMatch = (id) => {
+    setSelected(selected.filter((s) => s.id !== id));
+  };
+
+  return (
+    <div style={{ border: "1px solid #555", padding: 15, borderRadius: 10, background: "#1a1a1a", marginTop: 20 }}>
+      <h3 style={{ margin: "0 0 10px 0", color: "#00ff41" }}>🎫 Tu Ticket</h3>
+      {selected.map((s) => (
+        <div key={s.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: "0.9em", borderBottom: "1px solid #333", paddingBottom: 5 }}>
+          <span>{s.home} vs {s.away} (Pick: {s.pick})</span>
+          <span>
+            <strong style={{ color: "#00ff41", marginRight: 10 }}>@{s.quota}</strong>
+            <button onClick={() => removeMatch(s.id)} style={{ background: "transparent", color: "#ff0044", border: "none", cursor: "pointer" }}>✖</button>
+          </span>
+        </div>
+      ))}
+      <div style={{ marginTop: 10, textAlign: "right", fontSize: "1.1em" }}>
+        Cuota Total: <strong style={{ color: "#00ff41" }}>@{totalQuota}</strong>
+      </div>
+    </div>
+  );
+}
+
+/* ===========================
+MATCH CARD
+=========================== */
+function MatchCard({ match, selected, setSelected }) {
+  const [open, setOpen] = useState(false);
+  const data = useMemo(() => runModel(match), [match]);
+  
+  const corners = predictCorners(match.home, match.away);
+  const cards = predictCards(match.home, match.away);
+
+  const isSelected = (pick) => selected.some(s => s.id === match.id && s.pick === pick);
+
+  const toggleSelection = (pick, odd) => {
+    // Si ya está seleccionado este pick específico, lo quitamos
+    if (isSelected(pick)) {
+      setSelected(selected.filter(s => !(s.id === match.id && s.pick === pick)));
+    } else {
+      // Quitamos cualquier otro pick de este mismo partido antes de añadir el nuevo
+      const filtered = selected.filter(s => s.id !== match.id);
+      setSelected([...filtered, { ...match, pick, quota: parseFloat(odd) }]);
+    }
+  };
+
+  return (
+    <div style={{ border: "1px solid #222", padding: "15px", borderRadius: "8px", background: "#111", marginBottom: "15px" }}>
+      <div onClick={() => setOpen((o) => !o)} style={{ cursor: "pointer", display: "flex", justifyContent: "space-between" }}>
+        <div style={{ fontSize: "1.1em" }}><strong>{match.home}</strong> vs <strong>{match.away}</strong></div>
+        <div style={{ color: "#666", fontSize: "0.85em" }}>📅 {match.date}</div>
+      </div>
+
+      <div style={{ marginTop: "15px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", textAlign: "center" }}>
+        <div 
+          onClick={() => toggleSelection("1", data.odd1)}
+          style={{ background: isSelected("1") ? "#00ff41" : "#1a1a1a", color: isSelected("1") ? "#000" : "#fff", padding: "10px", borderRadius: "5px", cursor: "pointer" }}
+        >
+          <div style={{ fontSize: "0.8em", marginBottom: "5px" }}>1 ({data.homeProb}%)</div>
+          <div style={{ fontWeight: "bold" }}>@{data.odd1}</div>
+        </div>
+        <div 
+          onClick={() => toggleSelection("X", data.oddX)}
+          style={{ background: isSelected("X") ? "#00ff41" : "#1a1a1a", color: isSelected("X") ? "#000" : "#fff", padding: "10px", borderRadius: "5px", cursor: "pointer" }}
+        >
+          <div style={{ fontSize: "0.8em", marginBottom: "5px" }}>X ({data.drawProb}%)</div>
+          <div style={{ fontWeight: "bold" }}>@{data.oddX}</div>
+        </div>
+        <div 
+          onClick={() => toggleSelection("2", data.odd2)}
+          style={{ background: isSelected("2") ? "#00ff41" : "#1a1a1a", color: isSelected("2") ? "#000" : "#fff", padding: "10px", borderRadius: "5px", cursor: "pointer" }}
+        >
+          <div style={{ fontSize: "0.8em", marginBottom: "5px" }}>2 ({data.awayProb}%)</div>
+          <div style={{ fontWeight: "bold" }}>@{data.odd2}</div>
+        </div>
+      </div>
+
+      {open && (
+        <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px dashed #333", fontSize: "0.9em", color: "#ccc", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+          <div><span style={{ color: "#fff" }}>⚽ xG:</span> {data.hxg} - {data.axg}</div>
+          <div><span style={{ color: "#fff" }}>🚩 Córners:</span> {corners.avg}</div>
+          <div><span style={{ color: "#fff" }}>🟨 Tarjetas:</span> {cards.avg}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===========================
+APP MAIN COMPONENT
 =========================== */
 export default function GolPredictPro() {
   const [league, setLeague] = useState("LALIGA");
-  const [stats, setStats] = useState({ win: 0, loss: 0 });
-  const [tick, setTick] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), 5000);
-    return () => clearInterval(timer);
-  }, []);
+  const [selectedMatches, setSelectedMatches] = useState([]);
 
   const matches = matchesDB[league];
 
@@ -221,103 +325,51 @@ export default function GolPredictPro() {
     <div style={{ background: "#0a0a0a", color: "#e0e0e0", minHeight: "100vh", padding: "20px", fontFamily: "sans-serif" }}>
       <header style={{ borderBottom: "1px solid #333", paddingBottom: "15px", marginBottom: "20px" }}>
         <h2 style={{ color: "#00ff41", margin: 0 }}>GOLPREDICT PRO</h2>
-        <div style={{ fontSize: "0.9em", marginTop: "10px", color: "#888" }}>
-          <strong>Aciertos:</strong> <span style={{color: '#00ff41'}}>{stats.win}</span> | <strong>Fallos:</strong> <span style={{color: '#ff0044'}}>{stats.loss}</span>
-        </div>
       </header>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "20px" }}>
-        {Object.keys(matchesDB).map((l) => (
-          <button
-            key={l}
-            onClick={() => setLeague(l)}
-            style={{ 
-              padding: "8px 12px", 
-              background: league === l ? "#00ff41" : "#222", 
-              color: league === l ? "#000" : "#fff",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              fontWeight: "bold"
-            }}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
+      <div style={{ display: "flex", gap: "20px" }}>
+        
+        {/* Columna Izquierda: Ligas y Partidos */}
+        <div style={{ flex: 2 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "20px" }}>
+            {Object.keys(matchesDB).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLeague(l)}
+                style={{ 
+                  padding: "8px 12px", background: league === l ? "#00ff41" : "#222", 
+                  color: league === l ? "#000" : "#fff", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold"
+                }}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
 
-      <h3 style={{ borderBottom: "1px solid #333", paddingBottom: "10px" }}>Partidos</h3>
-      
-      <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-        {matches.map((m) => (
-          <MatchCard key={m.id} match={m} />
-        ))}
-      </div>
+          <h3 style={{ borderBottom: "1px solid #333", paddingBottom: "10px" }}>Partidos {league}</h3>
+          
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {matches.map((m) => (
+              <MatchCard key={m.id} match={m} selected={selectedMatches} setSelected={setSelectedMatches} />
+            ))}
+          </div>
+        </div>
 
-      <button style={{ marginTop: "40px", background: "#ff0044", color: "#fff", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: "bold" }}>
-        Cerrar Sesión
-      </button>
+        {/* Columna Derecha: IA y Ticket */}
+        <div style={{ flex: 1 }}>
+          <h3 style={{ borderBottom: "1px solid #333", paddingBottom: "10px" }}>Combinadas IA</h3>
+          <ComboCardIA type="Básica" matches={matches} />
+          <ComboCardIA type="Moderada" matches={matches} />
+          <ComboCardIA type="Arriesgada" matches={matches} />
+
+          <Ticket selected={selectedMatches} setSelected={setSelectedMatches} />
+        </div>
+
+      </div>
     </div>
   );
-}
-
-/* ===========================
-MATCH CARD COMPONENT
-=========================== */
-function MatchCard({ match }) {
-  const [open, setOpen] = useState(false);
-  const data = useMemo(() => runModel(match), [match]);
-  
-  const corners = predictCorners(match.home, match.away);
-  const cards = predictCards(match.home, match.away);
-
-  return (
-    <div style={{ border: "1px solid #222", padding: "15px", borderRadius: "8px", background: "#111", boxShadow: "0 4px 6px rgba(0,0,0,0.3)" }}>
-      <div 
-        onClick={() => setOpen((o) => !o)} 
-        style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-      >
-        <div style={{ fontSize: "1.1em" }}>
-          <strong>{match.home}</strong> vs <strong>{match.away}</strong>
-        </div>
-        <div style={{ color: "#666", fontSize: "0.85em" }}>
-          📅 {match.date}
-        </div>
-      </div>
-
-      {/* Probabilidades Principales */}
-      <div style={{ marginTop: "15px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", textAlign: "center" }}>
-        <div style={{ background: "#1a1a1a", padding: "10px", borderRadius: "5px" }}>
-          <div style={{ color: "#888", fontSize: "0.8em", marginBottom: "5px" }}>1 ({data.homeProb}%)</div>
-          <div style={{ color: "#00ff41", fontWeight: "bold" }}>@{data.odd1}</div>
-        </div>
-        <div style={{ background: "#1a1a1a", padding: "10px", borderRadius: "5px" }}>
-          <div style={{ color: "#888", fontSize: "0.8em", marginBottom: "5px" }}>X ({data.drawProb}%)</div>
-          <div style={{ color: "#00ff41", fontWeight: "bold" }}>@{data.oddX}</div>
-        </div>
-        <div style={{ background: "#1a1a1a", padding: "10px", borderRadius: "5px" }}>
-          <div style={{ color: "#888", fontSize: "0.8em", marginBottom: "5px" }}>2 ({data.awayProb}%)</div>
-          <div style={{ color: "#00ff41", fontWeight: "bold" }}>@{data.odd2}</div>
-        </div>
-      </div>
-
-      {/* Análisis Extendido (Desplegable) */}
-      {open && (
-        <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px dashed #333", fontSize: "0.9em", color: "#ccc", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-          <div>
-            <span style={{ color: "#fff" }}>⚽ xG Match:</span> {data.hxg} - {data.axg}
-          </div>
-          <div>
-            <span style={{ color: "#fff" }}>🚩 Córners:</span> {corners.avg} <span style={{ color: corners.over85 ? "#00ff41" : "#ff0044" }}>(O8.5: {corners.over85 ? "SÍ" : "NO"})</span>
-          </div>
-          <div>
-            <span style={{ color: "#fff" }}>🟨 Tarjetas:</span> {cards.avg} <span style={{ color: cards.over45 ? "#00ff41" : "#ff0044" }}>(O4.5: {cards.over45 ? "SÍ" : "NO"})</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-     }
+    }
+    
   
     
 

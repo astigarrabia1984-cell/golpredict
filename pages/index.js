@@ -234,16 +234,24 @@ MAIN APP
 export default function GolPredictPro() {
   const [league, setLeague] = useState("LALIGA");
   const [selectedMatches, setSelectedMatches] = useState([]);
-  const [activeTab, setActiveTab] = useState("partidos"); // partidos | combinadas | ticket
+  const [activeTab, setActiveTab] = useState("partidos");
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Solución para Next.js: Detectar el tamaño de pantalla SOLO en el cliente
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize(); // Ejecutar al inicio
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const matches = matchesDB[league];
 
-  // Estilos para el contenedor responsivo
   const containerStyle = {
     maxWidth: "1200px",
     margin: "0 auto",
     display: "flex",
-    flexDirection: window.innerWidth < 768 ? "column" : "row",
+    flexDirection: isMobile ? "column" : "row",
     gap: "20px"
   };
 
@@ -253,7 +261,6 @@ export default function GolPredictPro() {
         <h2 style={{ color: "#00ff41", margin: 0 }}>GOLPREDICT PRO</h2>
       </header>
 
-      {/* Selector de Ligas (Siempre visible arriba) */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "15px", justifyContent: 'center' }}>
         {Object.keys(matchesDB).map((l) => (
           <button key={l} onClick={() => setLeague(l)} style={{ padding: "8px 10px", background: league === l ? "#00ff41" : "#222", color: league === l ? "#000" : "#fff", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold", fontSize: '0.8em' }}>
@@ -262,7 +269,7 @@ export default function GolPredictPro() {
         ))}
       </div>
 
-      {/* Pestañas para Móvil */}
+      {/* Pestañas (Se ven siempre pero ayudan al orden en móvil) */}
       <div style={{ display: "flex", marginBottom: "20px", borderBottom: "2px solid #222" }}>
         {["partidos", "combinadas", "ticket"].map((tab) => (
           <button 
@@ -281,16 +288,14 @@ export default function GolPredictPro() {
       </div>
 
       <div style={containerStyle}>
-        
-        {/* Lógica de visualización por pestaña */}
-        {(activeTab === "partidos" || window.innerWidth >= 768) && (
+        {(activeTab === "partidos" || !isMobile) && (
           <div style={{ flex: 2 }}>
             <h3 style={{ fontSize: '1.1em', marginBottom: 15 }}>Partidos {league}</h3>
             {matches.map((m) => <MatchCard key={m.id} match={m} selected={selectedMatches} setSelected={setSelectedMatches} />)}
           </div>
         )}
 
-        {(activeTab === "combinadas" || window.innerWidth >= 768) && (
+        {(activeTab === "combinadas" || !isMobile) && (
           <div style={{ flex: 1 }}>
             <h3 style={{ fontSize: '1.1em', marginBottom: 15 }}>Combinadas IA</h3>
             <ComboCardIA type="Básica" matches={matches} />
@@ -299,17 +304,17 @@ export default function GolPredictPro() {
           </div>
         )}
 
-        {(activeTab === "ticket" || window.innerWidth >= 768) && (
+        {(activeTab === "ticket" || !isMobile) && (
           <div style={{ flex: 1 }}>
             <h3 style={{ fontSize: '1.1em', marginBottom: 15 }}>Ticket de Apuesta</h3>
             <Ticket selected={selectedMatches} setSelected={setSelectedMatches} />
           </div>
         )}
-
       </div>
     </div>
   );
-     }
+        }
+    
      
     
   

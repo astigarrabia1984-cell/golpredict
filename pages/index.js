@@ -7,25 +7,20 @@ const factorial = (n) => (n <= 1 ? 1 : n * factorial(n - 1));
 const poisson = (lambda, k) => (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k);
 
 const teamRatings = {
-  "Real Madrid": { a: 1.45, d: 0.7 }, "Barcelona": { a: 1.4, d: 0.85 },
-  "Girona": { a: 1.25, d: 0.9 }, "Athletic Bilbao": { a: 1.15, d: 0.85 },
-  "Atlético Madrid": { a: 1.3, d: 0.8 }, "Real Sociedad": { a: 1.1, d: 0.85 },
-  "Betis": { a: 1.1, d: 0.95 }, "Valencia": { a: 1.0, d: 0.95 },
-  "Villarreal": { a: 1.2, d: 1.1 }, "Getafe": { a: 0.9, d: 1.0 },
-  "Osasuna": { a: 0.95, d: 1.0 }, "Sevilla": { a: 1.1, d: 1.1 },
-  "Las Palmas": { a: 0.85, d: 1.0 }, "Alaves": { a: 0.9, d: 1.1 },
-  "Mallorca": { a: 0.8, d: 0.95 }, "Rayo Vallecano": { a: 0.85, d: 1.1 },
-  "Celta Vigo": { a: 1.0, d: 1.1 }, "Cadiz": { a: 0.7, d: 1.1 },
-  "Granada": { a: 0.8, d: 1.3 }, "Almeria": { a: 0.8, d: 1.4 },
-  "Manchester City": { a: 1.6, d: 0.75 }, "Liverpool": { a: 1.5, d: 0.8 },
-  "Arsenal": { a: 1.5, d: 0.75 }, "Aston Villa": { a: 1.3, d: 1.0 },
-  "Tottenham": { a: 1.35, d: 1.1 }, "Man United": { a: 1.2, d: 1.1 },
-  "Newcastle": { a: 1.3, d: 1.2 }, "Chelsea": { a: 1.25, d: 1.1 },
-  "West Ham": { a: 1.15, d: 1.2 }, "Brighton": { a: 1.2, d: 1.2 },
-  "Bayern Munich": { a: 1.6, d: 0.8 }, "Leverkusen": { a: 1.5, d: 0.7 },
-  "Dortmund": { a: 1.35, d: 1.0 }, "Leipzig": { a: 1.4, d: 1.0 },
-  "Inter": { a: 1.4, d: 0.7 }, "Milan": { a: 1.3, d: 0.95 },
-  "Juventus": { a: 1.15, d: 0.8 }, "Napoli": { a: 1.2, d: 1.0 }
+  "Real Madrid": { a: 1.45, d: 0.7 }, "Elche": { a: 0.8, d: 1.2 },
+  "Girona": { a: 1.2, d: 0.9 }, "Athletic Bilbao": { a: 1.1, d: 0.9 },
+  "Atlético Madrid": { a: 1.3, d: 0.8 }, "Getafe": { a: 0.9, d: 1.1 },
+  "Arsenal": { a: 1.4, d: 0.8 }, "Everton": { a: 0.9, d: 1.1 },
+  "Chelsea": { a: 1.1, d: 1 }, "Newcastle": { a: 1.2, d: 0.95 },
+  "Liverpool": { a: 1.45, d: 0.85 }, "Tottenham Hotspur": { a: 1.25, d: 1 },
+  "Bayern Munich": { a: 1.55, d: 0.75 }, "Dortmund": { a: 1.3, d: 0.95 },
+  "Leverkusen": { a: 1.35, d: 0.9 }, "Inter": { a: 1.35, d: 0.85 },
+  "Roma": { a: 1.15, d: 0.95 }, "Milan": { a: 1.25, d: 0.9 },
+  "Napoli": { a: 1.3, d: 0.95 }, "PSG": { a: 1.5, d: 0.9 },
+  "Ajax": { a: 1.2, d: 1.05 }, "Betis": { a: 1.1, d: 1 },
+  "Sporting": { a: 1.15, d: 1 }, "Manchester City": { a: 1.6, d: 0.75 },
+  "Barcelona": { a: 1.4, d: 0.85 }, "Juventus": { a: 1.2, d: 0.8 },
+  "Villarreal": { a: 1.2, d: 1.0 }, "Sevilla": { a: 1.1, d: 1.1 }
 };
 
 function runModel(match) {
@@ -36,7 +31,6 @@ function runModel(match) {
   const axg = away.a * home.d;
   let p1 = 0, pX = 0, p2 = 0;
   let maxExactProb = 0; let exactScore = "0-0";
-
   for (let i = 0; i < 7; i++) {
     for (let j = 0; j < 7; j++) {
       const pr = poisson(hxg, i) * poisson(axg, j);
@@ -44,16 +38,16 @@ function runModel(match) {
       if (pr > maxExactProb) { maxExactProb = pr; exactScore = `${i}-${j}`; }
     }
   }
-
   const prob1 = (p1 * 100).toFixed(1);
   const probX = (pX * 100).toFixed(1);
   const prob2 = (p2 * 100).toFixed(1);
-
   return {
     homeProb: prob1, drawProb: probX, awayProb: prob2,
-    odd1: (100/prob1).toFixed(2), oddX: (100/probX).toFixed(2), odd2: (100/prob2).toFixed(2),
-    bestProb: Math.max(prob1, probX, prob2),
-    bestPick: prob1 > Math.max(probX, prob2) ? "1" : (probX > prob2 ? "X" : "2"),
+    odd1: prob1 > 0 ? (100/prob1).toFixed(2) : "0.00", 
+    oddX: probX > 0 ? (100/probX).toFixed(2) : "0.00", 
+    odd2: prob2 > 0 ? (100/prob2).toFixed(2) : "0.00",
+    bestProb: Math.max(parseFloat(prob1), parseFloat(probX), parseFloat(prob2)),
+    bestPick: parseFloat(prob1) > Math.max(parseFloat(probX), parseFloat(prob2)) ? "1" : (parseFloat(probX) > parseFloat(prob2) ? "X" : "2"),
     exactScore,
     predictGoals: (hxg + axg) > 2.5 ? "+2.5" : "-2.5",
     predictCorners: (7.5 + home.a + away.a) > 9.5 ? "+9.5" : "-9.5"
@@ -61,80 +55,94 @@ function runModel(match) {
 }
 
 /* ===========================
-BASE DE DATOS ACTUALIZADA
+BASE DE DATOS 13-23 MARZO
 =========================== */
 const matchesDB = {
   LALIGA: [
-    // Jornada 28
-    { id: 1, home: "Barcelona", away: "Mallorca", date: "08-03" },
-    { id: 2, home: "Valencia", away: "Getafe", date: "09-03" },
-    { id: 3, home: "Cadiz", away: "Atlético Madrid", date: "09-03" },
-    { id: 4, home: "Granada", away: "Real Sociedad", date: "09-03" },
-    { id: 5, home: "Girona", away: "Osasuna", date: "09-03" },
-    { id: 6, home: "Alaves", away: "Rayo Vallecano", date: "10-03" },
-    { id: 7, home: "Real Madrid", away: "Celta Vigo", date: "10-03" },
-    { id: 8, home: "Betis", away: "Villarreal", date: "10-03" },
-    { id: 9, home: "Las Palmas", away: "Athletic Bilbao", date: "10-03" },
-    { id: 10, home: "Almeria", away: "Sevilla", date: "11-03" },
-    // Jornada 29
-    { id: 11, home: "Real Sociedad", away: "Cadiz", date: "15-03" },
-    { id: 12, home: "Mallorca", away: "Granada", date: "16-03" },
-    { id: 13, home: "Osasuna", away: "Real Madrid", date: "16-03" },
-    { id: 14, home: "Getafe", away: "Girona", date: "16-03" },
-    { id: 15, home: "Athletic Bilbao", away: "Alaves", date: "16-03" },
-    { id: 16, home: "Sevilla", away: "Celta Vigo", date: "17-03" },
-    { id: 17, home: "Villarreal", away: "Valencia", date: "17-03" },
-    { id: 18, home: "Rayo Vallecano", away: "Betis", date: "17-03" },
-    { id: 19, home: "Las Palmas", away: "Almeria", date: "17-03" },
-    { id: 20, home: "Atlético Madrid", away: "Barcelona", date: "17-03" }
+    { id: 1, home: "Alaves", away: "Villarreal", date: "13-03" },
+    { id: 2, home: "Girona", away: "Athletic Bilbao", date: "14-03" },
+    { id: 3, home: "Atlético Madrid", away: "Getafe", date: "14-03" },
+    { id: 4, home: "Real Oviedo", away: "Valencia", date: "14-03" },
+    { id: 5, home: "Real Madrid", away: "Elche", date: "14-03" },
+    { id: 6, home: "Mallorca", away: "Espanyol", date: "15-03" },
+    { id: 7, home: "Barcelona", away: "Sevilla", date: "15-03" },
+    { id: 8, home: "Betis", away: "Celta Vigo", date: "15-03" },
+    { id: 9, home: "Real Sociedad", away: "Osasuna", date: "15-03" },
+    { id: 10, home: "Rayo Vallecano", away: "Levante", date: "16-03" },
+    { id: 11, home: "Villarreal", away: "Real Sociedad", date: "20-03" },
+    { id: 12, home: "Elche", away: "Mallorca", date: "21-03" },
+    { id: 13, home: "Espanyol", away: "Getafe", date: "21-03" },
+    { id: 14, home: "Levante", away: "Real Oviedo", date: "21-03" },
+    { id: 15, home: "Osasuna", away: "Girona", date: "21-03" },
+    { id: 16, home: "Sevilla", away: "Valencia", date: "21-03" },
+    { id: 17, home: "Barcelona", away: "Rayo Vallecano", date: "22-03" },
+    { id: 18, home: "Celta Vigo", away: "Alaves", date: "22-03" },
+    { id: 19, home: "Athletic Bilbao", away: "Betis", date: "22-03" },
+    { id: 20, home: "Real Madrid", away: "Atlético Madrid", date: "22-03" }
   ],
   PREMIER: [
-    // Jornada 30
-    { id: 30, home: "Newcastle", away: "West Ham", date: "30-03" },
-    { id: 31, home: "Chelsea", away: "Burnley", date: "30-03" },
-    { id: 32, home: "Tottenham", away: "Luton", date: "30-03" },
-    { id: 33, home: "Aston Villa", away: "Wolves", date: "30-03" },
-    { id: 34, home: "Brentford", away: "Man United", date: "30-03" },
-    { id: 35, home: "Liverpool", away: "Brighton", date: "31-03" },
-    { id: 36, home: "Man City", away: "Arsenal", date: "31-03" },
-    // Jornada 31
-    { id: 40, home: "Newcastle", away: "Everton", date: "02-04" },
-    { id: 41, home: "Arsenal", away: "Luton", date: "03-04" },
-    { id: 42, home: "Man City", away: "Aston Villa", date: "03-04" },
-    { id: 43, home: "Liverpool", away: "Sheffield Utd", date: "04-04" },
-    { id: 44, home: "Chelsea", away: "Man United", date: "04-04" }
+    { id: 30, home: "Burnley", away: "Bournemouth", date: "14-03" },
+    { id: 31, home: "Sunderland", away: "Brighton", date: "14-03" },
+    { id: 32, home: "Arsenal", away: "Everton", date: "14-03" },
+    { id: 33, home: "Chelsea", away: "Newcastle", date: "14-03" },
+    { id: 34, home: "West Ham United", away: "Manchester City", date: "14-03" },
+    { id: 35, home: "Crystal Palace", away: "Leeds United", date: "15-03" },
+    { id: 36, home: "Manchester United", away: "Aston Villa", date: "15-03" },
+    { id: 37, home: "Nottingham Forest", away: "Fulham", date: "15-03" },
+    { id: 38, home: "Liverpool", away: "Tottenham Hotspur", date: "15-03" },
+    { id: 39, home: "Brentford", away: "Wolves", date: "16-03" },
+    { id: 40, home: "Bournemouth", away: "Manchester United", date: "20-03" },
+    { id: 41, home: "Brighton", away: "Liverpool", date: "21-03" },
+    { id: 42, home: "Aston Villa", away: "West Ham United", date: "21-03" },
+    { id: 43, home: "Fulham", away: "Burnley", date: "21-03" },
+    { id: 44, home: "Manchester City", away: "Crystal Palace", date: "21-03" },
+    { id: 45, home: "Everton", away: "Chelsea", date: "21-03" },
+    { id: 46, home: "Leeds United", away: "Brentford", date: "21-03" },
+    { id: 47, home: "Newcastle United", away: "Sunderland", date: "22-03" },
+    { id: 48, home: "Tottenham Hotspur", away: "Nottingham Forest", date: "22-03" }
   ],
   BUNDESLIGA: [
-    // Jornada 26
-    { id: 60, home: "Darmstadt", away: "Bayern Munich", date: "16-03" },
-    { id: 61, home: "Mainz", away: "Bochum", date: "16-03" },
-    { id: 62, home: "Heidenheim", away: "Monchengladbach", date: "16-03" },
-    { id: 63, home: "Hoffenheim", away: "Stuttgart", date: "16-03" },
-    { id: 64, home: "Freiburg", away: "Leverkusen", date: "17-03" },
-    { id: 65, home: "Dortmund", away: "Frankfurt", date: "17-03" },
-    // Jornada 27
-    { id: 70, home: "Leverkusen", away: "Hoffenheim", date: "30-03" },
-    { id: 71, home: "Bayern Munich", away: "Dortmund", date: "30-03" },
-    { id: 72, home: "Leipzig", away: "Mainz", date: "30-03" }
+    { id: 60, home: "Monchengladbach", away: "St Pauli", date: "13-03" },
+    { id: 61, home: "Dortmund", away: "Augsburg", date: "14-03" },
+    { id: 62, home: "Eintracht Frankfurt", away: "Heidenheim", date: "14-03" },
+    { id: 63, home: "Hoffenheim", away: "Wolfsburg", date: "14-03" },
+    { id: 64, home: "Leverkusen", away: "Bayern Munich", date: "14-03" },
+    { id: 65, home: "Hamburg", away: "Cologne", date: "14-03" },
+    { id: 66, home: "Stuttgart", away: "Union Berlin", date: "15-03" },
+    { id: 67, home: "RB Leipzig", away: "Mainz", date: "20-03" },
+    { id: 68, home: "Bayern Munich", away: "Union Berlin", date: "21-03" },
+    { id: 69, home: "Cologne", away: "Monchengladbach", date: "21-03" },
+    { id: 70, home: "Heidenheim", away: "Leverkusen", date: "21-03" },
+    { id: 71, home: "Wolfsburg", away: "Werder Bremen", date: "21-03" },
+    { id: 72, home: "Dortmund", away: "Hamburg", date: "21-03" }
   ],
   SERIEA: [
-    // Jornada 29
-    { id: 80, home: "Empoli", away: "Bologna", date: "15-03" },
-    { id: 81, home: "Monza", away: "Cagliari", date: "16-03" },
-    { id: 82, home: "Juventus", away: "Genoa", date: "17-03" },
-    { id: 83, home: "Inter", away: "Napoli", date: "17-03" },
-    { id: 84, home: "Roma", away: "Sassuolo", date: "17-03" },
-    // Jornada 30
-    { id: 90, home: "Napoli", away: "Atalanta", date: "30-03" },
-    { id: 91, home: "Lazio", away: "Juventus", date: "30-03" },
-    { id: 92, home: "Fiorentina", away: "Milan", date: "30-03" },
-    { id: 93, home: "Inter", away: "Empoli", date: "01-04" }
+    { id: 80, home: "Torino", away: "Parma", date: "13-03" },
+    { id: 81, home: "Inter", away: "Atalanta", date: "14-03" },
+    { id: 82, home: "Napoli", away: "Lecce", date: "14-03" },
+    { id: 83, home: "Udinese", away: "Juventus", date: "14-03" },
+    { id: 84, home: "Lazio", away: "Bologna", date: "15-03" },
+    { id: 85, home: "Fiorentina", away: "Cagliari", date: "15-03" },
+    { id: 86, home: "Roma", away: "Como", date: "21-03" },
+    { id: 87, home: "Sassuolo", away: "Torino", date: "21-03" },
+    { id: 88, home: "AC Milan", away: "Fiorentina", date: "22-03" },
+    { id: 89, home: "Juventus", away: "Napoli", date: "22-03" }
   ],
   CHAMPIONS: [
-    { id: 100, home: "Arsenal", away: "Bayern Munich", date: "09-04" },
-    { id: 101, home: "Real Madrid", away: "Man City", date: "09-04" },
-    { id: 102, home: "Atlético Madrid", away: "Dortmund", date: "10-04" },
-    { id: 103, home: "PSG", away: "Barcelona", date: "10-04" }
+    { id: 100, home: "Arsenal", away: "Porto", date: "18-03" },
+    { id: 101, home: "Bayern Munich", away: "Inter", date: "18-03" },
+    { id: 102, home: "Manchester City", away: "Real Madrid", date: "18-03" },
+    { id: 103, home: "PSG", away: "Dortmund", date: "19-03" },
+    { id: 104, home: "Barcelona", away: "Napoli", date: "19-03" },
+    { id: 105, home: "Liverpool", away: "Juventus", date: "19-03" }
+  ],
+  EUROPA: [
+    { id: 120, home: "Freiburg", away: "Genk", date: "19-03" },
+    { id: 121, home: "Lyon", away: "Celta Vigo", date: "19-03" },
+    { id: 122, home: "Midtjylland", away: "Nottingham Forest", date: "19-03" },
+    { id: 123, home: "Aston Villa", away: "Lille", date: "19-03" },
+    { id: 124, home: "Porto", away: "Stuttgart", date: "19-03" },
+    { id: 125, home: "Real Betis", away: "Panathinaikos", date: "19-03" }
   ]
 };
 
@@ -165,8 +173,8 @@ function MatchCard({ match, selected, setSelected }) {
 
       {open && (
         <div style={{ marginTop: "10px", padding: "10px", background: "#050505", borderRadius: "5px", fontSize: "0.8em", borderTop: "1px solid #222" }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}><span>Exacto:</span> <b>{data.exactScore}</b></div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}><span>Goles:</span> <b style={{color: "#00ff41"}}>{data.predictGoals}</b></div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}><span>Resultado Exacto:</span> <b>{data.exactScore}</b></div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}><span>Goles:</span> <b style={{color: "#00ff41"}}>{data.predictGoals}</b></div>
           <div style={{ display: "flex", justifyContent: "space-between" }}><span>Córners:</span> <b style={{color: "#ffaa00"}}>{data.predictCorners}</b></div>
         </div>
       )}
@@ -234,7 +242,8 @@ export default function GolPredictPro() {
       </main>
     </div>
   );
-     }
+          }
+
      
     
 

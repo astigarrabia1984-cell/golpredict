@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
 
 /* ===========================
-LÓGICA IA Y SISTEMA DE VALIDACIÓN
+LÓGICA IA Y ESTADÍSTICAS
 =========================== */
-const teamRatings = {
+const teamStats = {
   "Real Madrid": { a: 1.5, d: 0.7 }, "Barcelona": { a: 1.4, d: 0.8 },
   "Manchester City": { a: 1.6, d: 0.7 }, "Arsenal": { a: 1.4, d: 0.8 },
   "Inter": { a: 1.3, d: 0.7 }, "Juventus": { a: 1.2, d: 0.8 }
@@ -13,24 +13,24 @@ const factorial = (n) => (n <= 1 ? 1 : n * factorial(n - 1));
 const poisson = (lambda, k) => (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k);
 
 function runModel(match) {
-  const home = teamRatings[match.home] || { a: 1.1, d: 1.0 };
-  const away = teamRatings[match.away] || { a: 1.0, d: 1.1 };
-  const hxg = (home.a * away.d) * 1.1;
+  const home = teamStats[match.home] || { a: 1.1, d: 1.0 };
+  const away = teamStats[match.away] || { a: 1.0, d: 1.1 };
+  const hxg = (home.a * away.d) * 1.15;
   const axg = away.a * home.d;
   
   let p1 = 0, pX = 0, p2 = 0;
-  let maxProb = 0; let exact = "0-0";
-  for (let i = 0; i < 5; i++) {
-    for (let j = 0; j < 5; j++) {
+  let maxP = 0; let exact = "0-0";
+  for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 6; j++) {
       const pr = poisson(hxg, i) * poisson(axg, j);
       if (i > j) p1 += pr; else if (i === j) pX += pr; else p2 += pr;
-      if (pr > maxProb) { maxProb = pr; exact = `${i}-${j}`; }
+      if (pr > maxP) { maxP = pr; exact = `${i}-${j}`; }
     }
   }
 
   const bestPick = p1 > pX && p1 > p2 ? "1" : (p2 > p1 && p2 > pX ? "2" : "X");
   const bestProb = Math.max(p1, pX, p2) * 100;
-
+  
   let status = "pending"; 
   if (match.ftScore) {
     const [hG, aG] = match.ftScore.split("-").map(Number);
@@ -39,15 +39,15 @@ function runModel(match) {
   }
 
   return {
-    homeProb: (p1 * 100).toFixed(1),
-    drawProb: (pX * 100).toFixed(1),
-    awayProb: (p2 * 100).toFixed(1),
-    bestPick, bestProb: bestProb.toFixed(1), status, exact
+    homeProb: (p1 * 100).toFixed(1), drawProb: (pX * 100).toFixed(1), awayProb: (p2 * 100).toFixed(1),
+    bestPick, bestProb: bestProb.toFixed(1), status, exact,
+    corners: (home.a + away.a) * 4.2 > 8.5 ? "+8.5" : "-8.5",
+    goals: (hxg + axg) > 2.5 ? "+2.5" : "-2.5"
   };
 }
 
 /* ===========================
-BASE DE DATOS: TUS RESULTADOS VERIFICADOS
+BASE DE DATOS (TUS RESULTADOS)
 =========================== */
 const matchesDB = {
   LALIGA: [
@@ -68,83 +68,116 @@ const matchesDB = {
     { id: 13, home: "Nottingham Forest", away: "Fulham", ftScore: "0-0" },
     { id: 14, home: "West Ham", away: "Manchester City", ftScore: "1-1" },
     { id: 15, home: "Arsenal", away: "Everton", ftScore: "2-0" },
-    { id: 16, home: "Chelsea", away: "Newcastle", ftScore: "0-1" },
-    { id: 17, home: "Burnley", away: "Bournemouth", ftScore: "0-0" },
-    { id: 18, home: "Sunderland", away: "Brighton", ftScore: "0-1" }
+    { id: 16, home: "Chelsea", away: "Newcastle", ftScore: "0-1" }
   ],
   SERIEA: [
     { id: 20, home: "Lazio", away: "AC Milan", ftScore: "1-0" },
     { id: 21, home: "Como", away: "Roma", ftScore: "2-1" },
     { id: 22, home: "Pisa", away: "Cagliari", ftScore: "3-1" },
-    { id: 23, home: "Sassuolo", away: "Bolonia", ftScore: "0-1" },
-    { id: 24, home: "Verona", away: "Genoa", ftScore: "0-2" },
     { id: 25, home: "Udinese", away: "Juventus", ftScore: "0-1" },
-    { id: 26, home: "Nápoles", away: "Lecce", ftScore: "2-1" },
-    { id: 27, home: "Inter", away: "Atalanta", ftScore: "1-1" },
-    { id: 28, home: "Torino", away: "Parma", ftScore: "4-1" }
+    { id: 26, home: "Nápoles", away: "Lecce", ftScore: "2-1" }
   ]
 };
 
 /* ===========================
-INTERFAZ
+COMPONENTES UI
 =========================== */
 function MatchCard({ match }) {
+  const [open, setOpen] = useState(false);
   const data = useMemo(() => runModel(match), [match]);
   const color = data.status === "hit" ? "#00ff41" : (data.status === "miss" ? "#ff3333" : "#333");
 
   return (
-    <div style={{ background: "#111", padding: "12px", borderRadius: "10px", marginBottom: "10px", border: `2px solid ${color}` }}>
+    <div style={{ background: "#111", padding: "12px", borderRadius: "10px", marginBottom: "10px", border: `2px solid ${color}`, cursor: "pointer" }} onClick={() => setOpen(!open)}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7em", color: "#666" }}>
-        <span>ID: #{match.id}</span>
-        <span style={{ color, fontWeight: "bold" }}>{match.ftScore ? (data.status === "hit" ? "ACIERTO" : "FALLO") : "PENDIENTE"}</span>
+        <span>ID #{match.id}</span>
+        <span style={{ color }}>{match.ftScore ? (data.status === "hit" ? "ACIERTO" : "FALLO") : "PENDIENTE"}</span>
       </div>
       <div style={{ textAlign: "center", margin: "10px 0", fontWeight: "bold" }}>
-        {match.home} <span style={{color: "#00ff41"}}>{match.ftScore}</span> {match.away}
+        {match.home} <span style={{color: "#00ff41"}}>{match.ftScore || "vs"}</span> {match.away}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "5px", textAlign: "center", fontSize: "0.8em" }}>
         <div style={{ background: "#1a1a1a", padding: "5px", borderRadius: "5px" }}>1: {data.homeProb}%</div>
         <div style={{ background: "#1a1a1a", padding: "5px", borderRadius: "5px" }}>X: {data.drawProb}%</div>
         <div style={{ background: "#1a1a1a", padding: "5px", borderRadius: "5px" }}>2: {data.awayProb}%</div>
       </div>
+      {open && (
+        <div style={{ marginTop: "10px", padding: "10px", background: "#050505", borderRadius: "8px", fontSize: "0.75em", borderTop: "1px solid #333" }}>
+          <div>Marcador IA: <b>{data.exact}</b></div>
+          <div style={{ display: "flex", justifyContent: "space-around", marginTop: "5px" }}>
+            <span>Córners: <b style={{color: "#ffaa00"}}>{data.corners}</b></span>
+            <span>Goles Totales: <b style={{color: "#00e5ff"}}>{data.goals}</b></span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function GolPredictPro() {
+  const [activeTab, setActiveTab] = useState("LIGAS");
   const [league, setLeague] = useState("LALIGA");
   const [email, setEmail] = useState("");
   const isVIP = ["astigarrabia1984@gmail.com", "vieirajuandavid9@gmail.con"].includes(email.toLowerCase().trim());
 
   return (
     <div style={{ background: "#050505", color: "#fff", minHeight: "100vh", padding: "15px", fontFamily: "sans-serif" }}>
-      <header style={{ textAlign: "center", marginBottom: "20px" }}>
-        <h1 style={{ color: "#00ff41", margin: "0" }}>GOLPREDICT PRO</h1>
-        <input 
-          type="email" 
-          placeholder="Email VIP" 
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ background: "#111", border: "1px solid #333", color: "#fff", padding: "8px", borderRadius: "5px", marginTop: "10px", width: "100%", maxWidth: "300px" }}
-        />
+      <header style={{ textAlign: "center", marginBottom: "15px" }}>
+        <h1 style={{ color: "#00ff41", margin: "0", fontSize: "1.5rem" }}>GOLPREDICT PRO</h1>
+        <input type="email" placeholder="Email VIP" onChange={(e) => setEmail(e.target.value)} style={{ background: "#111", border: "1px solid #333", color: "#fff", padding: "8px", borderRadius: "5px", marginTop: "10px", width: "90%" }} />
       </header>
 
-      <div style={{ display: "flex", overflowX: "auto", gap: "10px", marginBottom: "20px" }}>
-        {Object.keys(matchesDB).map(l => (
-          <button key={l} onClick={() => setLeague(l)} style={{ padding: "10px 20px", background: league === l ? "#00ff41" : "#111", color: league === l ? "#000" : "#fff", border: "none", borderRadius: "20px", fontWeight: "bold", cursor: "pointer" }}>{l}</button>
+      <nav style={{ display: "flex", gap: "5px", marginBottom: "20px" }}>
+        {["LIGAS", "COMBINADAS", "TICKET", "CALC"].map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)} style={{ flex: 1, padding: "10px 5px", background: activeTab === tab ? "#00ff41" : "#222", color: activeTab === tab ? "#000" : "#fff", border: "none", borderRadius: "5px", fontSize: "0.65em", fontWeight: "bold" }}>{tab}</button>
         ))}
-      </div>
+      </nav>
 
-      <div style={{ maxWidth: "500px", margin: "0 auto" }}>
-        {matchesDB[league].map(m => <MatchCard key={m.id} match={m} />)}
-      </div>
+      {activeTab === "LIGAS" && (
+        <>
+          <div style={{ display: "flex", overflowX: "auto", gap: "10px", marginBottom: "15px" }}>
+            {Object.keys(matchesDB).map(l => (
+              <button key={l} onClick={() => setLeague(l)} style={{ padding: "8px 15px", background: league === l ? "#333" : "#111", color: league === l ? "#00ff41" : "#fff", border: "1px solid #333", borderRadius: "20px", fontSize: "0.7em", whiteSpace: "nowrap" }}>{l}</button>
+            ))}
+          </div>
+          {matchesDB[league].map(m => <MatchCard key={m.id} match={m} />)}
+        </>
+      )}
 
-      {isVIP && (
-        <div style={{ marginTop: "30px", padding: "15px", background: "#111", borderRadius: "10px", border: "1px solid #ffaa00", textAlign: "center", maxWidth: "500px", margin: "20px auto" }}>
-          <h3 style={{ color: "#ffaa00", margin: "0" }}>⭐ ACCESO VIP ACTIVADO</h3>
+      {activeTab === "COMBINADAS" && (
+        <div style={{ padding: "10px" }}>
+          <div style={{ background: "#111", padding: "15px", borderRadius: "10px", border: "2px solid #ffaa00", marginBottom: "15px" }}>
+            <h3 style={{ color: "#ffaa00", marginTop: "0" }}>⭐ COMBO LIGA ESPAÑOLA (TOP 3)</h3>
+            {!isVIP ? "Acceso Protegido" : "Real Sociedad (1) + Barcelona (1) + Real Madrid (1)"}
+          </div>
+          <div style={{ background: "#111", padding: "15px", borderRadius: "10px", border: "2px solid #00e5ff" }}>
+            <h3 style={{ color: "#00e5ff", marginTop: "0" }}>🌍 COMBO MULTI-LIGA</h3>
+            {!isVIP ? "Acceso Protegido" : "Barça + Arsenal + Juventus"}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "TICKET" && (
+        <div style={{ textAlign: "center", padding: "20px" }}>
+          <h3>MI TICKET IA</h3>
+          <div style={{ border: "2px dashed #333", padding: "20px", borderRadius: "10px" }}>
+            {isVIP ? "No hay apuestas seleccionadas" : "Inicia sesión para generar tickets"}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "CALC" && (
+        <div style={{ padding: "15px", background: "#111", borderRadius: "10px" }}>
+          <h3>CALCULADORA DE STAKE</h3>
+          <input type="number" placeholder="Bankroll" style={{ width: "100%", padding: "10px", marginBottom: "10px", background: "#000", color: "#00ff41", border: "1px solid #333" }} />
+          <button style={{ width: "100%", padding: "10px", background: "#00ff41", border: "none", fontWeight: "bold" }}>CALCULAR</button>
         </div>
       )}
     </div>
   );
-                                  }
+        }
+        
+                                  
             
           
         

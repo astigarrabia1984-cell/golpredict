@@ -47,7 +47,6 @@ function runModel(match) {
     status = actual === bestPick ? "hit" : "miss";
   }
 
-  // IA Realista: Menos de 4 tarjetas y córners ajustados
   const cornerIdx = (home.a + away.a) * 4.1;
   const cardIdx = (home.d + away.d) * 2.1;
 
@@ -65,44 +64,44 @@ BASE DE DATOS SEGÚN CAPTURAS
 const matchesDB = {
   LALIGA: [
     { id: 1, home: "Alaves", away: "Villarreal", date: "13-03", ftScore: "1-1" },
-    { id: 2, home: "Girona", away: "Athletic Bilbao", date: "14-03", ftScore: "1-2" },
-    { id: 3, home: "Atlético Madrid", away: "Getafe", date: "14-03", ftScore: "2-1" },
-    { id: 4, home: "Real Oviedo", away: "Valencia", date: "14-03", ftScore: "0-1" },
-    { id: 5, home: "Real Madrid", away: "Elche", date: "14-03", ftScore: "3-0" },
-    { id: 6, home: "Mallorca", away: "Espanyol", date: "15-03", ftScore: "0-0" },
-    { id: 7, home: "Barcelona", away: "Sevilla", date: "15-03", ftScore: "2-0" },
-    { id: 8, home: "Betis", away: "Celta Vigo", date: "15-03", ftScore: "1-2" },
-    { id: 9, home: "Real Sociedad", away: "Osasuna", date: "15-03", ftScore: "1-1" },
-    { id: 10, home: "Rayo Vallecano", away: "Levante", date: "16-03", ftScore: "0-2" }
+    { id: 2, home: "Girona", away: "Athletic Bilbao", date: "14-03", ftScore: "2-0" },
+    { id: 3, home: "Atlético Madrid", away: "Getafe", date: "14-03", ftScore: "1-0" },
+    { id: 4, home: "Real Oviedo", away: "Valencia", date: "14-03", ftScore: "0-0" },
+    { id: 5, home: "Real Madrid", away: "Elche", date: "14-03", ftScore: "2-0" },
+    { id: 6, home: "Mallorca", away: "Espanyol", date: "15-03", ftScore: "1-2" },
+    { id: 7, home: "Barcelona", away: "Sevilla", date: "15-03", ftScore: "2-1" },
+    { id: 8, home: "Betis", away: "Celta Vigo", date: "15-03", ftScore: "1-1" },
+    { id: 9, home: "Real Sociedad", away: "Osasuna", date: "15-03", ftScore: "1-0" },
+    { id: 10, home: "Rayo Vallecano", away: "Levante", date: "16-03", ftScore: "1-1" }
   ],
   PREMIER: [
     { id: 30, home: "Burnley", away: "Bournemouth", date: "14-03", ftScore: "0-2" },
     { id: 31, home: "Sunderland", away: "Brighton", date: "14-03", ftScore: "1-1" },
-    { id: 32, home: "Arsenal", away: "Everton", date: "14-03", ftScore: "3-1" },
-    { id: 33, home: "Chelsea", away: "Newcastle", date: "14-03", ftScore: "2-2" },
-    { id: 34, home: "West Ham United", away: "Manchester City", date: "14-03", ftScore: "1-3" },
-    { id: 35, home: "Crystal Palace", away: "Leeds United", date: "15-03", ftScore: "0-0" },
-    { id: 36, home: "Manchester United", away: "Aston Villa", date: "15-03", ftScore: "1-2" },
-    { id: 37, home: "Nottingham Forest", away: "Fulham", date: "15-03", ftScore: "1-1" },
-    { id: 38, home: "Liverpool", away: "Tottenham Hotspur", date: "15-03", ftScore: "3-2" },
-    { id: 39, home: "Brentford", away: "Wolves", date: "16-03", ftScore: "0-1" }
+    { id: 32, home: "Arsenal", away: "Everton", date: "14-03", ftScore: "3-0" },
+    { id: 33, home: "Chelsea", away: "Newcastle", date: "14-03", ftScore: "1-1" },
+    { id: 34, home: "West Ham United", away: "Manchester City", date: "14-03", ftScore: "0-4" },
+    { id: 35, home: "Crystal Palace", away: "Leeds United", date: "15-03", ftScore: "1-1" },
+    { id: 36, home: "Manchester United", away: "Aston Villa", date: "15-03", ftScore: "2-1" },
+    { id: 37, home: "Nottingham Forest", away: "Fulham", date: "15-03", ftScore: "0-1" },
+    { id: 38, home: "Liverpool", away: "Tottenham Hotspur", date: "15-03", ftScore: "2-2" },
+    { id: 39, home: "Brentford", away: "Wolves", date: "16-03", ftScore: "1-0" }
   ],
   SERIEA: [
-    { id: 80, home: "Torino", away: "Parma", date: "13-03", ftScore: "1-1" },
-    { id: 81, home: "Inter", away: "Atalanta", date: "14-03", ftScore: "2-0" },
+    { id: 80, home: "Torino", away: "Parma", date: "13-03", ftScore: "2-1" },
+    { id: 81, home: "Inter", away: "Atalanta", date: "14-03", ftScore: "1-1" },
     { id: 82, home: "Napoli", away: "Lecce", date: "14-03", ftScore: "2-1" },
-    { id: 83, home: "Udinese", away: "Juventus", date: "14-03", ftScore: "0-2" },
-    { id: 84, home: "Lazio", away: "Bologna", date: "15-03", ftScore: "1-0" },
-    { id: 85, home: "Fiorentina", away: "Cagliari", date: "15-03", ftScore: "1-1" }
+    { id: 83, home: "Udinese", away: "Juventus", date: "14-03", ftScore: "0-1" },
+    { id: 84, home: "Lazio", away: "Bologna", date: "15-03", ftScore: "2-0" },
+    { id: 85, home: "Fiorentina", away: "Cagliari", date: "15-03", ftScore: "2-1" }
   ],
   BUNDESLIGA: [
-    { id: 60, home: "Monchengladbach", away: "St Pauli", date: "13-03", ftScore: "1-1" },
-    { id: 61, home: "Dortmund", away: "Augsburg", date: "14-03", ftScore: "2-1" },
-    { id: 62, home: "Eintracht Frankfurt", away: "Heidenheim", date: "14-03", ftScore: "3-1" },
-    { id: 63, home: "Hoffenheim", away: "Wolfsburg", date: "14-03", ftScore: "0-2" },
-    { id: 64, home: "Leverkusen", away: "Bayern Munich", date: "14-03", ftScore: "1-1" },
-    { id: 65, home: "Hamburg", away: "Cologne", date: "14-03", ftScore: "2-1" },
-    { id: 66, home: "Stuttgart", away: "Union Berlin", date: "15-03", ftScore: "3-0" }
+    { id: 60, home: "Monchengladbach", away: "St Pauli", date: "13-03", ftScore: "2-0" },
+    { id: 61, home: "Dortmund", away: "Augsburg", date: "14-03", ftScore: "3-1" },
+    { id: 62, home: "Eintracht Frankfurt", away: "Heidenheim", date: "14-03", ftScore: "2-1" },
+    { id: 63, home: "Hoffenheim", away: "Wolfsburg", date: "14-03", ftScore: "1-1" },
+    { id: 64, home: "Leverkusen", away: "Bayern Munich", date: "14-03", ftScore: "1-2" },
+    { id: 65, home: "Hamburg", away: "Cologne", date: "14-03", ftScore: "0-1" },
+    { id: 66, home: "Stuttgart", away: "Union Berlin", date: "15-03", ftScore: "2-0" }
   ]
 };
 
@@ -188,22 +187,20 @@ export default function GolPredictPro() {
           ) : (
             <>
               <h3 style={{ color: "#ffaa00", marginTop: 0, textAlign: "center" }}>COMBINADA MULTI-LIGA</h3>
-              {superCombo.map(m => (
+              {superCombo.length > 0 ? superCombo.map(m => (
                 <div key={m.id} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #222" }}>
                   <span style={{ fontSize: "0.85em" }}>{m.home} vs {m.away}</span>
                   <span style={{ color: "#00ff41", fontWeight: "bold" }}>{m.res.bestPick} ({m.res.bestProb}%)</span>
                 </div>
-              ))}
-              <div style={{ marginTop: "20px", textAlign: "center", padding: "15px", background: "#00ff41", color: "#000", borderRadius: "8px", fontWeight: "bold" }}>
-                Cuota Estimada: {(superCombo.reduce((acc, m) => acc * (m.res.bestProb/100), 1) * 10).toFixed(2)}
-              </div>
+              )) : <p style={{textAlign:'center'}}>Cargando próximos partidos...</p>}
             </>
           )}
         </div>
       )}
     </div>
   );
-  }
+          }
+          
         
           
 

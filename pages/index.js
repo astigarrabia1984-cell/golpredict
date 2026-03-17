@@ -47,35 +47,30 @@ function runModel(match) {
 }
 
 /* ===========================
-BASE DE DATOS INTEGRAL
+BASE DE DATOS INTEGRAL (ACTUALIZADA)
 =========================== */
 const matchesDB = {
   LALIGA: [
-    { id: 1, home: "Real Sociedad", away: "Osasuna", ftScore: "3-1" },
-    { id: 2, home: "Real Betis", away: "Celta de Vigo", ftScore: "1-1" },
-    { id: 3, home: "Barcelona", away: "Sevilla", ftScore: "5-2" },
-    { id: 4, home: "Mallorca", away: "Espanyol", ftScore: "2-1" },
-    { id: 5, home: "Real Madrid", away: "Elche", ftScore: "4-1" },
-    { id: 6, home: "Real Oviedo", away: "Valencia", ftScore: "1-0" },
-    { id: 7, home: "Atlético Madrid", away: "Getafe", ftScore: "1-0" },
-    { id: 8, home: "Girona", away: "Athletic Club", ftScore: "3-0" },
-    { id: 9, home: "Alavés", away: "Villarreal", ftScore: "1-1" }
+    { id: 1, home: "Girona", away: "Athletic Club", ftScore: "2-1" },
+    { id: 2, home: "Alavés", away: "Barcelona", ftScore: "0-3" },
+    { id: 3, home: "Sevilla", away: "Real Betis", ftScore: "1-0" },
+    { id: 4, home: "Real Sociedad", away: "Atlético Madrid", ftScore: "1-1" }
   ],
   PREMIER: [
-    { id: 10, home: "Liverpool", away: "Tottenham", ftScore: "1-1" },
-    { id: 12, home: "Manchester Utd", away: "Aston Villa", ftScore: "3-1" },
-    { id: 15, home: "Arsenal", away: "Everton", ftScore: "2-0" }
+    { id: 10, home: "Aston Villa", away: "Man Utd", ftScore: "0-0" },
+    { id: 11, home: "Chelsea", away: "Nottingham", ftScore: "1-1" },
+    { id: 12, home: "Brighton", away: "Tottenham", ftScore: "3-2" }
   ],
   SERIEA: [
-    { id: 25, home: "Udinese", away: "Juventus", ftScore: "0-1" },
-    { id: 27, home: "Inter", away: "Atalanta", ftScore: "1-1" }
+    { id: 20, home: "Juventus", away: "Cagliari", ftScore: "1-1" },
+    { id: 21, home: "Lazio", away: "Empoli", ftScore: "2-1" },
+    { id: 22, home: "Monza", away: "Roma", ftScore: "1-1" },
+    { id: 23, home: "Fiorentina", away: "Milan", ftScore: "2-1" }
   ],
-  CHAMPIONS: [
-    { id: 101, home: "Man City", away: "Bayern", ftScore: "3-0" },
-    { id: 102, home: "Real Madrid", away: "Chelsea", ftScore: "2-0" }
-  ],
-  EUROPA: [
-    { id: 201, home: "Sevilla", away: "Man Utd", ftScore: "3-0" }
+  BUNDESLIGA: [
+    { id: 30, home: "Heidenheim", away: "RB Leipzig", ftScore: "0-1" },
+    { id: 31, home: "Stuttgart", away: "Hoffenheim", ftScore: "1-1" },
+    { id: 32, home: "Eintracht", away: "Bayern", ftScore: "3-3" }
   ]
 };
 
@@ -90,7 +85,7 @@ function MatchCard({ match, onAddToTicket }) {
   return (
     <div style={{ background: "#111", padding: "12px", borderRadius: "10px", marginBottom: "10px", border: `2px solid ${borderColor}`, cursor: "pointer" }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7em", color: "#888" }} onClick={() => setOpen(!open)}>
-        <span>ID #{match.id} (Pulsa para Detalles)</span>
+        <span>ID #{match.id} (Detalles)</span>
         <span style={{ color: borderColor, fontWeight: "bold" }}>{data.status === "hit" ? "✓ ACIERTO" : "✗ FALLO"}</span>
       </div>
       <div style={{ textAlign: "center", margin: "10px 0", fontWeight: "bold" }} onClick={() => setOpen(!open)}>
@@ -160,13 +155,11 @@ export default function GolPredictPro() {
         <div style={{ padding: "10px" }}>
           <div style={{ background: "#111", padding: "15px", borderRadius: "10px", border: "2px solid #ffaa00", marginBottom: "15px" }}>
             <h3 style={{ color: "#ffaa00", margin: "0 0 10px 0", fontSize: "0.9em" }}>🔥 COMBO ESPAÑA (TOP 3 IA)</h3>
-            <p style={{ fontSize: "0.8em", color: "#ccc" }}>Real Sociedad (1) + Barcelona (1) + Real Madrid (1)</p>
-            <div style={{ color: "#00ff41", fontWeight: "bold" }}>Cuota Est: 3.25</div>
+            <p style={{ fontSize: "0.8em", color: "#ccc" }}>Girona (1) + Barcelona (2) + Sevilla (1)</p>
           </div>
           <div style={{ background: "#111", padding: "15px", borderRadius: "10px", border: "2px solid #00e5ff" }}>
             <h3 style={{ color: "#00e5ff", margin: "0 0 10px 0", fontSize: "0.9em" }}>🌍 COMBO MULTI-LIGA GLOBAL</h3>
-            <p style={{ fontSize: "0.8em", color: "#ccc" }}>Arsenal (1) + Juventus (2) + Man City (1)</p>
-            <div style={{ color: "#00ff41", fontWeight: "bold" }}>Cuota Est: 4.50</div>
+            <p style={{ fontSize: "0.8em", color: "#ccc" }}>Barcelona (2) + RB Leipzig (2) + Lazio (1)</p>
           </div>
         </div>
       )}
@@ -192,7 +185,9 @@ export default function GolPredictPro() {
       )}
     </div>
   );
-          }
+}
+
+        
       
         
   

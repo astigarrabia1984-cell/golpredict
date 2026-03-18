@@ -70,20 +70,28 @@ function runModel(match) {
 }
 
 /* ============================================================
-   3. APP PRINCIPAL
+   3. APP PRINCIPAL (NEXT.JS COMPATIBLE)
    ============================================================ */
 export default function GolPredictPro() {
   const [activeTab, setActiveTab] = useState("LIGAS");
   const [league, setLeague] = useState("CHAMPIONS");
   const [searchTerm, setSearchTerm] = useState("");
   const [ticket, setTicket] = useState([]);
-  const [myBets, setMyBets] = useState(() => {
-    const saved = localStorage.getItem("gp_ultra_master");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [myBets, setMyBets] = useState([]);
 
+  // SOLUCIÓN AL ERROR DE LOCALSTORAGE: Carga inicial
   useEffect(() => {
-    localStorage.setItem("gp_ultra_master", JSON.stringify(myBets));
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("gp_ultra_final_v1");
+      if (saved) setMyBets(JSON.parse(saved));
+    }
+  }, []);
+
+  // SOLUCIÓN AL ERROR DE LOCALSTORAGE: Guardado automático
+  useEffect(() => {
+    if (typeof window !== "undefined" && myBets.length > 0) {
+      localStorage.setItem("gp_ultra_final_v1", JSON.stringify(myBets));
+    }
   }, [myBets]);
 
   const initialData = {
@@ -118,19 +126,15 @@ export default function GolPredictPro() {
     "SERIE A": [
       { id: "it1", home: "Cagliari", away: "Nápoles", date: "20.03" },
       { id: "it2", home: "Genoa", away: "Udinese", date: "20.03" },
-      { id: "it3", home: "Parma", away: "Cremonese", date: "21.03" },
       { id: "it4", home: "AC Milan", away: "Torino", date: "21.03" },
       { id: "it5", home: "Juventus", away: "Sassuolo", date: "21.03" },
-      { id: "it6", home: "Como", away: "Pisa", date: "22.03" },
       { id: "it7", home: "Atalanta", away: "Verona", date: "22.03" },
       { id: "it8", home: "Bolonia", away: "Lazio", date: "22.03" }
     ],
     "BUNDESLIGA": [
       { id: "de1", home: "RB Leipzig", away: "Hoffenheim", date: "20.03" },
       { id: "de2", home: "Bayern Múnich", away: "Union Berlin", date: "21.03" },
-      { id: "de3", home: "Colonia", away: "Borussia M'gladbach", date: "21.03" },
       { id: "de4", home: "Heidenheim", away: "Bayer Leverkusen", date: "21.03" },
-      { id: "de5", home: "Wolfsburgo", away: "Werder Bremen", date: "21.03" },
       { id: "de6", home: "Borussia Dortmund", away: "Hamburgo", date: "21.03" }
     ]
   };
@@ -157,7 +161,9 @@ export default function GolPredictPro() {
     let text = `🚀 *GOLPREDICT ULTRA*\n\n`;
     ticket.forEach(t => text += `⚽ ${t.home} vs ${t.away}\n👉 Pronóstico: *${t.pick}* (@${t.q})\n\n`);
     text += `💰 *CUOTA TOTAL: @${qTotal}*`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    if (typeof window !== "undefined") {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    }
   };
 
   const saveBet = () => {
@@ -184,7 +190,7 @@ export default function GolPredictPro() {
 
       <div style={{ marginBottom: "15px" }}>
         <input 
-          type="text" placeholder="🔍 Buscar partido (Ej: Real Madrid)..." value={searchTerm}
+          type="text" placeholder="🔍 Buscar partido..." value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #222", background: "#111", color: "#fff", boxSizing: "border-box" }}
         />
@@ -205,17 +211,14 @@ export default function GolPredictPro() {
               <button key={l} onClick={() => {setLeague(l); setSearchTerm("");}} style={{ whiteSpace: "nowrap", padding: "8px 15px", background: league === l ? "#222" : "#111", color: league === l ? "#00ff41" : "#777", border: "1px solid #333", borderRadius: "20px", fontSize: "0.7rem", fontWeight: "bold" }}>{l}</button>
             ))}
           </div>
-          {filteredMatches.length > 0 ? 
-            filteredMatches.map(m => <MatchCard key={m.id} match={m} onSelect={addToTicket} ticket={ticket} />) :
-            <p style={{textAlign:"center", color:"#444", marginTop:"20px"}}>No hay partidos que coincidan...</p>
-          }
+          {filteredMatches.map(m => <MatchCard key={m.id} match={m} onSelect={addToTicket} ticket={ticket} />)}
         </>
       )}
 
       {activeTab === "TICKET" && (
         <div style={{ background: "#111", padding: "20px", borderRadius: "15px", border: "1px solid #222" }}>
           <h3 style={{ color: "#00ff41", marginTop: 0 }}>MI JUGADA</h3>
-          {ticket.length === 0 ? <p style={{color:"#444", textAlign:"center"}}>Selecciona cuotas en "LIGAS"</p> : (
+          {ticket.length === 0 ? <p style={{color:"#444", textAlign:"center"}}>Selecciona pronósticos...</p> : (
             <>
               {ticket.map(t => (
                 <div key={t.id} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #222", fontSize: "0.8rem" }}>
@@ -225,7 +228,7 @@ export default function GolPredictPro() {
               <div style={{ marginTop: "20px", textAlign: "right" }}>
                 <div style={{fontSize:"1.5rem", color:"#00ff41", fontWeight:"bold"}}>@{ticket.reduce((a,b)=>a*b.q, 1).toFixed(2)}</div>
                 <button onClick={shareWhatsApp} style={{ width: "100%", marginTop: "15px", padding: "12px", background: "#25D366", color: "#fff", border: "none", borderRadius: "10px", fontWeight: "bold" }}>ENVIAR POR WHATSAPP 📲</button>
-                <button onClick={saveBet} style={{ width: "100%", marginTop: "10px", padding: "12px", background: "#00ff41", color: "#000", border: "none", borderRadius: "10px", fontWeight: "bold" }}>GUARDAR EN HISTORIAL</button>
+                <button onClick={saveBet} style={{ width: "100%", marginTop: "10px", padding: "12px", background: "#00ff41", color: "#000", border: "none", borderRadius: "10px", fontWeight: "bold" }}>GUARDAR HISTORIAL</button>
               </div>
             </>
           )}
@@ -301,7 +304,9 @@ function MatchCard({ match, onSelect, ticket }) {
       )}
     </div>
   );
-              }
+       }
+     
+              
        
    
      

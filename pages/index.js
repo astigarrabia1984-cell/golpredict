@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 
 /* ============================================================
-   1. CEREBRO ESTADÍSTICO (78 EQUIPOS + PARÁMETROS POISSON)
+   1. BASE DE DATOS DE EQUIPOS (78 EQUIPOS + MÉTRICAS IA)
    ============================================================ */
 const teamStats = {
   // ESPAÑA
@@ -9,31 +9,34 @@ const teamStats = {
   "Atlético de Madrid": { a: 1.7, d: 0.8, c: 4.8 }, "Girona": { a: 1.9, d: 1.2, c: 5.0 },
   "Villarreal": { a: 1.8, d: 1.5, c: 4.9 }, "Real Sociedad": { a: 1.3, d: 0.9, c: 5.6 },
   "Sevilla": { a: 1.4, d: 1.4, c: 5.5 }, "Valencia": { a: 1.1, d: 1.2, c: 4.2 },
-  "Espanyol": { a: 1.1, d: 1.5, c: 4.0 }, "Getafe": { a: 1.0, d: 1.1, c: 3.8 },
-  "Elche": { a: 0.8, d: 1.6, c: 3.9 }, "Mallorca": { a: 0.9, d: 1.1, c: 4.1 },
+  "Athletic Club": { a: 1.5, d: 1.0, c: 5.4 }, "Real Betis": { a: 1.3, d: 1.1, c: 5.1 },
+  "Osasuna": { a: 1.2, d: 1.3, c: 4.5 }, "Celta de Vigo": { a: 1.3, d: 1.5, c: 5.2 },
+  "Mallorca": { a: 0.9, d: 1.1, c: 4.1 }, "Getafe": { a: 1.0, d: 1.1, c: 3.8 },
   "Rayo Vallecano": { a: 1.0, d: 1.4, c: 4.7 }, "Alavés": { a: 1.0, d: 1.3, c: 4.4 },
-  "Real Betis": { a: 1.3, d: 1.1, c: 5.1 }, "Athletic Club": { a: 1.5, d: 1.0, c: 5.4 },
+  "Espanyol": { a: 1.1, d: 1.5, c: 4.0 }, "Elche": { a: 0.8, d: 1.6, c: 3.9 },
   // INGLATERRA
   "Man City": { a: 2.5, d: 0.7, c: 7.5 }, "Arsenal": { a: 2.1, d: 0.8, c: 6.8 },
   "Liverpool": { a: 2.3, d: 0.9, c: 7.2 }, "Man Utd": { a: 1.5, d: 1.5, c: 5.4 },
   "Chelsea": { a: 1.7, d: 1.6, c: 5.8 }, "Tottenham": { a: 2.0, d: 1.5, c: 6.4 },
+  "Aston Villa": { a: 1.9, d: 1.3, c: 5.6 }, "Newcastle": { a: 1.8, d: 1.6, c: 6.0 },
   "Brighton": { a: 1.6, d: 1.6, c: 5.7 }, "Bournemouth": { a: 1.3, d: 1.7, c: 4.8 },
-  "Newcastle": { a: 1.8, d: 1.6, c: 6.0 }, "Sunderland": { a: 1.1, d: 1.4, c: 4.5 },
   "Everton": { a: 1.1, d: 1.3, c: 5.0 }, "West Ham": { a: 1.4, d: 1.5, c: 4.9 },
+  "Sunderland": { a: 1.1, d: 1.4, c: 4.5 },
   // ITALIA
   "Inter": { a: 2.2, d: 0.6, c: 6.1 }, "Milan": { a: 1.9, d: 1.1, c: 5.3 },
   "Juventus": { a: 1.5, d: 0.7, c: 4.9 }, "Napoli": { a: 1.5, d: 1.3, c: 5.9 },
-  "Torino": { a: 1.0, d: 1.0, c: 4.4 }, "Sassuolo": { a: 1.2, d: 1.6, c: 4.2 },
-  "Fiorentina": { a: 1.4, d: 1.2, c: 5.2 }, "Roma": { a: 1.6, d: 1.1, c: 4.6 },
+  "Atalanta": { a: 1.8, d: 1.2, c: 5.5 }, "Roma": { a: 1.6, d: 1.1, c: 4.6 },
+  "Lazio": { a: 1.3, d: 1.1, c: 4.8 }, "Torino": { a: 1.0, d: 1.0, c: 4.4 },
+  "Sassuolo": { a: 1.2, d: 1.6, c: 4.2 }, "Fiorentina": { a: 1.4, d: 1.2, c: 5.2 },
   // ALEMANIA
   "Leverkusen": { a: 2.4, d: 0.8, c: 6.4 }, "Bayern": { a: 2.7, d: 1.1, c: 7.3 },
   "Dortmund": { a: 1.9, d: 1.3, c: 5.6 }, "RB Leipzig": { a: 2.1, d: 1.1, c: 6.0 },
-  "Union Berlin": { a: 1.0, d: 1.2, c: 4.1 }, "Hoffenheim": { a: 1.5, d: 1.8, c: 4.7 },
+  "Hoffenheim": { a: 1.5, d: 1.8, c: 4.7 }, "Union Berlin": { a: 1.0, d: 1.2, c: 4.1 },
   "Heidenheim": { a: 1.1, d: 1.4, c: 4.0 }, "Hamburgo": { a: 1.2, d: 1.4, c: 4.5 }
 };
 
 /* ============================================================
-   2. MOTOR DE PROBABILIDADES
+   2. MOTOR DE CÁLCULO (POISSON SINCRONIZADO)
    ============================================================ */
 const factorial = (n) => (n <= 1 ? 1 : n * factorial(n - 1));
 const poisson = (lambda, k) => (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k);
@@ -44,36 +47,35 @@ function runModel(match) {
   const hxg = (home.a * 1.15) * away.d;
   const axg = away.a * (home.d * 0.95);
   
-  let p1 = 0, pX = 0, p2 = 0, maxP = 0, exact = "0-0";
+  let p1 = 0, pX = 0, p2 = 0, maxP = 0, bestI = 0, bestJ = 0;
   for (let i = 0; i < 6; i++) {
     for (let j = 0; j < 6; j++) {
       const pr = poisson(hxg, i) * poisson(axg, j);
       if (i > j) p1 += pr; else if (i === j) pX += pr; else p2 += pr;
-      if (pr > maxP) { maxP = pr; exact = `${i}-${j}`; }
+      if (pr > maxP) { maxP = pr; bestI = i; bestJ = j; }
     }
   }
-  const q1 = (1 / (p1 + 0.05)).toFixed(2);
-  const qX = (1 / (pX + 0.05)).toFixed(2);
-  const q2 = (1 / (p2 + 0.05)).toFixed(2);
-  const bestPick = p1 > p2 && p1 > pX ? "1" : (p2 > pX ? "2" : "X");
-  const prob = Math.max(p1, pX, p2) * 100;
 
   return { 
     p1: (p1 * 100).toFixed(0), pX: (pX * 100).toFixed(0), p2: (p2 * 100).toFixed(0),
-    q1, qX, q2, exact, bestPick, prob: prob.toFixed(0),
-    goals: (hxg + axg) > 2.5 ? "+2.5" : "-2.5", corners: (home.c + away.c) * 0.9 > 9.5 ? "+9.5" : "-9.5" 
+    q1: (1 / (p1 + 0.05)).toFixed(2), qX: (1 / (pX + 0.05)).toFixed(2), q2: (1 / (p2 + 0.05)).toFixed(2),
+    exact: `${bestI}-${bestJ}`,
+    goals: (bestI + bestJ) > 2 ? "+2.5 Goles" : "-2.5 Goles",
+    corners: (home.c + away.c) * 0.9 > 9.5 ? "+9.5 Córners" : "-9.5 Córners",
+    bestPick: p1 > p2 && p1 > pX ? "1" : (p2 > pX ? "2" : "X"),
+    prob: Math.max(p1, pX, p2)
   };
 }
 
 /* ============================================================
-   3. APP PRINCIPAL
+   3. COMPONENTE PRINCIPAL
    ============================================================ */
 export default function GolPredictPro() {
   const [activeTab, setActiveTab] = useState("LIGAS");
   const [league, setLeague] = useState("LALIGA");
   const [ticket, setTicket] = useState([]);
   const [stake, setStake] = useState(10);
-  const [cashOutDone, setCashOutDone] = useState(false);
+  const [msg, setMsg] = useState("");
 
   const initialData = {
     "LALIGA": [
@@ -107,17 +109,17 @@ export default function GolPredictPro() {
       { id: "de4", home: "Heidenheim", away: "Leverkusen", date: "21.03" }
     ],
     "CHAMPIONS": [
-      { id: "ucl1", home: "Arsenal", away: "Bayern", date: "07.04" },
-      { id: "ucl2", home: "Real Madrid", away: "Man City", date: "07.04" }
+      { id: "u1", home: "Arsenal", away: "Bayern", date: "07.04" },
+      { id: "u2", home: "Real Madrid", away: "Man City", date: "07.04" }
     ],
     "EUROPA": [
-      { id: "uel1", home: "Leverkusen", away: "West Ham", date: "09.04" },
-      { id: "uel2", home: "Milan", away: "Roma", date: "09.04" }
+      { id: "e1", home: "Leverkusen", away: "West Ham", date: "09.04" },
+      { id: "e2", home: "Milan", away: "Roma", date: "09.04" }
     ]
   };
 
   const addToTicket = (match, pick, q) => {
-    setCashOutDone(false);
+    setMsg("");
     setTicket(prev => {
       const exists = prev.find(t => t.id === match.id);
       if (exists) return prev.filter(t => t.id !== match.id);
@@ -128,25 +130,18 @@ export default function GolPredictPro() {
   const aiCombos = useMemo(() => {
     const all = Object.values(initialData).flat().map(m => ({ ...m, result: runModel(m) }));
     all.sort((a, b) => b.result.prob - a.result.prob);
-    return {
-      b: all.slice(0, 2),
-      m: all.slice(0, 3),
-      a: all.slice(0, 4)
-    };
+    return { b: all.slice(0, 2), m: all.slice(0, 3), a: all.slice(0, 4) };
   }, []);
 
   const totalCuota = ticket.reduce((acc, curr) => acc * curr.q, 1).toFixed(2);
-  const potentialWin = (totalCuota * stake).toFixed(2);
 
   return (
     <div style={{ background: "#050505", color: "#fff", minHeight: "100vh", padding: "15px", maxWidth: "500px", margin: "0 auto", fontFamily: "sans-serif" }}>
-      <header style={{ textAlign: "center", marginBottom: "20px" }}>
-        <h2 style={{ color: "#00ff41", letterSpacing: "2px", margin: 0, textShadow: "0 0 10px rgba(0,255,65,0.3)" }}>GOLPREDICT <span style={{color:"#fff"}}>ULTRA</span></h2>
-      </header>
+      <h2 style={{ color: "#00ff41", textAlign: "center", marginBottom: "20px" }}>GOLPREDICT <span style={{color:"#fff"}}>ULTRA</span></h2>
 
-      <nav style={{ display: "flex", gap: "5px", marginBottom: "15px" }}>
-        {["LIGAS", "COMBINADAS", "TICKET"].map(t => (
-          <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "12px", background: activeTab === t ? "#00ff41" : "#111", color: activeTab === t ? "#000" : "#fff", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "0.75rem", position:"relative" }}>
+      <nav style={{ display: "flex", gap: "5px", marginBottom: "20px" }}>
+        {["LIGAS", "IA COMBOS", "TICKET"].map(t => (
+          <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: "12px", background: activeTab === t ? "#00ff41" : "#111", color: activeTab === t ? "#000" : "#fff", border: "none", borderRadius: "10px", fontWeight: "bold", position:"relative" }}>
             {t} {t === "TICKET" && ticket.length > 0 && <span style={{position:"absolute", top:"-5px", right:"-5px", background:"#ff3333", color:"#fff", borderRadius:"50%", padding:"2px 6px", fontSize:"0.6rem"}}>{ticket.length}</span>}
           </button>
         ))}
@@ -163,52 +158,41 @@ export default function GolPredictPro() {
         </>
       )}
 
-      {activeTab === "COMBINADAS" && (
+      {activeTab === "IA COMBOS" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-          <h4 style={{margin:0, color:"#666", fontSize:"0.8rem"}}>PRONÓSTICOS DE LA IA (MULTILIGA)</h4>
-          <ComboCard title="IA BÁSICA (Fijos)" color="#00ff41" matches={aiCombos.b} onSelect={addToTicket} ticket={ticket} />
-          <ComboCard title="IA MODERADA" color="#ffaa00" matches={aiCombos.m} onSelect={addToTicket} ticket={ticket} />
-          <ComboCard title="IA ARRIESGADA" color="#ff3333" matches={aiCombos.a} onSelect={addToTicket} ticket={ticket} />
+          <ComboView title="COMBO SEGURO (Fijos)" color="#00ff41" matches={aiCombos.b} onAdd={addToTicket} />
+          <ComboView title="COMBO MODERADO" color="#ffaa00" matches={aiCombos.m} onAdd={addToTicket} />
+          <ComboView title="COMBO ARRIESGADO" color="#ff3333" matches={aiCombos.a} onAdd={addToTicket} />
         </div>
       )}
 
       {activeTab === "TICKET" && (
         <div style={{ background: "#111", padding: "20px", borderRadius: "15px", border: "1px solid #222" }}>
-          <h3 style={{ color: "#00ff41", marginTop: 0, fontSize: "1.1rem" }}>CALCULADORA DE TICKET</h3>
-          {ticket.length === 0 ? (
-            <p style={{color:"#666", textAlign:"center", padding:"20px"}}>Tu ticket está vacío.</p>
-          ) : (
+          <h3 style={{ color: "#00ff41", marginTop: 0 }}>CALCULADORA DE APUESTA</h3>
+          {ticket.length === 0 ? <p style={{color:"#666", textAlign:"center"}}>Selecciona pronósticos en las ligas.</p> : (
             <>
               {ticket.map(t => (
-                <div key={t.id} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #222", fontSize: "0.85rem" }}>
-                  <div>
-                    <div style={{fontWeight:"bold"}}>{t.home} vs {t.away}</div>
-                    <div style={{color:"#00ff41"}}>Elección: {t.pick}</div>
-                  </div>
-                  <b style={{alignSelf:"center"}}>@{t.q}</b>
+                <div key={t.id} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #222", fontSize: "0.85rem" }}>
+                  <span>{t.home} vs {t.away} <b>({t.pick})</b></span>
+                  <b style={{color:"#00ff41"}}>@{t.q}</b>
                 </div>
               ))}
-              
-              <div style={{ marginTop: "20px", background: "#050505", padding: "15px", borderRadius: "12px", border: "1px solid #333" }}>
+              <div style={{ marginTop: "20px", background: "#050505", padding: "15px", borderRadius: "10px", border: "1px solid #333" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
-                  <span>Cuota Total:</span> <b style={{ fontSize: "1.3rem", color: "#00ff41" }}>@{totalCuota}</b>
+                  <span>Cuota Total:</span> <b style={{ fontSize: "1.2rem", color: "#00ff41" }}>@{totalCuota}</b>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-                  <span>Tu Apuesta (€):</span>
-                  <input type="number" value={stake} onChange={(e) => setStake(e.target.value)} style={{ width: "80px", background: "#111", border: "1px solid #00ff41", color: "#fff", padding: "8px", borderRadius: "8px", textAlign: "center", fontSize: "1rem" }} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Inversión (€):</span>
+                  <input type="number" value={stake} onChange={(e) => setStake(e.target.value)} style={{ width: "80px", background: "#111", border: "1px solid #00ff41", color: "#fff", padding: "8px", borderRadius: "5px", textAlign: "center" }} />
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #222", paddingTop: "15px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px", borderTop: "1px solid #222", paddingTop: "15px" }}>
                   <span style={{fontWeight:"bold"}}>POSIBLE PREMIO:</span> 
-                  <b style={{ color: "#00ff41", fontSize: "1.5rem" }}>{potentialWin}€</b>
+                  <b style={{ color: "#00ff41", fontSize: "1.4rem" }}>{(totalCuota * stake).toFixed(2)}€</b>
                 </div>
               </div>
-
-              <div style={{display:"flex", gap:"10px", marginTop:"15px"}}>
-                <button onClick={() => { setCashOutDone(true); setTimeout(() => setTicket([]), 2000); }} style={{ flex: 2, padding: "12px", background: "#00ff41", color: "#000", border: "none", borderRadius: "10px", fontWeight: "bold", cursor: "pointer" }}>
-                  {cashOutDone ? "¡APUESTA REALIZADA! ✅" : "CERRAR APUESTA"}
-                </button>
-                <button onClick={() => setTicket([])} style={{ flex: 1, padding: "12px", background: "transparent", color: "#ff3333", border: "1px solid #ff3333", borderRadius: "10px", fontWeight: "bold", cursor: "pointer" }}>LIMPIAR</button>
-              </div>
+              <button onClick={() => { setMsg("✅ APUESTA REGISTRADA"); setTimeout(()=>setTicket([]), 2000); }} style={{ width: "100%", marginTop: "15px", padding: "12px", background: "#00ff41", color: "#000", border: "none", borderRadius: "10px", fontWeight: "bold", cursor: "pointer" }}>
+                {msg || "CERRAR APUESTA"}
+              </button>
             </>
           )}
         </div>
@@ -224,28 +208,27 @@ function MatchCard({ match, onSelect, ticket }) {
 
   return (
     <div style={{ background: "#111", padding: "15px", borderRadius: "12px", marginBottom: "12px", border: "1px solid #222" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#666", marginBottom: "10px" }}>
-        <span style={{color:"#00ff41", fontWeight:"bold"}}>📅 {match.date}</span>
+      <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.65rem", color:"#555", marginBottom:"8px"}}>
+         <span>📅 {match.date}</span>
       </div>
       <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "1rem", marginBottom: "15px" }}>
-        {match.home} <span style={{color: "#444", margin:"0 5px"}}>vs</span> {match.away}
+        {match.home} vs {match.away}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
         {[{ l: "1", q: data.q1, p: data.p1 }, { l: "X", q: data.qX, p: data.pX }, { l: "2", q: data.q2, p: data.p2 }].map(i => (
-          <button key={i.l} onClick={() => onSelect(match, i.l, i.q)} style={{ background: currentPick === i.l ? "#00ff41" : "#050505", color: currentPick === i.l ? "#000" : "#fff", border: currentPick === i.l ? "1px solid #00ff41" : "1px solid #333", borderRadius: "10px", padding: "10px 5px", cursor: "pointer", transition: "0.2s" }}>
-            <div style={{ fontSize: "0.7rem", fontWeight: "bold" }}>{i.l}</div>
+          <button key={i.l} onClick={() => onSelect(match, i.l, i.q)} style={{ background: currentPick === i.l ? "#00ff41" : "#050505", color: currentPick === i.l ? "#000" : "#fff", border: "1px solid #333", borderRadius: "10px", padding: "10px 5px", cursor: "pointer" }}>
             <div style={{ fontSize: "0.9rem", fontWeight: "900" }}>@{i.q}</div>
             <div style={{ fontSize: "0.6rem", opacity: 0.6 }}>{i.p}%</div>
           </button>
         ))}
       </div>
       <button onClick={() => setOpen(!open)} style={{width:"100%", background:"none", border:"none", color:"#444", fontSize:"0.65rem", marginTop:"12px", cursor:"pointer", textDecoration:"underline"}}>
-        {open ? "OCULTAR DATA" : "ANÁLISIS IA (SCORE/CÓRNERS)"}
+        {open ? "OCULTAR" : "ANÁLISIS IA & MARCADOR"}
       </button>
       {open && (
-        <div style={{ marginTop: "10px", fontSize: "0.75rem", background: "#050505", padding: "12px", borderRadius: "8px", border: "1px dashed #333", color: "#ccc" }}>
+        <div style={{ marginTop: "10px", fontSize: "0.75rem", background: "#050505", padding: "10px", borderRadius: "8px", color: "#eee" }}>
           <div style={{display:"flex", justifyContent:"space-between", marginBottom:"4px"}}><span>🎯 Marcador IA:</span> <b style={{color:"#00ff41"}}>{data.exact}</b></div>
-          <div style={{display:"flex", justifyContent:"space-between", marginBottom:"4px"}}><span>⚽ Línea Goles:</span> <b>{data.goals}</b></div>
+          <div style={{display:"flex", justifyContent:"space-between", marginBottom:"4px"}}><span>⚽ Goles:</span> <b>{data.goals}</b></div>
           <div style={{display:"flex", justifyContent:"space-between"}}><span>🚩 Córners:</span> <b>{data.corners}</b></div>
         </div>
       )}
@@ -253,32 +236,22 @@ function MatchCard({ match, onSelect, ticket }) {
   );
 }
 
-function ComboCard({ title, color, matches, onSelect, ticket }) {
+function ComboView({ title, color, matches, onAdd }) {
   const cuota = matches.reduce((acc, curr) => acc * parseFloat(curr.result.q1), 1).toFixed(2);
   return (
-    <div style={{ background: "#111", padding: "15px", borderRadius: "15px", borderLeft: `6px solid ${color}` }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-        <b style={{ color, fontSize: "0.9rem" }}>{title}</b>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:"0.6rem", color:"#666"}}>CUOTA</div>
-          <b style={{fontSize:"1.1rem"}}>@{cuota}</b>
-        </div>
+    <div style={{ background: "#111", padding: "15px", borderRadius: "12px", borderLeft: `5px solid ${color}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+        <b style={{ color, fontSize: "0.85rem" }}>{title}</b>
+        <b style={{ color: "#fff" }}>@{cuota}</b>
       </div>
       {matches.map(m => (
-        <div key={m.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", padding: "6px 0", borderBottom: "1px solid #222" }}>
-          <span>{m.home} vs {m.away}</span>
-          <b style={{color}}>({m.result.bestPick})</b>
-        </div>
+        <div key={m.id} style={{ fontSize: "0.75rem", color: "#aaa", margin: "4px 0" }}>• {m.home}-{m.away} ({m.result.bestPick})</div>
       ))}
-      <button 
-        onClick={() => matches.forEach(m => onSelect(m, m.result.bestPick, m.result.q1))}
-        style={{ width: "100%", marginTop: "12px", padding: "8px", background: "#222", color: "#fff", border: "1px solid #333", borderRadius: "8px", fontSize: "0.7rem", fontWeight: "bold", cursor: "pointer" }}
-      >
-        AÑADIR TODO AL TICKET
-      </button>
+      <button onClick={() => matches.forEach(m => onAdd(m, m.result.bestPick, m.result.q1))} style={{width:"100%", marginTop:"10px", padding:"8px", background:"#222", color:"#fff", border:"1px solid #333", borderRadius:"8px", fontSize:"0.65rem", fontWeight:"bold", cursor:"pointer"}}>AÑADIR COMBO AL TICKET</button>
     </div>
   );
-}
+         }
+               
 
                                     
          

@@ -20,111 +20,76 @@ const MASTER_DATA = {
     { id: "u4", d: "08.04. 21:00", h: "Atlético", a: "Dortmund", hE: 1.6, aE: 1.1 }
   ],
   "NBA": [
-    { id: "nba1", d: "26.03. 01:30", h: "Boston Celtics", a: "NY Knicks", hE: 118, aE: 105 },
-    { id: "nba2", d: "26.03. 03:00", h: "Denver Nuggets", a: "Phoenix Suns", hE: 112, aE: 114 },
-    { id: "nba3", d: "27.03. 02:00", h: "Lakers", a: "GS Warriors", hE: 121, aE: 118 }
+    { id: "n1", d: "26.03. 01:30", h: "Boston Celtics", a: "NY Knicks", hE: 116, aE: 108 },
+    { id: "n2", d: "26.03. 03:00", h: "Denver Nuggets", a: "Phoenix Suns", hE: 110, aE: 115 }
   ],
-  "NHL (HOCKEY)": [
-    { id: "nhl1", d: "26.03. 01:00", h: "Florida Panthers", a: "Boston Bruins", hE: 3.2, aE: 2.8 },
-    { id: "nhl2", d: "26.03. 02:30", h: "Colorado Avalanche", a: "Dallas Stars", hE: 4.1, aE: 3.5 }
+  "NHL": [
+    { id: "h1", d: "26.03. 01:00", h: "Florida Panthers", a: "Boston Bruins", hE: 3.5, aE: 2.5 }
   ]
 };
 
-export default function GolPredictElite() {
+export default function App() {
   const [tab, setTab] = useState("LALIGA (J30)");
-  const [open, setOpen] = useState(null);
+  const [active, setActive] = useState(null);
 
-  const getStats = (h, a, type) => {
-    const isBasket = type === "NBA";
-    const total = h + a;
-    
-    // Probabilidades 1X2 o 12 (NBA)
-    let p1 = isBasket ? Math.round((h/(h+a))*100) : Math.round((h/total)*85);
-    let p2 = isBasket ? (100 - p1) : Math.round((a/total)*75);
-    let pX = isBasket ? 0 : Math.round(20 + (1/total)*15);
+  const calc = (h, a, type) => {
+    const isNBA = type === "NBA";
+    const t = h + a;
+    const p1 = Math.round((h / (h + a)) * (isNBA ? 100 : 85));
+    const p2 = isNBA ? (100 - p1) : Math.round((a / (h + a)) * 75);
+    const pX = isNBA ? 0 : (100 - p1 - p2);
 
-    let res = { txt: "", col: "" };
-    if (p1 > p2 && p1 > pX) { res = { txt: `1: ${p1}%`, col: "#00ff41" }; }
-    else if (p2 > p1 && p2 > pX) { res = { txt: `2: ${p2}%`, col: "#ff4444" }; }
-    else { res = { txt: `X: ${pX}%`, col: "#ffa500" }; }
+    let res = { txt: `X: ${pX}%`, col: "#ffa500" };
+    if (p1 > p2 && p1 > pX) res = { txt: `1: ${p1}%`, col: "#00ff41" };
+    if (p2 > p1 && p2 > pX) res = { txt: `2: ${p2}%`, col: "#ff4444" };
 
-    return { ...res, p1, pX, p2, 
-      val1: isBasket ? h : total.toFixed(1), 
-      val2: isBasket ? "PUNTOS" : "GOLES",
-      corn: isBasket ? "ASIST" : "CORNERS",
-      cVal: isBasket ? Math.round(h/4) : Math.round(total + 6) 
-    };
+    return { ...res, p1, pX, p2, g: isNBA ? h : t.toFixed(1), c: isNBA ? "AST" : "CNR", cv: isNBA ? Math.round(h/5) : Math.round(t+6) };
   };
 
   return (
-    <div style={{ background: "#000", color: "#FFF", minHeight: "100vh", maxWidth: "480px", margin: "0 auto", padding: "15px", fontFamily: "sans-serif" }}>
+    <div style={{ background: "#000", color: "#FFF", minHeight: "100vh", maxWidth: "500px", margin: "0 auto", padding: "10px", fontFamily: "sans-serif" }}>
+      <h1 style={{ color: "#00ff41", textAlign: "center", fontSize: "1.4rem" }}>GOLPREDICT OMNI</h1>
       
-      <header style={{ textAlign: "center", marginBottom: "20px", borderBottom: "2px solid #00ff41", paddingBottom: "10px" }}>
-        <h1 style={{ color: "#00ff41", fontSize: "1.4rem", margin: 0, fontWeight: "900" }}>GOLPREDICT <span style={{color:"#FFF"}}>OMNI</span></h1>
-      </header>
-
-      {/* TABS NAVEGACIÓN */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "20px", overflowX: "auto", paddingBottom: "5px" }}>
+      <div style={{ display: "flex", gap: "5px", marginBottom: "15px", overflowX: "auto" }}>
         {Object.keys(MASTER_DATA).map(l => (
-          <button key={l} onClick={() => {setTab(l); setOpen(null);}} style={{ flexShrink: 0, padding: "10px 15px", borderRadius: "8px", background: tab === l ? "#00ff41" : "#1a1a1a", color: tab === l ? "#000" : "#777", border: "none", fontWeight: "bold", fontSize: "0.65rem" }}>{l}</button>
+          <button key={l} onClick={() => {setTab(l); setActive(null);}} style={{ flexShrink: 0, padding: "10px", borderRadius: "5px", border: "none", background: tab === l ? "#00ff41" : "#222", color: tab === l ? "#000" : "#FFF", fontWeight: "bold", fontSize: "0.7rem" }}>{l}</button>
         ))}
       </div>
 
-      {/* LISTA DINÁMICA */}
       {MASTER_DATA[tab].map(m => {
-        const s = getStats(m.hE, m.aE, tab);
-        const isOpen = open === m.id;
+        const s = calc(m.hE, m.aE, tab);
+        const isOpen = active === m.id;
         return (
-          <div key={m.id} style={{ background: "#0d0d0d", borderRadius: "12px", marginBottom: "10px", border: isOpen ? `1px solid ${s.col}` : "1px solid #222", overflow: "hidden" }}>
-            <div onClick={() => setOpen(isOpen ? null : m.id)} style={{ padding: "15px", cursor: "pointer" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ flex: 1, fontSize: "0.85rem", fontWeight: "bold" }}>{m.h}</div>
-                <div style={{ textAlign: "center", width: "90px" }}>
-                  <div style={{ fontSize: "1.1rem", fontWeight: "900", color: s.col }}>{s.txt}</div>
-                  <div style={{ fontSize: "0.5rem", color: "#555" }}>{m.d}</div>
-                </div>
-                <div style={{ flex: 1, textAlign: "right", fontSize: "0.85rem", fontWeight: "bold" }}>{m.a}</div>
+          <div key={m.id} style={{ background: "#111", borderRadius: "10px", marginBottom: "8px", border: isOpen ? `1px solid ${s.col}` : "1px solid #333" }}>
+            <div onClick={() => setActive(isOpen ? null : m.id)} style={{ padding: "15px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ flex: 1, fontSize: "0.85rem", fontWeight: "bold" }}>{m.h}</div>
+              <div style={{ textAlign: "center", width: "90px" }}>
+                <div style={{ fontSize: "1.1rem", fontWeight: "900", color: s.col }}>{s.txt}</div>
+                <div style={{ fontSize: "0.5rem", color: "#555" }}>{m.d}</div>
               </div>
+              <div style={{ flex: 1, textAlign: "right", fontSize: "0.85rem", fontWeight: "bold" }}>{m.a}</div>
             </div>
-
             {isOpen && (
-              <div style={{ padding: "15px", background: "#050505", borderTop: "1px solid #222", animation: "fadeIn 0.3s" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "12px" }}>
-                  <MiniBox lab="L/H" val={s.p1+"%"} />
-                  <MiniBox lab="X" val={tab === "NBA" ? "-" : s.pX+"%"} />
-                  <MiniBox lab="V/A" val={s.p2+"%"} />
+              <div style={{ padding: "15px", background: "#080808", borderTop: "1px solid #222" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "5px", marginBottom: "10px", textAlign: "center" }}>
+                  <div style={{ padding: "5px", background: "#1a1a1a", fontSize: "0.6rem" }}>L: {s.p1}%</div>
+                  <div style={{ padding: "5px", background: "#1a1a1a", fontSize: "0.6rem" }}>X: {tab === "NBA" ? "-" : s.pX+"%"}</div>
+                  <div style={{ padding: "5px", background: "#1a1a1a", fontSize: "0.6rem" }}>V: {s.p2}%</div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  <DetailBox lab={s.val2} val={s.val1} />
-                  <DetailBox lab={s.corn} val={s.cVal} />
+                  <div style={{ background: "#1a1a1a", padding: "8px", borderRadius: "5px", textAlign: "center", fontSize: "0.7rem", color: "#00ff41" }}>{tab === "NBA" ? "PTS" : "GOLES"}: {s.g}</div>
+                  <div style={{ background: "#1a1a1a", padding: "8px", borderRadius: "5px", textAlign: "center", fontSize: "0.7rem", color: "#00ff41" }}>{s.c}: {s.cv}</div>
                 </div>
               </div>
             )}
           </div>
         );
       })}
-      <style>{`@keyframes fadeIn { from {opacity: 0} to {opacity: 1} }`}</style>
     </div>
   );
-}
+              }
 
-function MiniBox({ lab, val }) {
-  return (
-    <div style={{ background: "#1a1a1a", padding: "8px", borderRadius: "6px", textAlign: "center" }}>
-      <div style={{ fontSize: "0.45rem", color: "#666" }}>{lab}</div>
-      <div style={{ fontSize: "0.8rem", fontWeight: "bold" }}>{val}</div>
-    </div>
-  );
-}
-
-function DetailBox({ lab, val }) {
-  return (
-    <div style={{ background: "#1a1a1a", padding: "10px", borderRadius: "8px", textAlign: "center", border: "1px solid #222" }}>
-      <div style={{ fontSize: "0.55rem", color: "#00ff41", marginBottom: "2px" }}>{lab}</div>
-      <div style={{ fontSize: "1rem", fontWeight: "bold" }}>{val}</div>
-    </div>
-  );
-        }
+        
                                       
 
               

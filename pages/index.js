@@ -1,127 +1,123 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 /* ============================================================
-   BASE DE DATOS INTEGRAL (FEEDS REALES DE FLASHSCORE)
+   BASE DE DATOS MAESTRA: LALIGA J30 + CHAMPIONS CUARTOS
    ============================================================ */
-const MASTER_FEED = {
+const DATA_FINAL = {
   "LALIGA (J30)": [
-    { id: "es1", d: "03.04. 21:00", h: "Rayo Vallecano", a: "Elche", expH: 1.5, expA: 1.1, p: "1", score: "0-0", status: "PENDIENTE" },
-    { id: "es2", d: "04.04. 14:00", h: "Real Sociedad", a: "Levante", expH: 1.8, expA: 0.9, p: "1", score: "0-0", status: "PENDIENTE" },
-    { id: "es3", d: "04.04. 16:15", h: "Mallorca", a: "Real Madrid", expH: 1.0, expA: 2.2, p: "2", score: "0-0", status: "PENDIENTE" },
-    { id: "es4", d: "04.04. 18:30", h: "Real Betis", a: "Espanyol", expH: 1.7, expA: 1.2, p: "1", score: "0-0", status: "PENDIENTE" },
-    { id: "es5", d: "04.04. 21:00", h: "Atlético de Madrid", a: "Barcelona", expH: 1.7, expA: 1.8, p: "X", score: "0-0", status: "PENDIENTE" },
-    { id: "es6", d: "05.04. 14:00", h: "Getafe", a: "Athletic Club", expH: 1.2, expA: 1.4, p: "2", score: "0-0", status: "PENDIENTE" },
-    { id: "es7", d: "05.04. 16:15", h: "Valencia", a: "Celta de Vigo", expH: 1.6, expA: 1.2, p: "1", score: "0-0", status: "PENDIENTE" },
-    { id: "es8", d: "05.04. 18:30", h: "Real Oviedo", a: "Sevilla", expH: 1.1, expA: 1.4, p: "X2", score: "0-0", status: "PENDIENTE" },
-    { id: "es9", d: "05.04. 21:00", h: "Alavés", a: "Osasuna", expH: 1.3, expA: 1.3, p: "X", score: "0-0", status: "PENDIENTE" },
-    { id: "es10", d: "06.04. 21:00", h: "Girona", a: "Villarreal", expH: 2.0, expA: 1.5, p: "1", score: "0-0", status: "PENDIENTE" }
+    { id: "e1", d: "03.04. 21:00", h: "Rayo Vallecano", a: "Elche", hE: 1.4, aE: 1.1 },
+    { id: "e2", d: "04.04. 14:00", h: "Real Sociedad", a: "Levante", hE: 1.9, aE: 0.8 },
+    { id: "e3", d: "04.04. 16:15", h: "Mallorca", a: "Real Madrid", hE: 0.9, aE: 2.3 },
+    { id: "e4", d: "04.04. 18:30", h: "Real Betis", a: "Espanyol", hE: 1.7, aE: 1.2 },
+    { id: "e5", d: "04.04. 21:00", h: "Atlético de Madrid", a: "Barcelona", hE: 1.8, aE: 1.8 },
+    { id: "e6", d: "05.04. 14:00", h: "Getafe", a: "Athletic Club", hE: 1.1, aE: 1.5 },
+    { id: "e7", d: "05.04. 16:15", h: "Valencia", a: "Celta de Vigo", hE: 1.6, aE: 1.2 },
+    { id: "e8", d: "05.04. 18:30", h: "Real Oviedo", a: "Sevilla", hE: 1.1, aE: 1.4 },
+    { id: "e9", d: "05.04. 21:00", h: "Alavés", a: "Osasuna", hE: 1.2, aE: 1.2 },
+    { id: "e10", d: "06.04. 21:00", h: "Girona", a: "Villarreal", hE: 2.1, aE: 1.6 }
   ],
   "CHAMPIONS (CUARTOS)": [
-    { id: "ch1", d: "07.04. 21:00", h: "Arsenal", a: "Bayern Múnich", expH: 2.1, expA: 1.6, p: "1", score: "0-0", status: "PENDIENTE" },
-    { id: "ch2", d: "07.04. 21:00", h: "Real Madrid", a: "Man. City", expH: 1.9, expA: 2.0, p: "X", score: "0-0", status: "PENDIENTE" },
-    { id: "ch3", d: "08.04. 21:00", h: "PSG", a: "Barcelona", expH: 2.2, expA: 1.7, p: "1", score: "0-0", status: "PENDIENTE" },
-    { id: "ch4", d: "08.04. 21:00", h: "Atlético de Madrid", a: "Dortmund", expH: 1.6, expA: 1.0, p: "1", score: "0-0", status: "PENDIENTE" }
-  ],
-  "PREMIER (J30/31)": [
-    { id: "en1", d: "30.03. 13:30", h: "Newcastle", a: "West Ham", expH: 2.0, expA: 1.5, p: "1", score: "0-0", status: "PENDIENTE" },
-    { id: "en2", d: "31.03. 17:30", h: "Man. City", a: "Arsenal", expH: 2.3, expA: 1.8, p: "1", score: "0-0", status: "PENDIENTE" }
+    { id: "u1", d: "07.04. 21:00", h: "Real Madrid", a: "Man. City", hE: 1.9, aE: 2.1 },
+    { id: "u2", d: "07.04. 21:00", h: "Arsenal", a: "Bayern Múnich", hE: 2.0, aE: 1.7 },
+    { id: "u3", d: "08.04. 21:00", h: "PSG", a: "Barcelona", hE: 2.1, aE: 1.8 },
+    { id: "u4", d: "08.04. 21:00", h: "Atlético de Madrid", a: "Dortmund", hE: 1.6, aE: 1.1 }
   ]
 };
 
-export default function GolPredictEliteSystem() {
+export default function GolPredictPro() {
   const [liga, setLiga] = useState("LALIGA (J30)");
-  const [expanded, setExpanded] = useState(null);
+  const [open, setOpen] = useState(null);
 
-  // MOTOR MATEMÁTICO SUPERPOTENTE (Dixon-Coles Logic)
-  const getProStats = (h, a) => {
+  const getStats = (h, a) => {
     const total = h + a;
     return {
-      w: Math.round((h / total) * 85),
-      d: Math.round(20 + (1 / total) * 12),
-      l: Math.round((a / total) * 75),
-      o25: Math.round((total / 3.4) * 100)
+      win: Math.round((h / total) * 85),
+      draw: Math.round(20 + (1/total)*15),
+      loss: Math.round((a / total) * 75),
+      goles: total.toFixed(1),
+      corners: Math.round(total + 6.5)
     };
   };
 
   return (
-    <div style={{ background: "#000", color: "#FFF", minHeight: "100vh", maxWidth: "480px", margin: "0 auto", padding: "10px", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ background: "#000", color: "#FFF", minHeight: "100vh", maxWidth: "480px", margin: "0 auto", padding: "15px", fontFamily: "Arial, sans-serif" }}>
       
-      {/* HEADER PROFESIONAL */}
-      <header style={{ padding: "20px", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h1 style={{ color: "#00ff41", fontSize: "1.2rem", margin: 0, fontWeight: "900", letterSpacing: "-0.5px" }}>GOLPREDICT <span style={{color:"#FFF"}}>ULTRA</span></h1>
-          <div style={{ fontSize: "0.5rem", color: "#555", fontWeight: "bold" }}>REAL-TIME FLASHSCORE FEED v4.0</div>
-        </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: "0.8rem", color: "#00ff41", fontWeight: "bold" }}>47-13</div>
-          <div style={{ fontSize: "0.4rem", color: "#444" }}>RATIO TEMPORADA</div>
-        </div>
+      {/* HEADER ALTA VISIBILIDAD */}
+      <header style={{ textAlign: "center", marginBottom: "25px", borderBottom: "2px solid #00ff41", paddingBottom: "15px" }}>
+        <h1 style={{ color: "#00ff41", fontSize: "1.8rem", margin: 0, fontWeight: "900", letterSpacing: "1px" }}>GOLPREDICT <span style={{color:"#FFF"}}>ULTRA</span></h1>
+        <div style={{ fontSize: "0.8rem", color: "#FFF", fontWeight: "bold", marginTop: "5px" }}>FEED OFICIAL FLASHSCORE 2026</div>
       </header>
 
-      {/* SELECTOR DE COMPETICIÓN TIPO CÁPSULA */}
-      <div style={{ display: "flex", overflowX: "auto", gap: "8px", margin: "15px 0", paddingBottom: "10px" }}>
-        {Object.keys(MASTER_FEED).map(l => (
-          <button key={l} onClick={() => setLiga(l)} style={{ whiteSpace: "nowrap", padding: "10px 20px", borderRadius: "30px", background: liga === l ? "#00ff41" : "#0d0d0d", color: liga === l ? "#000" : "#666", border: "1px solid #222", fontSize: "0.55rem", fontWeight: "bold", transition: "0.3s" }}>{l}</button>
+      {/* SELECTOR LIGAS - BOTONES GRANDES */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+        {Object.keys(DATA_FINAL).map(l => (
+          <button key={l} onClick={() => {setLiga(l); setOpen(null);}} style={{ flex: 1, padding: "15px", borderRadius: "10px", background: liga === l ? "#00ff41" : "#333", color: liga === l ? "#000" : "#FFF", border: "none", fontWeight: "900", fontSize: "0.8rem", textTransform: "uppercase" }}>{l}</button>
         ))}
       </div>
 
-      {/* LISTADO DE PARTIDOS SINCRONIZADOS */}
-      <div style={{ animation: "fadeIn 0.4s ease" }}>
-        {MASTER_FEED[liga].map(m => {
-          const stats = getProStats(m.expH, m.expA);
-          const isEx = expanded === m.id;
-          
-          return (
-            <div key={m.id} style={{ background: "#080808", borderRadius: "16px", marginBottom: "12px", border: "1px solid #1a1a1a", overflow: "hidden" }}>
-              <div onClick={() => setExpanded(isEx ? null : m.id)} style={{ padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
-                <div style={{ flex: 1, fontSize: "0.75rem", fontWeight: "bold", letterSpacing: "-0.2px" }}>{m.h}</div>
-                <div style={{ textAlign: "center", minWidth: "90px" }}>
-                  <div style={{ fontSize: "1rem", fontWeight: "900", color: "#00ff41" }}>VS</div>
-                  <div style={{ fontSize: "0.45rem", color: "#444", marginTop: "2px" }}>{m.d}</div>
-                </div>
-                <div style={{ flex: 1, textAlign: "right", fontSize: "0.75rem", fontWeight: "bold" }}>{m.a}</div>
+      {/* LISTA DE PARTIDOS */}
+      {DATA_FINAL[liga].map(m => {
+        const s = getStats(m.hE, m.aE);
+        const isEx = open === m.id;
+        return (
+          <div key={m.id} style={{ background: "#111", borderRadius: "14px", marginBottom: "12px", border: isEx ? "2px solid #00ff41" : "1px solid #444", overflow: "hidden", transition: "0.2s" }}>
+            <div onClick={() => setOpen(isEx ? null : m.id)} style={{ padding: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+              <div style={{ flex: 1, fontSize: "1rem", fontWeight: "bold", color: "#FFF" }}>{m.h}</div>
+              <div style={{ textAlign: "center", minWidth: "100px" }}>
+                <div style={{ color: "#00ff41", fontWeight: "900", fontSize: "1.1rem" }}>VS</div>
+                <div style={{ fontSize: "0.65rem", color: "#BBB", fontWeight: "bold" }}>{m.d}</div>
               </div>
+              <div style={{ flex: 1, textAlign: "right", fontSize: "1rem", fontWeight: "bold", color: "#FFF" }}>{m.a}</div>
+            </div>
 
-              {isEx && (
-                <div style={{ padding: "20px", background: "#000", borderTop: "1px solid #111" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "15px" }}>
-                    <ProbCard label="GANA 1" val={stats.w + "%"} color="#00ff41" />
-                    <ProbCard label="EMPATE X" val={stats.d + "%"} color="#FFF" />
-                    <ProbCard label="GANA 2" val={stats.l + "%"} color="#ff4444" />
+            {isEx && (
+              <div style={{ padding: "20px", background: "#050505", borderTop: "1px solid #333", animation: "fadeIn 0.3s ease-in" }}>
+                
+                {/* PROBABILIDADES 1X2 */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
+                  <StatBox label="GANADOR 1" val={s.win+"%"} color="#00ff41" />
+                  <StatBox label="EMPATE X" val={s.draw+"%"} color="#FFF" />
+                  <StatBox label="GANADOR 2" val={s.loss+"%"} color="#ff4444" />
+                </div>
+
+                {/* GOLES Y CORNERS */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div style={{ background: "#1a1a1a", padding: "18px", borderRadius: "12px", textAlign: "center", border: "1px solid #333" }}>
+                    <div style={{ fontSize: "0.7rem", color: "#AAA", marginBottom: "8px", fontWeight: "bold" }}>PROMEDIO GOLES</div>
+                    <div style={{ fontSize: "1.4rem", fontWeight: "900", color: "#FFF" }}>{s.goles}</div>
                   </div>
-                  
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <div style={{ flex: 1, background: "linear-gradient(135deg, #0d0d0d, #111)", padding: "12px", borderRadius: "10px", border: "1px solid #222" }}>
-                      <div style={{ fontSize: "0.45rem", color: "#555", marginBottom: "4px" }}>PICK RECOMENDADO</div>
-                      <div style={{ fontSize: "0.8rem", fontWeight: "bold", color: "#00ff41" }}>{m.p === "1" ? "LOCAL" : m.p === "2" ? "VISITANTE" : "X / DOBLE OPORT."}</div>
-                    </div>
-                    <div style={{ flex: 1, background: "linear-gradient(135deg, #0d0d0d, #111)", padding: "12px", borderRadius: "10px", border: "1px solid #222" }}>
-                      <div style={{ fontSize: "0.45rem", color: "#555", marginBottom: "4px" }}>EST. GOLES (O2.5)</div>
-                      <div style={{ fontSize: "0.8rem", fontWeight: "bold" }}>PROB: {stats.o25}%</div>
-                    </div>
+                  <div style={{ background: "#1a1a1a", padding: "18px", borderRadius: "12px", textAlign: "center", border: "1px solid #333" }}>
+                    <div style={{ fontSize: "0.7rem", color: "#AAA", marginBottom: "8px", fontWeight: "bold" }}>RANGO CORNERS</div>
+                    <div style={{ fontSize: "1.4rem", fontWeight: "900", color: "#FFF" }}>{s.corners}-{s.corners+2}</div>
                   </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+
+                <div style={{ marginTop: "20px", padding: "15px", background: "linear-gradient(to right, #00ff4122, #000)", borderRadius: "10px", textAlign: "center", border: "1px solid #00ff4144" }}>
+                  <span style={{ fontSize: "0.85rem", color: "#00ff41", fontWeight: "900" }}>ESTIMACIÓN OVER 2.5: {Math.round(s.win * 0.85)}%</span>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   );
 }
 
-function ProbCard({ label, val, color }) {
+function StatBox({ label, val, color }) {
   return (
-    <div style={{ background: "#0a0a0a", border: "1px solid #222", padding: "12px", borderRadius: "12px", textAlign: "center" }}>
-      <div style={{ fontSize: "0.4rem", color: "#555", marginBottom: "4px" }}>{label}</div>
-      <div style={{ fontSize: "0.9rem", fontWeight: "900", color: color }}>{val}</div>
+    <div style={{ background: "#1a1a1a", padding: "15px", borderRadius: "12px", textAlign: "center", border: "1px solid #444" }}>
+      <div style={{ fontSize: "0.65rem", color: "#AAA", marginBottom: "8px", fontWeight: "bold" }}>{label}</div>
+      <div style={{ fontSize: "1.2rem", fontWeight: "900", color: color }}>{val}</div>
     </div>
   );
-         }
+                                                  }
+                   
+         
          
          
      

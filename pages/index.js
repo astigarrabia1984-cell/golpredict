@@ -33,12 +33,12 @@ export default function App() {
 
   return (
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh", padding: "10px", fontFamily: "sans-serif" }}>
-      <h2 style={{ color: "#00ff41", textAlign: "center", margin: "10px 0" }}>GOLPREDICT OMNI</h2>
+      <h2 style={{ color: "#00ff41", textAlign: "center", textTransform: "uppercase", letterSpacing: "2px" }}>GolPredict Omni</h2>
       
       <div style={{ display: "flex", gap: "5px", marginBottom: "15px" }}>
         {["LALIGA (J30)", "NBA", "TICKET"].map(n => (
-          <button key={n} onClick={() => setTab(n)} style={{ flex: 1, padding: "12px 5px", borderRadius: "8px", border: "none", background: tab === n ? "#00ff41" : "#222", color: tab === n ? "#000" : "#fff", fontWeight: "bold", fontSize: "10px" }}>
-            {n === "TICKET" ? "🎟️ TICKET (" + bet.length + ")" : n}
+          <button key={n} onClick={() => setTab(n)} style={{ flex: 1, padding: "12px 5px", borderRadius: "8px", border: "none", background: tab === n ? "#00ff41" : "#1a1a1a", color: tab === n ? "#000" : "#fff", fontWeight: "bold", fontSize: "10px" }}>
+            {n === "TICKET" ? "🎟️ (" + bet.length + ")" : n}
           </button>
         ))}
       </div>
@@ -51,39 +51,50 @@ export default function App() {
         const p2 = 100 - p1 - pX;
         const isOpen = open === m.id;
 
+        // Lógica de color: El más alto siempre en Verde, los demás en gris
+        const max = Math.max(p1, pX, p2);
+
         return (
-          <div key={m.id} style={{ background: "#111", borderRadius: "12px", marginBottom: "8px", border: "1px solid #333" }}>
-            {/* VISTA PRINCIPAL CON PORCENTAJES */}
+          <div key={m.id} style={{ background: "#111", borderRadius: "12px", marginBottom: "8px", border: "1px solid #222" }}>
             <div onClick={() => setOpen(isOpen ? null : m.id)} style={{ padding: "12px", cursor: "pointer" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                <span style={{ fontSize: "12px", fontWeight: "bold", flex: 1 }}>{m.h}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", fontSize: "13px" }}>
+                <span style={{ fontWeight: "bold", flex: 1 }}>{m.h}</span>
                 <span style={{ fontSize: "9px", color: "#666", width: "80px", textAlign: "center" }}>{m.d}</span>
-                <span style={{ fontSize: "12px", fontWeight: "bold", flex: 1, textAlign: "right" }}>{m.a}</span>
+                <span style={{ fontWeight: "bold", flex: 1, textAlign: "right" }}>{m.a}</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "center", gap: "15px", background: "#000", padding: "8px", borderRadius: "8px" }}>
-                <div style={{ textAlign: "center" }}><div style={{ fontSize: "8px", color: "#555" }}>1</div><div style={{ color: "#00ff41", fontWeight: "bold" }}>{p1}%</div></div>
-                {!isN && <div style={{ textAlign: "center" }}><div style={{ fontSize: "8px", color: "#555" }}>X</div><div style={{ color: "#ffa500", fontWeight: "bold" }}>{pX}%</div></div>}
-                <div style={{ textAlign: "center" }}><div style={{ fontSize: "8px", color: "#555" }}>2</div><div style={{ color: "#ff4444", fontWeight: "bold" }}>{p2}%</div></div>
+              
+              <div style={{ display: "flex", justifyContent: "center", gap: "15px", background: "#050505", padding: "10px", borderRadius: "8px", border: "1px solid #1a1a1a" }}>
+                <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "8px", color: "#444" }}>L</div>
+                    <div style={{ color: p1 === max ? "#00ff41" : "#666", fontWeight: "bold", fontSize: "16px" }}>{p1}%</div>
+                </div>
+                {!isN && <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "8px", color: "#444" }}>X</div>
+                    <div style={{ color: pX === max ? "#00ff41" : "#666", fontWeight: "bold", fontSize: "16px" }}>{pX}%</div>
+                </div>}
+                <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "8px", color: "#444" }}>V</div>
+                    <div style={{ color: p2 === max ? "#00ff41" : "#666", fontWeight: "bold", fontSize: "16px" }}>{p2}%</div>
+                </div>
               </div>
             </div>
 
-            {/* DESPLEGABLE: SÓLO GOLES, CÓRNERS Y CUOTAS */}
             {isOpen && (
-              <div style={{ padding: "12px", background: "#080808", borderTop: "1px solid #222" }}>
+              <div style={{ padding: "12px", background: "#0a0a0a", borderTop: "1px solid #222", borderBottomLeftRadius: "12px", borderBottomRightRadius: "12px" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
-                  <div style={{ background: "#1a1a1a", padding: "8px", borderRadius: "6px", textAlign: "center" }}>
-                    <div style={{ fontSize: "9px", color: "#00ff41" }}>GOLES TOTALES</div>
-                    <div style={{ fontWeight: "bold", fontSize: "16px" }}>{isN ? tot : tot.toFixed(1)}</div>
+                  <div style={{ background: "#151515", padding: "10px", borderRadius: "8px", textAlign: "center", border: "1px solid #222" }}>
+                    <div style={{ fontSize: "9px", color: "#00ff41", marginBottom: "4px" }}>GOLES TOTALES</div>
+                    <div style={{ fontWeight: "bold", fontSize: "18px" }}>{isN ? tot : tot.toFixed(1)}</div>
                   </div>
-                  <div style={{ background: "#1a1a1a", padding: "8px", borderRadius: "6px", textAlign: "center" }}>
-                    <div style={{ fontSize: "9px", color: "#00ff41" }}>CÓRNERS TOTALES</div>
-                    <div style={{ fontWeight: "bold", fontSize: "16px" }}>{Math.round(tot + 6)}</div>
+                  <div style={{ background: "#151515", padding: "10px", borderRadius: "8px", textAlign: "center", border: "1px solid #222" }}>
+                    <div style={{ fontSize: "9px", color: "#00ff41", marginBottom: "4px" }}>CÓRNERS TOTALES</div>
+                    <div style={{ fontWeight: "bold", fontSize: "18px" }}>{Math.round(tot + 6)}</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "5px" }}>
-                  <button onClick={() => addToTicket(m, "1", m.q1)} style={{ flex: 1, background: "#222", color: "#fff", border: "1px solid #444", padding: "8px", borderRadius: "5px", fontSize: "10px" }}>Cuota 1: {m.q1}</button>
-                  {!isN && <button onClick={() => addToTicket(m, "X", m.qX)} style={{ flex: 1, background: "#222", color: "#fff", border: "1px solid #444", padding: "8px", borderRadius: "5px", fontSize: "10px" }}>Cuota X: {m.qX}</button>}
-                  <button onClick={() => addToTicket(m, "2", m.q2)} style={{ flex: 1, background: "#222", color: "#fff", border: "1px solid #444", padding: "8px", borderRadius: "5px", fontSize: "10px" }}>Cuota 2: {m.q2}</button>
+                  <button onClick={() => addToTicket(m, "1", m.q1)} style={{ flex: 1, background: "#222", color: "#fff", border: "1px solid #333", padding: "10px", borderRadius: "6px", fontSize: "11px" }}>{m.q1}</button>
+                  {!isN && <button onClick={() => addToTicket(m, "X", m.qX)} style={{ flex: 1, background: "#222", color: "#fff", border: "1px solid #333", padding: "10px", borderRadius: "6px", fontSize: "11px" }}>{m.qX}</button>}
+                  <button onClick={() => addToTicket(m, "2", m.q2)} style={{ flex: 1, background: "#222", color: "#fff", border: "1px solid #333", padding: "10px", borderRadius: "6px", fontSize: "11px" }}>{m.q2}</button>
                 </div>
               </div>
             )}
@@ -91,38 +102,42 @@ export default function App() {
         );
       })}
 
-      {/* PESTAÑA TICKET / CALCULADORA */}
       {tab === "TICKET" && (
-        <div style={{ background: "#111", padding: "15px", borderRadius: "12px" }}>
-          <h3 style={{ color: "#00ff41", marginTop: 0 }}>Calculadora de Ticket</h3>
+        <div style={{ background: "#111", padding: "20px", borderRadius: "15px", border: "1px solid #00ff41" }}>
+          <h3 style={{ color: "#00ff41", marginTop: 0, textAlign: "center" }}>CALCULADORA DE PREMIOS</h3>
           {bet.map(b => (
-            <div key={b.id} style={{ borderBottom: "1px solid #222", padding: "8px 0", fontSize: "11px", display: "flex", justifyContent: "space-between" }}>
-              <span>{b.h} vs {b.a} (<b>{b.pick}</b>)</span>
-              <span style={{ color: "#00ff41" }}>@{b.odd}</span>
+            <div key={b.id} style={{ borderBottom: "1px solid #222", padding: "10px 0", fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
+              <span>{b.h} - {b.a} (<b>{b.pick}</b>)</span>
+              <span style={{ color: "#00ff41", fontWeight: "bold" }}>@{b.odd}</span>
             </div>
           ))}
           {bet.length > 0 ? (
-            <div style={{ marginTop: "15px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", fontSize: "13px" }}>
-                <span>Cuota Total:</span>
-                <span style={{ fontWeight: "bold", color: "#00ff41" }}>{totalOdds}</span>
+            <div style={{ marginTop: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                <span>Cuota Combinada:</span>
+                <span style={{ fontWeight: "bold", color: "#00ff41", fontSize: "18px" }}>{totalOdds}</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
-                <span>Importe:</span>
-                <input type="number" value={money} onChange={(e) => setMoney(e.target.value)} style={{ width: "70px", background: "#222", color: "#fff", border: "1px solid #444", borderRadius: "4px", textAlign: "right", padding: "5px" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <span>Tu Apuesta:</span>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                    <input type="number" value={money} onChange={(e) => setMoney(e.target.value)} style={{ width: "80px", background: "#000", color: "#fff", border: "1px solid #00ff41", borderRadius: "6px", textAlign: "right", padding: "8px", fontSize: "16px" }} />
+                    <span style={{ marginLeft: "5px" }}>€</span>
+                </div>
               </div>
-              <div style={{ background: "#00ff41", color: "#000", padding: "15px", borderRadius: "10px", textAlign: "center" }}>
-                <div style={{ fontSize: "11px", fontWeight: "bold" }}>GANANCIA POTENCIAL</div>
-                <div style={{ fontSize: "26px", fontWeight: "900" }}>{(totalOdds * money).toFixed(2)}€</div>
+              <div style={{ background: "#00ff41", color: "#000", padding: "20px", borderRadius: "12px", textAlign: "center", boxShadow: "0 4px 15px rgba(0,255,65,0.3)" }}>
+                <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}>COBRO TOTAL ESTIMADO</div>
+                <div style={{ fontSize: "32px", fontWeight: "900" }}>{(totalOdds * money).toFixed(2)}€</div>
               </div>
-              <button onClick={() => setBet([])} style={{ width: "100%", marginTop: "15px", color: "#ff4444", background: "none", border: "none", fontSize: "11px" }}>Vaciar Ticket</button>
+              <button onClick={() => setBet([])} style={{ width: "100%", marginTop: "20px", color: "#ff4444", background: "none", border: "none", fontSize: "12px", cursor: "pointer" }}>BORRAR TODO EL TICKET</button>
             </div>
-          ) : <p style={{ textAlign: "center", color: "#555" }}>Selecciona cuotas para calcular.</p>}
+          ) : <p style={{ textAlign: "center", color: "#444", padding: "40px 0" }}>El ticket está vacío.<br/>Añade cuotas desde la lista de partidos.</p>}
         </div>
       )}
     </div>
   );
-                  }
+}
+
+                  
               
 
 

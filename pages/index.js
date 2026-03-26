@@ -17,7 +17,7 @@ const DATA = {
   ]
 };
 
-export default function Page() {
+export default function App() {
   const [tab, setTab] = useState("LALIGA");
   const [open, setOpen] = useState(null);
 
@@ -37,14 +37,19 @@ export default function Page() {
 
   return (
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh", padding: "10px", fontFamily: "sans-serif" }}>
-      <h2 style={{ color: "#00ff41", textAlign: "center" }}>GOLPREDICT OMNI</h2>
+      <h2 style={{ color: "#00ff41", textAlign: "center", marginBottom: "20px" }}>GOLPREDICT OMNI</h2>
       
-      <div style={{ display: "flex", gap: "5px", marginBottom: "15px", overflowX: "auto" }}>
+      <div style={{ display: "flex", gap: "5px", marginBottom: "15px", overflowX: "auto", paddingBottom: "10px" }}>
         {Object.keys(DATA).map((name) => (
           <button 
             key={name} 
             onClick={() => {setTab(name); setOpen(null);}} 
-            style={{ padding: "8px", borderRadius: "5px", border: "none", background: tab === name ? "#00ff41" : "#222", color: tab === name ? "#000" : "#fff", fontWeight: "bold", fontSize: "10px" }}
+            style={{ 
+              padding: "10px", borderRadius: "8px", border: "none", 
+              background: tab === name ? "#00ff41" : "#222", 
+              color: tab === name ? "#000" : "#fff", 
+              fontWeight: "bold", fontSize: "11px", whiteSpace: "nowrap" 
+            }}
           >
             {name}
           </button>
@@ -55,25 +60,25 @@ export default function Page() {
         const s = calc(m.hE, m.aE, tab);
         const isOpen = open === m.id;
         return (
-          <div key={m.id} style={{ background: "#111", borderRadius: "10px", marginBottom: "8px", border: isOpen ? "1px solid " + s.c : "1px solid #333" }}>
-            <div onClick={() => setOpen(isOpen ? null : m.id)} style={{ padding: "12px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ flex: 1, fontSize: "13px" }}>{m.h}</div>
-              <div style={{ textAlign: "center", width: "80px" }}>
-                <div style={{ fontSize: "16px", fontWeight: "bold", color: s.c }}>{s.t}</div>
-                <div style={{ fontSize: "9px", color: "#666" }}>{m.d}</div>
+          <div key={m.id} style={{ background: "#111", borderRadius: "12px", marginBottom: "10px", border: isOpen ? "1px solid " + s.c : "1px solid #333" }}>
+            <div onClick={() => setOpen(isOpen ? null : m.id)} style={{ padding: "15px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ flex: 1, fontSize: "14px", fontWeight: "bold" }}>{m.h}</div>
+              <div style={{ textAlign: "center", width: "90px" }}>
+                <div style={{ fontSize: "18px", fontWeight: "900", color: s.c }}>{s.t}</div>
+                <div style={{ fontSize: "10px", color: "#666" }}>{m.d}</div>
               </div>
-              <div style={{ flex: 1, textAlign: "right", fontSize: "13px" }}>{m.a}</div>
+              <div style={{ flex: 1, textAlign: "right", fontSize: "14px", fontWeight: "bold" }}>{m.a}</div>
             </div>
             
             {isOpen && (
-              <div style={{ padding: "10px", borderTop: "1px solid #222", background: "#080808" }}>
-                <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "10px", fontSize: "11px" }}>
-                  <span>1: {s.p1}%</span>
+              <div style={{ padding: "15px", borderTop: "1px solid #222", background: "#080808" }}>
+                <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "12px", fontSize: "12px" }}>
+                  <span>Local: {s.p1}%</span>
                   {tab !== "NBA" && <span>X: {s.pX}%</span>}
-                  <span>2: {s.p2}%</span>
+                  <span>Visitante: {s.p2}%</span>
                 </div>
-                <div style={{ background: "#1a1a1a", padding: "8px", borderRadius: "5px", textAlign: "center", color: "#00ff41", fontSize: "12px" }}>
-                  {tab === "NBA" ? "PREDICCIÓN PUNTOS: " : "ESTIMACIÓN GOLES: "} {s.g}
+                <div style={{ background: "#1a1a1a", padding: "12px", borderRadius: "8px", textAlign: "center", color: "#00ff41", fontSize: "13px", fontWeight: "bold" }}>
+                  {tab === "NBA" ? "PROY. PUNTOS: " : "EST. GOLES: "} {s.g}
                 </div>
               </div>
             )}
@@ -82,7 +87,9 @@ export default function Page() {
       })}
     </div>
   );
-              }
+        }
+
+            
 
 
               

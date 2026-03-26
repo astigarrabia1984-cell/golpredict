@@ -1,91 +1,167 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const DATA = {
-  "LALIGA": [
-    { id: 1, d: "03.04 21:00", h: "Rayo Vallecano", a: "Elche", hE: 1.4, aE: 1.1 },
-    { id: 2, d: "04.04 14:00", h: "Real Sociedad", a: "Levante", hE: 1.9, aE: 0.8 },
-    { id: 3, d: "04.04 16:15", h: "Mallorca", a: "Real Madrid", hE: 0.9, aE: 2.3 },
-    { id: 4, d: "04.04 18:30", h: "Real Betis", a: "Espanyol", hE: 1.7, aE: 1.2 },
-    { id: 5, d: "04.04 21:00", h: "Atleti", a: "Barça", hE: 1.8, aE: 1.8 },
-    { id: 6, d: "05.04 14:00", h: "Getafe", a: "Athletic", hE: 1.1, aE: 1.5 },
-    { id: 7, d: "05.04 16:15", h: "Valencia", a: "Celta", hE: 1.6, aE: 1.2 },
-    { id: 8, d: "05.04 18:30", h: "Oviedo", a: "Sevilla", hE: 1.1, aE: 1.4 },
-    { id: 9, d: "05.04 21:00", h: "Alavés", a: "Osasuna", hE: 1.2, aE: 1.2 },
-    { id: 10, d: "06.04 21:00", h: "Girona", a: "Villarreal", hE: 2.1, aE: 1.6 }
+  "LALIGA (J30)": [
+    { id: 1, date: "03.04 21:00", home: "Rayo Vallecano", away: "Elche", hE: 1.4, aE: 1.1 },
+    { id: 2, date: "04.04 14:00", home: "Real Sociedad", away: "Levante", hE: 1.9, aE: 0.8 },
+    { id: 3, date: "04.04 16:15", home: "Mallorca", away: "Real Madrid", hE: 0.9, aE: 2.3 },
+    { id: 4, date: "04.04 18:30", home: "Real Betis", away: "Espanyol", hE: 1.7, aE: 1.2 },
+    { id: 5, date: "04.04 21:00", home: "Atleti", away: "Barça", hE: 1.8, aE: 1.8 },
+    { id: 6, date: "05.04 14:00", home: "Getafe", away: "Athletic", hE: 1.1, aE: 1.5 },
+    { id: 7, date: "05.04 16:15", home: "Valencia", away: "Celta", hE: 1.6, aE: 1.2 },
+    { id: 8, date: "05.04 18:30", home: "Oviedo", away: "Sevilla", hE: 1.1, aE: 1.4 },
+    { id: 9, date: "05.04 21:00", home: "Alavés", away: "Osasuna", hE: 1.2, aE: 1.2 },
+    { id: 10, date: "06.04 21:00", home: "Girona", away: "Villarreal", hE: 2.1, aE: 1.6 }
   ],
-  "CHAMPIONS": [
-    { id: 11, d: "07.04 21:00", h: "Real Madrid", a: "Man. City", hE: 1.9, aE: 2.1 },
-    { id: 12, d: "08.04 21:00", h: "PSG", a: "Barcelona", hE: 2.1, aE: 1.8 }
+  CHAMPIONS: [
+    { id: 11, date: "07.04 21:00", home: "Real Madrid", away: "Man. City", hE: 1.9, aE: 2.1 },
+    { id: 12, date: "08.04 21:00", home: "PSG", away: "Barcelona", hE: 2.1, aE: 1.8 }
   ],
-  "NBA": [
-    { id: 13, d: "Hoy 02:00", h: "Boston Celtics", a: "NY Knicks", hE: 116, aE: 105 },
-    { id: 14, d: "Hoy 04:30", h: "LA Lakers", a: "GS Warriors", hE: 112, aE: 118 }
+  NBA: [
+    { id: 20, date: "Hoy 02:00", home: "Boston Celtics", away: "NY Knicks", hE: 116, aE: 105 },
+    { id: 21, date: "Hoy 04:30", home: "Denver Nuggets", away: "Phoenix Suns", hE: 112, aE: 118 }
   ],
-  "NHL": [
-    { id: 15, d: "Hoy 01:00", h: "Florida", a: "Boston", hE: 3.2, aE: 2.5 }
+  "NHL (HOCKEY)": [
+    { id: 30, date: "Hoy 01:00", home: "Florida Panthers", away: "Boston Bruins", hE: 3.5, aE: 2.8 }
   ]
 };
 
-export default function GolPredict() {
-  const [tab, setTab] = useState("LALIGA");
-  const [open, setOpen] = useState(null);
+const calcProbs = (h, a, isNBA) => {
+  const total = h + a;
+  if (isNBA) {
+    const p1 = Math.round((h / total) * 100);
+    return { p1, p2: 100 - p1, pX: 0 };
+  }
+  const drawProb = 0.22; 
+  const pX = Math.round(drawProb * 100);
+  const p1 = Math.round((h / total) * (100 - pX));
+  const p2 = 100 - p1 - pX;
+  return { p1, pX, p2 };
+};
 
-  const getS = (h, a, t) => {
-    const isN = t === "NBA";
-    const sum = h + a;
-    const p1 = Math.round((h / sum) * (isN ? 100 : 85));
-    const p2 = isN ? (100 - p1) : Math.round((a / sum) * 75);
-    const pX = isN ? 0 : (100 - p1 - p2);
+const Bar = ({ value, color }) => (
+  <div style={{ background: "#222", borderRadius: 4, overflow: "hidden", height: 8, marginTop: 4, marginBottom: 10 }}>
+    <motion.div 
+      initial={{ width: 0 }}
+      animate={{ width: `${value}%` }}
+      style={{ background: color, height: "100%" }} 
+    />
+  </div>
+);
 
-    let res = { txt: `X: ${pX}%`, col: "#ffa500" };
-    if (p1 > p2 && p1 > pX) res = { txt: `1: ${p1}%`, col: "#00ff41" };
-    if (p2 > p1 && p2 > pX) res = { txt: `2: ${p2}%`, col: "#ff4444" };
+const MatchCard = ({ match, open, toggle, isNBA }) => {
+  const { p1, p2, pX } = calcProbs(match.hE, match.aE, isNBA);
+  
+  // Lógica de color y texto para la pantalla principal
+  let mainTxt = "";
+  let mainCol = "";
 
-    return { ...res, p1, pX, p2, g: isN ? h : sum.toFixed(1), c: isN ? "AST" : "CNR", cv: isN ? Math.round(h/5) : Math.round(sum+6) };
-  };
+  if (p1 > p2 && p1 > pX) { mainTxt = `1: ${p1}%`; mainCol = "#00ff41"; }
+  else if (p2 > p1 && p2 > pX) { mainTxt = `2: ${p2}%`; mainCol = "#ff4444"; }
+  else { mainTxt = `X: ${pX}%`; mainCol = "#ffa500"; }
 
   return (
-    <div style={{ background: "#000", color: "#FFF", minHeight: "100vh", padding: "10px", fontFamily: "sans-serif" }}>
-      <h1 style={{ color: "#00ff41", textAlign: "center", fontSize: "1.2rem" }}>GOLPREDICT OMNI</h1>
-      
-      <div style={{ display: "flex", gap: "5px", marginBottom: "15px", overflowX: "auto" }}>
-        {Object.keys(DATA).map(l => (
-          <button key={l} onClick={() => {setTab(l); setOpen(null);}} style={{ flexShrink: 0, padding: "8px 12px", borderRadius: "5px", border: "none", background: tab === l ? "#00ff41" : "#222", color: tab === l ? "#000" : "#FFF", fontWeight: "bold", fontSize: "0.7rem" }}>{l}</button>
+    <motion.div layout style={{ background: "#111", borderRadius: 12, marginBottom: 12, border: open ? `1px solid ${mainCol}` : "1px solid #222", overflow: "hidden" }}>
+      <div onClick={toggle} style={{ padding: "15px", cursor: "pointer" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ flex: 1, fontWeight: "bold", fontSize: "0.9rem" }}>{match.home}</div>
+          <div style={{ textAlign: "center", minWidth: "80px" }}>
+            <span style={{ color: mainCol, fontWeight: 900, fontSize: "1.1rem" }}>{mainTxt}</span>
+          </div>
+          <div style={{ flex: 1, textAlign: "right", fontWeight: "bold", fontSize: "0.9rem" }}>{match.away}</div>
+        </div>
+        <div style={{ fontSize: 10, textAlign: "center", opacity: 0.5, marginTop: 5 }}>{match.date}</div>
+      </div>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ padding: "0 15px 15px 15px", background: "#080808" }}
+          >
+            <div style={{ paddingTop: 10 }}>
+              <div style={{ fontSize: "0.7rem", display: "flex", justifyContent: "space-between" }}>
+                <span>Local</span><span>{p1}%</span>
+              </div>
+              <Bar value={p1} color="#00ff41" />
+
+              {!isNBA && (
+                <>
+                  <div style={{ fontSize: "0.7rem", display: "flex", justifyContent: "space-between" }}>
+                    <span>Empate</span><span>{pX}%</span>
+                  </div>
+                  <Bar value={pX} color="#ffa500" />
+                </>
+              )}
+
+              <div style={{ fontSize: "0.7rem", display: "flex", justifyContent: "space-between" }}>
+                <span>Visitante</span><span>{p2}%</span>
+              </div>
+              <Bar value={p2} color="#ff4444" />
+              
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+                <div style={{ background: "#1a1a1a", padding: 8, borderRadius: 6, textAlign: "center" }}>
+                   <div style={{ fontSize: 9, color: "#666" }}>EST. GOLES/PTS</div>
+                   <div style={{ fontWeight: "bold", color: "#00ff41" }}>{(match.hE + match.aE).toFixed(1)}</div>
+                </div>
+                <div style={{ background: "#1a1a1a", padding: 8, borderRadius: 6, textAlign: "center" }}>
+                   <div style={{ fontSize: 9, color: "#666" }}>{isNBA ? "ASISTENCIAS" : "CORNERS"}</div>
+                   <div style={{ fontWeight: "bold", color: "#00ff41" }}>{Math.round(match.hE + match.aE + 5)}</div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+export default function GolPredictPro() {
+  const [tab, setTab] = useState("LALIGA (J30)");
+  const [open, setOpen] = useState(null);
+
+  return (
+    <div style={{ background: "#000", color: "#fff", minHeight: "100vh", maxWidth: "480px", margin: "0 auto", padding: "20px", fontFamily: "sans-serif" }}>
+      <h1 style={{ textAlign: "center", color: "#00ff41", fontSize: "1.5rem", fontWeight: 900, marginBottom: 20 }}>GOLPREDICT <span style={{color:"#fff"}}>PRO</span></h1>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, overflowX: "auto", paddingBottom: 10 }}>
+        {Object.keys(DATA).map(t => (
+          <button
+            key={t}
+            onClick={() => { setTab(t); setOpen(null); }}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 8,
+              border: "none",
+              background: tab === t ? "#00ff41" : "#1a1a1a",
+              color: tab === t ? "#000" : "#fff",
+              fontWeight: "bold",
+              fontSize: "0.7rem",
+              whiteSpace: "nowrap"
+            }}
+          >
+            {t}
+          </button>
         ))}
       </div>
 
-      {DATA[tab].map(m => {
-        const s = getS(m.hE, m.aE, tab);
-        const isOpen = open === m.id;
-        return (
-          <div key={m.id} style={{ background: "#111", borderRadius: "8px", marginBottom: "8px", border: isOpen ? `1px solid ${s.col}` : "1px solid #333" }}>
-            <div onClick={() => setOpen(isOpen ? null : m.id)} style={{ padding: "12px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ flex: 1, fontSize: "0.8rem", fontWeight: "bold" }}>{m.h}</div>
-              <div style={{ textAlign: "center", width: "85px" }}>
-                <div style={{ fontSize: "1rem", fontWeight: "900", color: s.col }}>{s.txt}</div>
-                <div style={{ fontSize: "0.5rem", color: "#666" }}>{m.d}</div>
-              </div>
-              <div style={{ flex: 1, textAlign: "right", fontSize: "0.8rem", fontWeight: "bold" }}>{m.a}</div>
-            </div>
-            {isOpen && (
-              <div style={{ padding: "12px", background: "#080808", borderTop: "1px solid #222" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "5px", marginBottom: "10px", textAlign: "center" }}>
-                  <div style={{ padding: "5px", background: "#1a1a1a", fontSize: "0.6rem" }}>1: {s.p1}%</div>
-                  <div style={{ padding: "5px", background: "#1a1a1a", fontSize: "0.6rem" }}>X: {tab === "NBA" ? "-" : s.pX+"%"}</div>
-                  <div style={{ padding: "5px", background: "#1a1a1a", fontSize: "0.6rem" }}>2: {s.p2}%</div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", textAlign: "center" }}>
-                  <div style={{ padding: "8px", background: "#1a1a1a", borderRadius: "5px", fontSize: "0.7rem", color: "#00ff41" }}>{tab === "NBA" ? "PTS" : "GOLES"}: {s.g}</div>
-                  <div style={{ padding: "8px", background: "#1a1a1a", borderRadius: "5px", fontSize: "0.7rem", color: "#00ff41" }}>{s.c}: {s.cv}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {DATA[tab].map(match => (
+        <MatchCard
+          key={match.id}
+          match={match}
+          isNBA={tab === "NBA"}
+          open={open === match.id}
+          toggle={() => setOpen(open === match.id ? null : match.id)}
+        />
+      ))}
     </div>
   );
-              }
+  }
+            
 
               
 

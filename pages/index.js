@@ -1,8 +1,5 @@
 import React, { useState } from "react";
 
-/* ============================================================
-   BASE DE DATOS MAESTRA: LALIGA J30 + CHAMPIONS CUARTOS
-   ============================================================ */
 const DATA_FINAL = {
   "LALIGA (J30)": [
     { id: "e1", d: "03.04. 21:00", h: "Rayo Vallecano", a: "Elche", hE: 1.4, aE: 1.1 },
@@ -31,34 +28,27 @@ export default function GolPredictPro() {
   const getStats = (h, a) => {
     const total = h + a;
     const p1 = Math.round((h / total) * 85);
-    const pX = Math.round(20 + (1/total)*15);
+    const pX = Math.round(20 + (1 / total) * 15);
     const p2 = Math.round((a / total) * 75);
-    
-    // Lógica de colores para la pantalla principal
+
     let mainProb = "";
     let mainColor = "";
     if (p1 > p2 && p1 > pX) { mainProb = `1: ${p1}%`; mainColor = "#00ff41"; }
     else if (p2 > p1 && p2 > pX) { mainProb = `2: ${p2}%`; mainColor = "#ff4444"; }
     else { mainProb = `X: ${pX}%`; mainColor = "#ffa500"; }
 
-    return {
-      win: p1, draw: pX, loss: p2,
-      goles: total.toFixed(1),
-      corners: Math.round(total + 6.5),
-      mainProb, mainColor
-    };
+    return { win: p1, draw: pX, loss: p2, goles: total.toFixed(1), corners: Math.round(total + 6.5), mainProb, mainColor };
   };
 
   return (
-    <div style={{ background: "#000", color: "#FFF", minHeight: "100vh", maxWidth: "480px", margin: "0 auto", padding: "15px", fontFamily: "Arial, sans-serif" }}>
-      
-      <header style={{ textAlign: "center", marginBottom: "25px", borderBottom: "2px solid #00ff41", paddingBottom: "15px" }}>
-        <h1 style={{ color: "#00ff41", fontSize: "1.8rem", margin: 0, fontWeight: "900" }}>GOLPREDICT <span style={{color:"#FFF"}}>ULTRA</span></h1>
+    <div style={{ background: "#000", color: "#FFF", minHeight: "100vh", maxWidth: "480px", margin: "0 auto", padding: "15px", fontFamily: "sans-serif" }}>
+      <header style={{ textAlign: "center", marginBottom: "20px", borderBottom: "2px solid #00ff41", paddingBottom: "10px" }}>
+        <h1 style={{ color: "#00ff41", fontSize: "1.5rem", margin: 0 }}>GOLPREDICT <span style={{ color: "#FFF" }}>ULTRA</span></h1>
       </header>
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
         {Object.keys(DATA_FINAL).map(l => (
-          <button key={l} onClick={() => {setLiga(l); setOpen(null);}} style={{ flex: 1, padding: "15px", borderRadius: "10px", background: liga === l ? "#00ff41" : "#333", color: liga === l ? "#000" : "#FFF", border: "none", fontWeight: "900", fontSize: "0.8rem" }}>{l}</button>
+          <button key={l} onClick={() => { setLiga(l); setOpen(null); }} style={{ flex: 1, padding: "12px", borderRadius: "8px", background: liga === l ? "#00ff41" : "#222", color: liga === l ? "#000" : "#FFF", border: "none", fontWeight: "bold", fontSize: "0.7rem" }}>{l}</button>
         ))}
       </div>
 
@@ -66,28 +56,38 @@ export default function GolPredictPro() {
         const s = getStats(m.hE, m.aE);
         const isEx = open === m.id;
         return (
-          <div key={m.id} style={{ background: "#111", borderRadius: "14px", marginBottom: "12px", border: isEx ? `2px solid ${s.mainColor}` : "1px solid #444", overflow: "hidden" }}>
-            <div onClick={() => setOpen(isEx ? null : m.id)} style={{ padding: "15px 20px", cursor: "pointer" }}>
+          <div key={m.id} style={{ background: "#111", borderRadius: "12px", marginBottom: "10px", border: isEx ? `1px solid ${s.mainColor}` : "1px solid #333", overflow: "hidden" }}>
+            <div onClick={() => setOpen(isEx ? null : m.id)} style={{ padding: "15px", cursor: "pointer" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ flex: 1.2, fontSize: "1rem", fontWeight: "bold" }}>{m.h}</div>
-                <div style={{ textAlign: "center", flex: 0.6 }}>
-                   <div style={{ fontSize: "1.1rem", fontWeight: "900", color: s.mainColor }}>{s.mainProb}</div>
-                   <div style={{ fontSize: "0.55rem", color: "#777", fontWeight: "bold" }}>{m.d}</div>
+                <div style={{ flex: 1, fontSize: "0.9rem", fontWeight: "bold" }}>{m.h}</div>
+                <div style={{ textAlign: "center", flex: 0.8 }}>
+                  <div style={{ fontSize: "1.1rem", fontWeight: "900", color: s.mainColor }}>{s.mainProb}</div>
+                  <div style={{ fontSize: "0.5rem", color: "#666" }}>{m.d}</div>
                 </div>
-                <div style={{ flex: 1.2, textAlign: "right", fontSize: "1rem", fontWeight: "bold" }}>{m.a}</div>
+                <div style={{ flex: 1, textAlign: "right", fontSize: "0.9rem", fontWeight: "bold" }}>{m.a}</div>
               </div>
             </div>
 
             {isEx && (
-              <div style={{ padding: "20px", background: "#050505", borderTop: "1px solid #333" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-                  <StatBox label="PROB. 1" val={s.win+"%"} color="#00ff41" />
-                  <StatBox label="PROB. X" val={s.draw+"%"} color="#ffa500" />
-                  <StatBox label="PROB. 2" val={s.loss+"%"} color="#ff4444" />
+              <div style={{ padding: "15px", background: "#050505", borderTop: "1px solid #222" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "15px" }}>
+                  <div style={{ textAlign: "center", background: "#1a1a1a", padding: "8px", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "0.5rem", color: "#888" }}>L: {s.win}%</div>
+                  </div>
+                  <div style={{ textAlign: "center", background: "#1a1a1a", padding: "8px", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "0.5rem", color: "#888" }}>X: {s.draw}%</div>
+                  </div>
+                  <div style={{ textAlign: "center", background: "#1a1a1a", padding: "8px", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "0.5rem", color: "#888" }}>V: {s.loss}%</div>
+                  </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <InfoCard label="EST. GOLES" val={s.goles} />
-                  <InfoCard label="CORNERS" val={`${s.corners}-${s.corners+2}`} />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div style={{ background: "#1a1a1a", padding: "10px", borderRadius: "8px", textAlign: "center" }}>
+                    <div style={{ fontSize: "0.55rem", color: "#00ff41" }}>GOLES: {s.goles}</div>
+                  </div>
+                  <div style={{ background: "#1a1a1a", padding: "10px", borderRadius: "8px", textAlign: "center" }}>
+                    <div style={{ fontSize: "0.55rem", color: "#00ff41" }}>CORNERS: {s.corners}</div>
+                  </div>
                 </div>
               </div>
             )}
@@ -96,25 +96,9 @@ export default function GolPredictPro() {
       })}
     </div>
   );
-}
-
-function StatBox({ label, val, color }) {
-  return (
-    <div style={{ background: "#1a1a1a", padding: "12px", borderRadius: "10px", textAlign: "center", border: `1px solid ${color}44` }}>
-      <div style={{ fontSize: "0.6rem", color: "#888", marginBottom: "4px" }}>{label}</div>
-      <div style={{ fontSize: "1.1rem", fontWeight: "900", color: color }}>{val}</div>
-    </div>
-  );
-}
-
-function InfoCard({ label, val }) {
-  return (
-    <div style={{ background: "#1a1a1a", padding: "15px", borderRadius: "10px", textAlign: "center", border: "1px solid #333" }}>
-      <div style={{ fontSize: "0.65rem", color: "#888", marginBottom: "5px" }}>{label}</div>
-      <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "#FFF" }}>{val}</div>
-    </div>
-  );
-         }
+                          }
+                              
+         
          
                                                   }
                    

@@ -30,91 +30,92 @@ export default function GolPredictPro() {
 
   const getStats = (h, a) => {
     const total = h + a;
+    const p1 = Math.round((h / total) * 85);
+    const pX = Math.round(20 + (1/total)*15);
+    const p2 = Math.round((a / total) * 75);
+    
+    // Lógica de colores para la pantalla principal
+    let mainProb = "";
+    let mainColor = "";
+    if (p1 > p2 && p1 > pX) { mainProb = `1: ${p1}%`; mainColor = "#00ff41"; }
+    else if (p2 > p1 && p2 > pX) { mainProb = `2: ${p2}%`; mainColor = "#ff4444"; }
+    else { mainProb = `X: ${pX}%`; mainColor = "#ffa500"; }
+
     return {
-      win: Math.round((h / total) * 85),
-      draw: Math.round(20 + (1/total)*15),
-      loss: Math.round((a / total) * 75),
+      win: p1, draw: pX, loss: p2,
       goles: total.toFixed(1),
-      corners: Math.round(total + 6.5)
+      corners: Math.round(total + 6.5),
+      mainProb, mainColor
     };
   };
 
   return (
     <div style={{ background: "#000", color: "#FFF", minHeight: "100vh", maxWidth: "480px", margin: "0 auto", padding: "15px", fontFamily: "Arial, sans-serif" }}>
       
-      {/* HEADER ALTA VISIBILIDAD */}
       <header style={{ textAlign: "center", marginBottom: "25px", borderBottom: "2px solid #00ff41", paddingBottom: "15px" }}>
-        <h1 style={{ color: "#00ff41", fontSize: "1.8rem", margin: 0, fontWeight: "900", letterSpacing: "1px" }}>GOLPREDICT <span style={{color:"#FFF"}}>ULTRA</span></h1>
-        <div style={{ fontSize: "0.8rem", color: "#FFF", fontWeight: "bold", marginTop: "5px" }}>FEED OFICIAL FLASHSCORE 2026</div>
+        <h1 style={{ color: "#00ff41", fontSize: "1.8rem", margin: 0, fontWeight: "900" }}>GOLPREDICT <span style={{color:"#FFF"}}>ULTRA</span></h1>
       </header>
 
-      {/* SELECTOR LIGAS - BOTONES GRANDES */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
         {Object.keys(DATA_FINAL).map(l => (
-          <button key={l} onClick={() => {setLiga(l); setOpen(null);}} style={{ flex: 1, padding: "15px", borderRadius: "10px", background: liga === l ? "#00ff41" : "#333", color: liga === l ? "#000" : "#FFF", border: "none", fontWeight: "900", fontSize: "0.8rem", textTransform: "uppercase" }}>{l}</button>
+          <button key={l} onClick={() => {setLiga(l); setOpen(null);}} style={{ flex: 1, padding: "15px", borderRadius: "10px", background: liga === l ? "#00ff41" : "#333", color: liga === l ? "#000" : "#FFF", border: "none", fontWeight: "900", fontSize: "0.8rem" }}>{l}</button>
         ))}
       </div>
 
-      {/* LISTA DE PARTIDOS */}
       {DATA_FINAL[liga].map(m => {
         const s = getStats(m.hE, m.aE);
         const isEx = open === m.id;
         return (
-          <div key={m.id} style={{ background: "#111", borderRadius: "14px", marginBottom: "12px", border: isEx ? "2px solid #00ff41" : "1px solid #444", overflow: "hidden", transition: "0.2s" }}>
-            <div onClick={() => setOpen(isEx ? null : m.id)} style={{ padding: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
-              <div style={{ flex: 1, fontSize: "1rem", fontWeight: "bold", color: "#FFF" }}>{m.h}</div>
-              <div style={{ textAlign: "center", minWidth: "100px" }}>
-                <div style={{ color: "#00ff41", fontWeight: "900", fontSize: "1.1rem" }}>VS</div>
-                <div style={{ fontSize: "0.65rem", color: "#BBB", fontWeight: "bold" }}>{m.d}</div>
+          <div key={m.id} style={{ background: "#111", borderRadius: "14px", marginBottom: "12px", border: isEx ? `2px solid ${s.mainColor}` : "1px solid #444", overflow: "hidden" }}>
+            <div onClick={() => setOpen(isEx ? null : m.id)} style={{ padding: "15px 20px", cursor: "pointer" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ flex: 1.2, fontSize: "1rem", fontWeight: "bold" }}>{m.h}</div>
+                <div style={{ textAlign: "center", flex: 0.6 }}>
+                   <div style={{ fontSize: "1.1rem", fontWeight: "900", color: s.mainColor }}>{s.mainProb}</div>
+                   <div style={{ fontSize: "0.55rem", color: "#777", fontWeight: "bold" }}>{m.d}</div>
+                </div>
+                <div style={{ flex: 1.2, textAlign: "right", fontSize: "1rem", fontWeight: "bold" }}>{m.a}</div>
               </div>
-              <div style={{ flex: 1, textAlign: "right", fontSize: "1rem", fontWeight: "bold", color: "#FFF" }}>{m.a}</div>
             </div>
 
             {isEx && (
-              <div style={{ padding: "20px", background: "#050505", borderTop: "1px solid #333", animation: "fadeIn 0.3s ease-in" }}>
-                
-                {/* PROBABILIDADES 1X2 */}
+              <div style={{ padding: "20px", background: "#050505", borderTop: "1px solid #333" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-                  <StatBox label="GANADOR 1" val={s.win+"%"} color="#00ff41" />
-                  <StatBox label="EMPATE X" val={s.draw+"%"} color="#FFF" />
-                  <StatBox label="GANADOR 2" val={s.loss+"%"} color="#ff4444" />
+                  <StatBox label="PROB. 1" val={s.win+"%"} color="#00ff41" />
+                  <StatBox label="PROB. X" val={s.draw+"%"} color="#ffa500" />
+                  <StatBox label="PROB. 2" val={s.loss+"%"} color="#ff4444" />
                 </div>
-
-                {/* GOLES Y CORNERS */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                  <div style={{ background: "#1a1a1a", padding: "18px", borderRadius: "12px", textAlign: "center", border: "1px solid #333" }}>
-                    <div style={{ fontSize: "0.7rem", color: "#AAA", marginBottom: "8px", fontWeight: "bold" }}>PROMEDIO GOLES</div>
-                    <div style={{ fontSize: "1.4rem", fontWeight: "900", color: "#FFF" }}>{s.goles}</div>
-                  </div>
-                  <div style={{ background: "#1a1a1a", padding: "18px", borderRadius: "12px", textAlign: "center", border: "1px solid #333" }}>
-                    <div style={{ fontSize: "0.7rem", color: "#AAA", marginBottom: "8px", fontWeight: "bold" }}>RANGO CORNERS</div>
-                    <div style={{ fontSize: "1.4rem", fontWeight: "900", color: "#FFF" }}>{s.corners}-{s.corners+2}</div>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: "20px", padding: "15px", background: "linear-gradient(to right, #00ff4122, #000)", borderRadius: "10px", textAlign: "center", border: "1px solid #00ff4144" }}>
-                  <span style={{ fontSize: "0.85rem", color: "#00ff41", fontWeight: "900" }}>ESTIMACIÓN OVER 2.5: {Math.round(s.win * 0.85)}%</span>
+                  <InfoCard label="EST. GOLES" val={s.goles} />
+                  <InfoCard label="CORNERS" val={`${s.corners}-${s.corners+2}`} />
                 </div>
               </div>
             )}
           </div>
         );
       })}
-
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
     </div>
   );
 }
 
 function StatBox({ label, val, color }) {
   return (
-    <div style={{ background: "#1a1a1a", padding: "15px", borderRadius: "12px", textAlign: "center", border: "1px solid #444" }}>
-      <div style={{ fontSize: "0.65rem", color: "#AAA", marginBottom: "8px", fontWeight: "bold" }}>{label}</div>
-      <div style={{ fontSize: "1.2rem", fontWeight: "900", color: color }}>{val}</div>
+    <div style={{ background: "#1a1a1a", padding: "12px", borderRadius: "10px", textAlign: "center", border: `1px solid ${color}44` }}>
+      <div style={{ fontSize: "0.6rem", color: "#888", marginBottom: "4px" }}>{label}</div>
+      <div style={{ fontSize: "1.1rem", fontWeight: "900", color: color }}>{val}</div>
     </div>
   );
+}
+
+function InfoCard({ label, val }) {
+  return (
+    <div style={{ background: "#1a1a1a", padding: "15px", borderRadius: "10px", textAlign: "center", border: "1px solid #333" }}>
+      <div style={{ fontSize: "0.65rem", color: "#888", marginBottom: "5px" }}>{label}</div>
+      <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "#FFF" }}>{val}</div>
+    </div>
+  );
+         }
+         
                                                   }
                    
          

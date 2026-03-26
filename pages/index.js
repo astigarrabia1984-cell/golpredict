@@ -81,7 +81,8 @@ export default function GolPredict() {
       })}
     </div>
   );
-      }
+}
+
           
         
 
